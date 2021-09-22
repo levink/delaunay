@@ -24,11 +24,9 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
         render.reloadShaders(platform);
     }
 }
-void mouseClick(GLFWwindow*, int button, int action, int mods) {
+void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
     using namespace ui::mouse;
-    auto mouseEvent = MouseEvent(button, action, mods);
     if (mouseEvent.is(Action::PRESS, Button::LEFT)) {
-
         std::random_device rd;
         std::mt19937 mt(rd());
         std::uniform_real_distribution<float> dist(50.f, 120.f);
@@ -40,9 +38,13 @@ void mouseClick(GLFWwindow*, int button, int action, int mods) {
         render.circles.push_back(circle);
     }
 }
+void mouseClick(GLFWwindow*, int button, int action, int mods) {
+    auto event = ui::mouse::MouseEvent(button, action, mods);
+    mouseCallback(event);
+}
 void mouseMove(GLFWwindow*, double x, double y) {
-    using namespace ui::mouse;
-    auto mouseEvent = MouseEvent(x, y);
+    auto event = ui::mouse::MouseEvent(x, y);
+    mouseCallback(event);
 }
 
 int main() {

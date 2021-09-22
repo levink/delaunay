@@ -12,8 +12,6 @@ void CircleShader::init() {
 void CircleShader::link(const Camera* camera) {
     context.camera = camera;
 }
-
-
 void CircleShader::enable() {
     BaseShader::enable();
     glDisable(GL_DEPTH_TEST);
