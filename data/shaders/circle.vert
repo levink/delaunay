@@ -1,5 +1,5 @@
-#version 100
-precision highp float;
+#version 120
+//precision highp float;
 
 uniform mat4 Ortho;
 uniform vec3 Color;

@@ -67,6 +67,7 @@ int main() {
         return -1;
     } else {
         printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
+        printf("GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
     glfwSetWindowPos(window, 600, 75);
