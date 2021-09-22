@@ -15,6 +15,6 @@ class CircleShader : public BaseShader {
 public:
     explicit CircleShader();
     void init() override;
-    void bind(const Camera* camera);
+    void link(const Camera* camera);
     void draw(const CircleModel& model);
 };

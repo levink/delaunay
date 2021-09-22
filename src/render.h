@@ -13,19 +13,17 @@ struct ShaderCache {
     ShaderSource circle;
 };
 
-struct RenderShaders {
-    CircleShader circle;
-};
-
 class Render {
     ShaderCache shaderCache;
 public:
     Camera camera;
-    RenderShaders shader;
+    CircleShader circleShader;
     std::vector<CircleModel> circles;
 
     void load(Platform& platform);
     void init();
     void destroy();
     void draw();
+    void reshape(int width, int height);
+    void reloadShaders(Platform& platform);
 };

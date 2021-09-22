@@ -50,8 +50,6 @@ protected:
     GLint attr(const char* name) const;
     GLint uniform(const char* name) const;
     virtual void init() { }
-    virtual void bind() { }
-    virtual void unbind() { }
 public:
 
     explicit BaseShader(uint8_t attributes, uint8_t uniforms);

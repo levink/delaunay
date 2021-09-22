@@ -6,34 +6,44 @@
 
 Render render;
 
-void reshape(GLFWwindow*, int width, int height) {
-
+void reshape(GLFWwindow*, int w, int h) {
+    render.reshape(w, h);
 }
 void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods) {
     using namespace ui::keyboard;
     auto keyEvent = KeyEvent(key, action, mods);
-    if (keyEvent.is(ESC))
+
+    if (keyEvent.is(ESC)) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+    else if (keyEvent.is(R)) {
+        std::cout << "Reload shaders" << std::endl;
+        Platform platform;
+        render.reloadShaders(platform);
+    }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
     using namespace ui::mouse;
     auto mouseEvent = MouseEvent(button, action, mods);
     if (mouseEvent.is(Action::PRESS, Button::LEFT)) {
         auto cursor = mouseEvent.getCursor();
-        std::cout << cursor.x << " " << cursor.y << std::endl;
+        //std::cout << cursor.x << " " << cursor.y << std::endl;
     }
 }
 void mouseMove(GLFWwindow*, double x, double y) {
     using namespace ui::mouse;
     auto mouseEvent = MouseEvent(x, y);
 }
+
 int main() {
 
     if (!glfwInit()) {
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(1280, 860, "Delone", nullptr, nullptr);
+    const auto WIDTH = 1280;
+    const auto HEIGHT = 860;
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Delone", nullptr, nullptr);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -56,9 +66,10 @@ int main() {
     glfwSwapInterval(1);
     glfwSetTime(0.0);
 
-    Platform master;
-    render.load(master);
+    Platform platform;
+    render.load(platform);
     render.init();
+    render.reshape(WIDTH, HEIGHT);
 
     while (!glfwWindowShouldClose(window)) {
         render.draw();

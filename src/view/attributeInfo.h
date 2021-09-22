@@ -10,3 +10,7 @@ struct AttributeInfo {
     GLenum dataType;
     int elementSize;
 };
+
+struct Attribute {
+    constexpr static const AttributeInfo vec2 = AttributeInfo{2, 0, GL_FLOAT, 0 };
+};

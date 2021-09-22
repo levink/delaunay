@@ -7,6 +7,7 @@
 
 struct CircleModel {
     std::vector<glm::vec2> vertex;
+    std::vector<glm::u16vec3> faces;
     glm::vec2 center;
     float radius;
     const glm::vec3* color;

@@ -8,6 +8,7 @@
 
 struct Color {
     static glm::vec3 asphalt;
+    static glm::vec3 teal;
 
 private:
     static glm::vec3 parse(const std::string& color);

@@ -128,10 +128,8 @@ GLint* BaseShader::createArray(uint8_t size) {
 }
 void BaseShader::enable() {
     glUseProgram(programId);
-    bind();
 }
 void BaseShader::disable() {
-    unbind();
     for (int i = 0; i < attributeCount; i++) {
         glDisableVertexAttribArray(a[i]);
     }

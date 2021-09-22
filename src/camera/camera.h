@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 
 class Camera {
-    glm::vec2 viewSize;
+public:
+    glm::ivec2 viewSize;
     glm::mat4 Ortho;
+    void reshape(int w, int h);
 };
