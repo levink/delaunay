@@ -27,9 +27,7 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     circleShader.enable();
-    for(auto& circle : circles) {
-        circleShader.draw(circle);
-    }
+    circleShader.draw(circles);
     circleShader.disable();
 }
 void Render::reshape(int w, int h) {

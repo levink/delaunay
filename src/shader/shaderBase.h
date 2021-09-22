@@ -17,7 +17,7 @@ protected:
     static GLint* createArray(uint8_t size);
 
     template<typename T>
-    static void setAttr(GLuint attributeId, const std::vector<T>& points, AttributeInfo info) {
+    static void attr(GLuint attributeId, const std::vector<T>& points, AttributeInfo info) {
         setAttr(attributeId, points.data(), info);
     }
     static void setAttr(GLuint attributeId, const void* points, AttributeInfo info);
@@ -47,7 +47,7 @@ protected:
     uint8_t attributeCount;
     uint8_t uniformCount;
 
-    GLint attr(const char* name) const;
+    GLint attribute(const char* name) const;
     GLint uniform(const char* name) const;
     virtual void init() { }
 public:

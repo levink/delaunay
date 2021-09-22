@@ -46,7 +46,6 @@ void mouseMove(GLFWwindow*, double x, double y) {
     auto event = ui::mouse::MouseEvent(x, y);
     mouseCallback(event);
 }
-
 int main() {
 
     if (!glfwInit()) {

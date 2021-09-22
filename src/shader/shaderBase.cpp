@@ -135,7 +135,7 @@ void BaseShader::disable() {
     }
     glUseProgram(0);
 }
-GLint BaseShader::attr(const char* name) const {
+GLint BaseShader::attribute(const char* name) const {
     return glGetAttribLocation(programId, name);
 }
 GLint BaseShader::uniform(const char* name) const {
