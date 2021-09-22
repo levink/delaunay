@@ -1,6 +1,8 @@
 #include <iostream>
+#include <random>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <src/model/color.h>
 #include "render.h"
 #include "ui.h"
 
@@ -26,8 +28,16 @@ void mouseClick(GLFWwindow*, int button, int action, int mods) {
     using namespace ui::mouse;
     auto mouseEvent = MouseEvent(button, action, mods);
     if (mouseEvent.is(Action::PRESS, Button::LEFT)) {
+
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<float> dist(50.f, 120.f);
+
+        float radius = dist(mt);
         auto cursor = mouseEvent.getCursor();
-        //std::cout << cursor.x << " " << cursor.y << std::endl;
+
+        auto circle = CircleModel(cursor.x, static_cast<float>(render.camera.viewSize.y) - cursor.y, radius);
+        render.circles.push_back(circle);
     }
 }
 void mouseMove(GLFWwindow*, double x, double y) {

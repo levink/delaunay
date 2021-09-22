@@ -5,6 +5,10 @@
 #include "render.h"
 
 void Render::load(Platform &platform) {
+    if (shaderCache.loaded) {
+        return;
+    }
+
     ShaderLoader loader(platform);
     shaderCache.circle = loader.load(files::circleVert, files::circleFrag);
 }
@@ -22,29 +26,12 @@ void Render::draw() {
                  1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glm::vec2 center = camera.viewSize / 2;
-    float r = 100;
-
-    CircleModel model;
-    model.vertex = {
-            glm::vec2(center.x - r, center.y - r),
-            glm::vec2(center.x - r, center.y + r),
-            glm::vec2(center.x + r, center.y + r),
-            glm::vec2(center.x + r, center.y - r),
-    };
-    model.faces = {
-            {0, 1,2},
-            {2, 3,0},
-    };
-    model.radius = r;
-    model.center = center;
-    model.color = &Color::teal;
-
     circleShader.enable();
-    circleShader.draw(model);
+    for(auto& circle : circles) {
+        circleShader.draw(circle);
+    }
     circleShader.disable();
 }
-
 void Render::reshape(int w, int h) {
     camera.reshape(w, h);
 }

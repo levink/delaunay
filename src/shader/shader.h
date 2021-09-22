@@ -17,4 +17,6 @@ public:
     void init() override;
     void link(const Camera* camera);
     void draw(const CircleModel& model);
+    void enable() override;
+    void disable() override;
 };

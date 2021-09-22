@@ -11,4 +11,6 @@ struct CircleModel {
     glm::vec2 center;
     float radius;
     const glm::vec3* color;
+    CircleModel() = default;
+    CircleModel(float x, float y, float r);
 };

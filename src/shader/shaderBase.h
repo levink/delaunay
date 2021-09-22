@@ -57,8 +57,8 @@ public:
 
     void create(const ShaderSource& source);
     void destroy();
-    void enable();
-    void disable();
+    virtual void enable();
+    virtual void disable();
 };
 
 
