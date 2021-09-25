@@ -13,6 +13,8 @@ add_executable(delone
         src/camera/camera.cpp
         src/model/circle.cpp
         src/model/color.cpp
+        src/model/face.cpp
+        src/model/line.cpp
         src/platform/loader.cpp
         src/platform/log.cpp
         src/shader/shader.cpp

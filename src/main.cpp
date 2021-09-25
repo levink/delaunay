@@ -24,15 +24,14 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
 void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
     using namespace ui::mouse;
     if (mouseEvent.is(Action::PRESS, Button::LEFT)) {
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_real_distribution<float> dist(50.f, 120.f);
-
-        float radius = dist(mt);
         auto cursor = mouseEvent.getCursor();
+        auto x = cursor.x;
+        auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        auto circle = CircleModel(cursor.x, static_cast<float>(render.camera.viewSize.y) - cursor.y, radius);
-        render.add(circle);
+        auto vertex = LineVertex();
+        vertex.position[0] = x;
+        vertex.position[1] = y;
+        render.lineVertices.push_back(vertex);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
@@ -78,6 +77,23 @@ int main() {
     render.load(platform);
     render.init();
     render.reshape(WIDTH, HEIGHT);
+
+    auto& viewSize = render.camera.viewSize;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    for(int i=0; i < 10; i++) {
+
+        std::uniform_real_distribution<float> getRandomX(0.f, (float)viewSize.x);
+        std::uniform_real_distribution<float> getRandomY(0.f, (float)viewSize.y);
+        std::uniform_real_distribution<float> getRandomRadius(50.f, 120.f);
+
+        float x = getRandomX(mt);
+        float y = getRandomY(mt);
+        float r = getRandomRadius(mt);
+
+        auto circle = CircleModel(x, y, r);
+        render.add(circle);
+    }
 
     while (!glfwWindowShouldClose(window)) {
         render.draw();

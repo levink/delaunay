@@ -23,7 +23,7 @@ struct Uniform {
     explicit Uniform(std::string name);
 };
 
-class BaseShader {
+class Shader {
 
 protected:
 
@@ -66,8 +66,8 @@ protected:
     std::vector<Uniform> u;
 public:
 
-    explicit BaseShader(uint8_t uniforms, uint8_t attributes);
-    virtual ~BaseShader();
+    explicit Shader(uint8_t uniforms, uint8_t attributes);
+    virtual ~Shader();
 
     void create(const ShaderSource& source);
     void destroy();

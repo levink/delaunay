@@ -4,8 +4,6 @@
 #include "circle.h"
 #include "color.h"
 
-Face::Face(uint16_t a, uint16_t b, uint16_t c) : a(a), b(b), c(c) { }
-
 CircleModel::CircleModel(float x, float y, float r) {
     glm::vec2 positions[4] = {
         glm::vec2(x - r, y - r),

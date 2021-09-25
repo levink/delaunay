@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <map>
 #include <fstream>
+#include <functional>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

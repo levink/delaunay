@@ -15,17 +15,17 @@ Uniform::Uniform(std::string name):
     name(std::move(name)) { }
 
 
-BaseShader::BaseShader(uint8_t uniforms, uint8_t attributes):
+Shader::Shader(uint8_t uniforms, uint8_t attributes):
     programId(0),
     vertexShader(0),
     fragmentShader(0) {
     u.resize(uniforms);
     a.resize(attributes);
 }
-BaseShader::~BaseShader() {
+Shader::~Shader() {
     destroy();
 }
-void BaseShader::destroy() {
+void Shader::destroy() {
     if (programId > 0) {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
@@ -35,7 +35,7 @@ void BaseShader::destroy() {
         fragmentShader = 0;
     }
 }
-void BaseShader::create(const ShaderSource &source) {
+void Shader::create(const ShaderSource &source) {
     vertexShader = compile(GL_VERTEX_SHADER, source.vertex.c_str());
     fragmentShader = compile(GL_FRAGMENT_SHADER, source.fragment.c_str());
     programId = link(vertexShader, fragmentShader);
@@ -56,7 +56,7 @@ void BaseShader::create(const ShaderSource &source) {
     }
     glUseProgram(0);
 }
-GLuint BaseShader::compile(GLenum shaderType, const char *shaderText) {
+GLuint Shader::compile(GLenum shaderType, const char *shaderText) {
     if (shaderText == nullptr) {
         std::string error;
         switch (shaderType) {
@@ -98,7 +98,7 @@ GLuint BaseShader::compile(GLenum shaderType, const char *shaderText) {
     glDeleteShader(shader);
     return 0;
 }
-GLuint BaseShader::link(GLuint vertexShader, GLuint fragmentShader) {
+GLuint Shader::link(GLuint vertexShader, GLuint fragmentShader) {
     if (!vertexShader || !fragmentShader) {
         Log::warn("Can't link shader because of empty parts");
         return 0;
@@ -134,10 +134,10 @@ GLuint BaseShader::link(GLuint vertexShader, GLuint fragmentShader) {
     glDeleteProgram(program);
     return 0;
 }
-void BaseShader::enable() {
+void Shader::enable() {
     glUseProgram(programId);
 }
-void BaseShader::disable() {
+void Shader::disable() {
     for (auto& attribute : a) {
         if (attribute.id != -1) {
             glDisableVertexAttribArray(attribute.id);
@@ -147,16 +147,17 @@ void BaseShader::disable() {
     glUseProgram(0);
 }
 
-void BaseShader::set3(const Uniform& uniform, const float* value) {
-    if (uniform.id != -1)
+void Shader::set3(const Uniform& uniform, const float* value) {
+    if (uniform.id != -1) {
         glUniform3fv(uniform.id, 1, (GLfloat *)value);
+    }
 }
-void BaseShader::set4(const Uniform& uniform, const glm::mat4& value) {
-    if (uniform.id != -1){
+void Shader::set4(const Uniform& uniform, const glm::mat4& value) {
+    if (uniform.id != -1) {
         glUniformMatrix4fv(uniform.id, 1, GL_FALSE, value_ptr(value));
     }
 }
-void BaseShader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
+void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
     if (attribute.id == -1) {
         return;
     }

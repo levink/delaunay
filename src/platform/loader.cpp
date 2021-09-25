@@ -30,7 +30,7 @@ std::string ShaderLoader::getShaderText(const char* fileName) {
 
     return result;
 }
-ShaderSource ShaderLoader::load(const char* path) {
+ShaderSource ShaderLoader::load(const char* path) const {
     static const auto vertexTag = "//#vertex";
     static const auto fragmentTag = "//#fragment";
 
