@@ -12,7 +12,7 @@ class CircleShader : public BaseShader {
 public:
     explicit CircleShader();
     void link(const Camera* camera);
-    void draw(const std::vector<CircleModel>& items);
+    void draw(const std::vector<CircleVertex>& vertex, const std::vector<Face>& face);
     void enable() override;
     void disable() override;
 };

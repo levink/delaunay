@@ -18,7 +18,8 @@ class Render {
 public:
     Camera camera;
     CircleShader circleShader;
-    std::vector<CircleModel> circles;
+    std::vector<CircleVertex> circleVertices;
+    std::vector<Face> circleFaces;
 
     void load(Platform& platform);
     void init();
@@ -26,4 +27,6 @@ public:
     void draw();
     void reshape(int width, int height);
     void reloadShaders(Platform& platform);
+
+    void add(const CircleModel &model);
 };

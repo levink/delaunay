@@ -32,7 +32,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto cursor = mouseEvent.getCursor();
 
         auto circle = CircleModel(cursor.x, static_cast<float>(render.camera.viewSize.y) - cursor.y, radius);
-        render.circles.push_back(circle);
+        render.add(circle);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {

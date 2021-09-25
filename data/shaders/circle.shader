@@ -28,7 +28,7 @@ varying vec2 Center;
 varying float Radius;
 void main() {
 
-	float thicknessHalf = 1.8;
+	float thicknessHalf = 1.5;
 	float inner = Radius - thicknessHalf * 2.0;
 	float middle = Radius - thicknessHalf;
 

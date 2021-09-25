@@ -16,16 +16,14 @@ void CircleShader::enable() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
-void CircleShader::draw(const std::vector<CircleModel>& items) {
+void CircleShader::draw(const std::vector<CircleVertex>& vertex, const std::vector<Face>& face) {
     set4(u[0], context.camera->Ortho);
-    for(auto& item : items) {
-        attr(a[0], item.vertices, sizeof(CircleVertex), offsetof(CircleVertex, position));
-        attr(a[1], item.vertices, sizeof(CircleVertex), offsetof(CircleVertex, color));
-        attr(a[2], item.vertices, sizeof(CircleVertex), offsetof(CircleVertex, center));
-        attr(a[3], item.vertices, sizeof(CircleVertex), offsetof(CircleVertex, radius));
+    attr(a[0], vertex, sizeof(CircleVertex), offsetof(CircleVertex, position));
+    attr(a[1], vertex, sizeof(CircleVertex), offsetof(CircleVertex, color));
+    attr(a[2], vertex, sizeof(CircleVertex), offsetof(CircleVertex, center));
+    attr(a[3], vertex, sizeof(CircleVertex), offsetof(CircleVertex, radius));
 
-        glDrawElements(GL_TRIANGLES, (int)item.faces.size() * 3, GL_UNSIGNED_SHORT, item.faces.data());
-    }
+    glDrawElements(GL_TRIANGLES, (int)face.size() * 3, GL_UNSIGNED_SHORT, face.data());
 }
 void CircleShader::disable() {
     BaseShader::disable();

@@ -27,7 +27,7 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     circleShader.enable();
-    circleShader.draw(circles);
+    circleShader.draw(circleVertices, circleFaces);
     circleShader.disable();
 }
 void Render::reshape(int w, int h) {
@@ -38,5 +38,18 @@ void Render::reloadShaders(Platform &platform) {
     shaderCache.circle = loader.load(files::circle);
     circleShader.create(shaderCache.circle);
     circleShader.link(&camera);
+}
+
+void Render::add(const CircleModel &model) {
+
+    auto offset = circleVertices.size();
+    circleVertices.insert(end(circleVertices), begin(model.vertices), end(model.vertices));
+
+    for(auto& face : model.faces) {
+        auto a = face.a + offset;
+        auto b = face.b + offset;
+        auto c = face.c + offset;
+        circleFaces.emplace_back(a, b, c);
+    }
 }
 
