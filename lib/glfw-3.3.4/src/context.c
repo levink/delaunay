@@ -667,7 +667,7 @@ GLFWAPI void glfwSwapInterval(int interval)
     if (!window)
     {
         _glfwInputError(GLFW_NO_CURRENT_CONTEXT,
-                        "Cannot set swap interval without a current OpenGL or OpenGL ES context");
+                        "Cannot enable swap interval without a current OpenGL or OpenGL ES context");
         return;
     }
 

@@ -52,8 +52,8 @@ int main() {
         return -1;
     }
 
-    const auto WIDTH = 1280;
-    const auto HEIGHT = 860;
+    const auto WIDTH = 800;
+    const auto HEIGHT = 600;
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Delone", nullptr, nullptr);
     if (!window) {
         glfwTerminate();
@@ -69,7 +69,7 @@ int main() {
         printf("GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
-    glfwSetWindowPos(window, 600, 75);
+    glfwSetWindowPos(window, 950, 50);
     glfwSetFramebufferSizeCallback(window, reshape);
     glfwSetKeyCallback(window, keyCallback);
     glfwSetMouseButtonCallback(window, mouseClick);

@@ -14,7 +14,6 @@ class CircleShader : public BaseShader {
     } context;
 public:
     explicit CircleShader();
-    void init() override;
     void link(const Camera* camera);
     void draw(const std::vector<CircleModel>& items);
     void enable() override;

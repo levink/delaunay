@@ -5,12 +5,21 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-struct CircleModel {
-    std::vector<glm::vec2> vertex;
-    std::vector<glm::u16vec3> faces;
-    glm::vec2 center;
+struct Face {
+    uint16_t a, b, c;
+    Face(uint16_t a, uint16_t b, uint16_t c);
+};
+
+struct CircleVertex {
+    float position[2];
+    float center[2];
     float radius;
-    const glm::vec3* color;
+    float color[3];
+};
+
+struct CircleModel {
+    std::vector<CircleVertex> vertices;
+    std::vector<Face> faces;
     CircleModel() = default;
     CircleModel(float x, float y, float r);
 };
