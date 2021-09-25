@@ -1,11 +1,9 @@
 //
 // Created by Konst on 22.09.2021.
 //
-
-#include "camera.h"
-#include <algorithm>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
+#include "camera.h"
+
 
 void Camera::reshape(int w, int h) {
     viewSize.x = std::clamp(w, 0,4096);

@@ -1,12 +1,12 @@
-#include "loader.h"
 #include <iostream>
-#include <fstream>
+#include "loader.h"
+#include "log.h"
 
 std::string ShaderLoader::getShaderText(const char* fileName) {
     std::string result;
     std::ifstream input(fileName, std::ifstream::binary);
     if (!input) {
-        std::wcout << L"Error: could not open file: " << fileName << std::endl;
+        Log::warn("Could not open file", fileName);
         return result;
     }
 

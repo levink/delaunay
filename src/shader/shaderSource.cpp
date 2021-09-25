@@ -1,7 +1,3 @@
-//
-// Created by Konst on 22.09.2021.
-//
-
 #include "shaderSource.h"
 
 ShaderSource::ShaderSource(const ShaderSource &right) {

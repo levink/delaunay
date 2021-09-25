@@ -1,9 +1,5 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #pragma once
-
-#include <string>
+#include "src/pch.h"
 
 struct ShaderSource {
     std::string vertex;

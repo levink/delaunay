@@ -1,7 +1,3 @@
-//
-// Created by Konst on 22.09.2021.
-//
-#include <glm/gtc/type_ptr.hpp>
 #include "src/platform/log.h"
 #include "shaderBase.h"
 

@@ -1,10 +1,5 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #pragma once
 #include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <vector>
 #include "shaderSource.h"
 
 struct GLSLType {

@@ -2,8 +2,8 @@
 // Created by Konst on 22.09.2021.
 //
 #pragma once
-#include <glm/glm.hpp>
-#include <vector>
+#include "src/pch.h"
+
 
 struct Face {
     uint16_t a, b, c;

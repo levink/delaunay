@@ -1,8 +1,5 @@
 #pragma once
-
-#include <cstdint>
-#include <glm/glm.hpp>
-#include <string_view>
+#include "src/pch.h"
 #include "src/camera/camera.h"
 #include "src/model/circle.h"
 #include "shaderBase.h"

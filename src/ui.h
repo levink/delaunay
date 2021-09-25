@@ -1,8 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <map>
+#include "src/pch.h"
 
 namespace ui {
     enum Mod {

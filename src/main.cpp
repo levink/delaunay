@@ -1,12 +1,9 @@
 #include <iostream>
 #include <random>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <src/model/color.h>
 #include "render.h"
 #include "ui.h"
 
-Render render;
+Render render ;
 
 void reshape(GLFWwindow*, int w, int h) {
     render.reshape(w, h);

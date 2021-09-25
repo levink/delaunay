@@ -1,6 +1,5 @@
 #pragma once
-#include <vector>
-#include <src/shader/shaderSource.h>
+#include "src/shader/shaderSource.h"
 
 /* Классы для загрузки ресурсов */
 namespace files {

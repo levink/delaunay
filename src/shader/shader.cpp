@@ -1,5 +1,3 @@
-#include <src/model/circle.h>
-#include <src/model/color.h>
 #include "shader.h"
 
 CircleShader::CircleShader() : BaseShader(1, 4) {

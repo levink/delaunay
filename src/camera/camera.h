@@ -2,7 +2,7 @@
 // Created by Konst on 22.09.2021.
 //
 #pragma once
-#include <glm/glm.hpp>
+#include "src/pch.h"
 
 class Camera {
 public:

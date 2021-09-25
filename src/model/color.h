@@ -2,9 +2,7 @@
 // Created by Konst on 22.09.2021.
 //
 #pragma once
-#include <glm/glm.hpp>
-#include <string>
-#include <stdexcept>
+#include "src/pch.h"
 
 struct Color {
     static glm::vec3 asphalt;
