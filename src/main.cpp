@@ -60,7 +60,6 @@ int main() {
         return -1;
     }
 
-    glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
     glfwMakeContextCurrent(window);
     if (!gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "Failed to init glad" << std::endl;

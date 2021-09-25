@@ -4,8 +4,7 @@
 
 /* Классы для загрузки ресурсов */
 namespace files {
-    static const char* circleVert = "../data/shaders/circle.vert";
-    static const char* circleFrag = "../data/shaders/circle.frag";
+    static const char* circle = "../data/shaders/circle.shader";
 }
 
 class Platform {
@@ -14,9 +13,9 @@ public:
 };
 
 class ShaderLoader {
-    std::string getShader(const char* fileName);
+    static std::string getShaderText(const char* fileName);
 public:
     ShaderLoader() = default;
     explicit ShaderLoader(Platform& platform) { }
-    ShaderSource load(const char* vertex, const char* fragment);
+    ShaderSource load(const char* path);
 };

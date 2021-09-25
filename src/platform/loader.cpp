@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-std::string ShaderLoader::getShader(const char* fileName) {
+std::string ShaderLoader::getShaderText(const char* fileName) {
     std::string result;
     std::ifstream input(fileName, std::ifstream::binary);
     if (!input) {
@@ -30,9 +30,20 @@ std::string ShaderLoader::getShader(const char* fileName) {
 
     return result;
 }
-ShaderSource ShaderLoader::load(const char* vertex, const char* fragment) {
+ShaderSource ShaderLoader::load(const char* path) {
+    static const auto vertexTag = "//#vertex";
+    static const auto fragmentTag = "//#fragment";
+
+    std::string text = getShaderText(path);
+    auto vertexPosition = text.find(vertexTag);
+    auto fragmentPosition = text.find(fragmentTag);
+
+    auto uniforms = text.substr(0, vertexPosition);
+    auto vertex = text.substr(0, fragmentPosition);
+    auto fragment = uniforms + text.substr(fragmentPosition);
+
     ShaderSource result;
-    result.vertex = getShader(vertex);
-    result.fragment = getShader(fragment);
+    result.vertex = vertex;
+    result.fragment = fragment;
     return result;
 }

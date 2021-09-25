@@ -1,11 +1,19 @@
 #version 120
-//precision highp float;
-
+uniform mat4 Ortho;
 uniform vec3 Color;
 uniform vec2 Center;
 uniform float Radius;
-varying vec2 Position;
 
+//#vertex
+attribute vec2 in_Position;
+varying vec2 Position;
+void main() {
+	gl_Position = Ortho * vec4(in_Position, 0.0, 1.0);
+	Position = in_Position;
+}
+
+//#fragment
+varying vec2 Position;
 void main() {
 	float thicknessHalf = 1.5;
 	float inner = Radius - thicknessHalf * 2.0;
@@ -20,5 +28,3 @@ void main() {
 		smoothstep(Radius, middle, dist);
 	gl_FragColor = vec4(Color.rgb, alpha);
 }
-
-

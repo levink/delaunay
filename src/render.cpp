@@ -10,7 +10,7 @@ void Render::load(Platform &platform) {
     }
 
     ShaderLoader loader(platform);
-    shaderCache.circle = loader.load(files::circleVert, files::circleFrag);
+    shaderCache.circle = loader.load(files::circle);
 }
 void Render::init() {
     circleShader.create(shaderCache.circle);
@@ -35,7 +35,7 @@ void Render::reshape(int w, int h) {
 }
 void Render::reloadShaders(Platform &platform) {
     ShaderLoader loader(platform);
-    shaderCache.circle = loader.load(files::circleVert, files::circleFrag);
+    shaderCache.circle = loader.load(files::circle);
     circleShader.create(shaderCache.circle);
     circleShader.link(&camera);
 }
