@@ -23,7 +23,7 @@ void main() {
 
 //#fragment
 void main() {
-	#define width 3.0
+	const float width = 3.0;
 	float inner = Radius - width;
 	float middle = Radius - 0.5 * width;
 	float dist = distance(Center, Position);
