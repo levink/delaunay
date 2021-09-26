@@ -1,6 +1,3 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #pragma once
 #include "src/pch.h"
 #include "face.h"
@@ -19,4 +16,5 @@ struct CircleModel {
     CircleModel() = default;
     CircleModel(float x, float y, float r);
     void fill(bool value);
+    void color(const glm::vec3& color);
 };

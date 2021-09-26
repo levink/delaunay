@@ -1,8 +1,4 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #pragma once
-
 #include <src/camera/camera.h>
 #include <src/platform/loader.h>
 #include <src/shader/shaderSource.h>

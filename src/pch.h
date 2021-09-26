@@ -1,6 +1,3 @@
-//
-// Created by Konst on 25.09.2021.
-//
 #pragma once
 #include <algorithm>
 #include <vector>

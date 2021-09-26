@@ -1,6 +1,3 @@
-//
-// Created by Konst on 26.09.2021.
-//
 #pragma once
 #include "src/pch.h"
 

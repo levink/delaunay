@@ -1,6 +1,3 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #include "circle.h"
 #include "color.h"
 
@@ -35,6 +32,14 @@ CircleModel::CircleModel(float x, float y, float r) {
 void CircleModel::fill(bool value) {
     for(auto& v : vertices) {
         v.fill = value ? 1.0 : 0.0;
+    }
+}
+
+void CircleModel::color(const glm::vec3 &color) {
+    for(auto& v : vertices) {
+        v.color[0] = color.r;
+        v.color[1] = color.g;
+        v.color[2] = color.b;
     }
 }
 

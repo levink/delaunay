@@ -1,6 +1,3 @@
-//
-// Created by Konst on 22.09.2021.
-//
 #include "color.h"
 
 glm::vec3 Color::asphalt = Color::parse("424250");
