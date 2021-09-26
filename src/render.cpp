@@ -42,11 +42,11 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.circle.enable();
-    shaders.circle.draw(circleVertices, circleFaces);
+    shaders.circle.draw(circleVertices, circleFaces, Color::orange);
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(lineVertices);
+    shaders.line.draw(lineVertices, Color::teal);
     shaders.line.disable();
 }
 void Render::reshape(int w, int h) {
@@ -61,13 +61,13 @@ void Render::reloadShaders(Platform &platform) {
 void Render::add(const CircleModel &model) {
 
     auto offset = static_cast<glm::uint16>(circleVertices.size());
-    circleVertices.insert(end(circleVertices), begin(model.vertices), end(model.vertices));
+    circleVertices.insert(end(circleVertices), std::begin(model.vertex), std::end(model.vertex));
 
-    for(auto face : model.faces) {
-        face.a += offset;
-        face.b += offset;
-        face.c += offset;
-        circleFaces.push_back(face);
+    for(auto faceCopy : model.face) {
+        faceCopy.a += offset;
+        faceCopy.b += offset;
+        faceCopy.c += offset;
+        circleFaces.push_back(faceCopy);
     }
 }
 

@@ -147,9 +147,9 @@ void Shader::disable() {
     glUseProgram(0);
 }
 
-void Shader::set3(const Uniform& uniform, const float* value) {
+void Shader::set3(const Uniform& uniform, const glm::vec3& value) {
     if (uniform.id != -1) {
-        glUniform3fv(uniform.id, 1, (GLfloat *)value);
+        glUniform3fv(uniform.id, 1, value_ptr(value));
     }
 }
 void Shader::set4(const Uniform& uniform, const glm::mat4& value) {

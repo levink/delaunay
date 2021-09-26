@@ -4,9 +4,7 @@
 
 struct LineVertex {
     float position[2];
-};
-
-struct LineModel {
-    std::vector<LineVertex> vertices;
+    LineVertex();
+    LineVertex(float x, float y);
 };
 

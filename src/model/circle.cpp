@@ -1,46 +1,19 @@
 #include "circle.h"
-#include "color.h"
 
-CircleModel::CircleModel(float x, float y, float r) {
-    glm::vec2 positions[4] = {
-        glm::vec2(x - r, y - r),
-        glm::vec2(x - r, y + r),
-        glm::vec2(x + r, y + r),
-        glm::vec2(x + r, y - r),
-    };
+CircleVertex::CircleVertex():
+    position{0}, center{0}, radius(0), fill(0.f) { }
 
-    vertices.reserve(4);
-    for(auto& pos : positions) {
-        CircleVertex vertex {};
-        vertex.position[0] = pos.x;
-        vertex.position[1] = pos.y;
-        vertex.center[0] = x;
-        vertex.center[1] = y;
-        vertex.radius = r;
-        vertex.fill = 0.0;
-        vertex.color[0] = Color::teal.r;
-        vertex.color[1] = Color::teal.g;
-        vertex.color[2] = Color::teal.b;
-        vertices.push_back(vertex);
-    }
-    faces = {
-        {0,1,2},
-        {2,3,0},
-    };
+CircleVertex::CircleVertex(float x, float y, float cx, float cy, float r, float fill):
+    position{x, y}, center{cx, cy}, radius(r), fill(fill) { }
+
+CircleModel::CircleModel(float x, float y, float r, bool filled) {
+    float fill = filled ? 1.f : 0.f;
+
+    vertex[0] = CircleVertex(x - r, y - r, x, y, r, fill);
+    vertex[1] = CircleVertex(x - r, y + r, x, y, r, fill);
+    vertex[2] = CircleVertex(x + r, y + r, x, y, r, fill);
+    vertex[3] = CircleVertex(x + r, y - r, x, y, r, fill);
+
+    face[0] = Face(0,1,2);
+    face[1] = Face(2,3,0);
 }
-
-void CircleModel::fill(bool value) {
-    for(auto& v : vertices) {
-        v.fill = value ? 1.0 : 0.0;
-    }
-}
-
-void CircleModel::color(const glm::vec3 &color) {
-    for(auto& v : vertices) {
-        v.color[0] = color.r;
-        v.color[1] = color.g;
-        v.color[2] = color.b;
-    }
-}
-
-

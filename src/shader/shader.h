@@ -14,7 +14,7 @@ public:
     explicit CircleShader();
     void link(const Camera* camera);
     void enable() override;
-    void draw(const std::vector<CircleVertex>& vertex, const std::vector<Face>& face);
+    void draw(const std::vector<CircleVertex>& vertex, const std::vector<Face>& face, const glm::vec3& color);
     void disable() override;
 };
 
@@ -27,6 +27,6 @@ public:
     explicit LineShader();
     void link(const Camera* camera);
     void enable() override;
-    void draw(const std::vector<LineVertex>& vertex);
+    void draw(const std::vector<LineVertex>& vertex, const glm::vec3& color);
     void disable() override;
 };

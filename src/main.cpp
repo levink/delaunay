@@ -29,15 +29,11 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto x = cursor.x;
         auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        auto circle = CircleModel(x, y, 3.0);
-        circle.fill(true);
-        circle.color(Color::orange);
+        auto circle = CircleModel(x, y, 3.0, true);
         render.add(circle);
 
-//        auto vertex = LineVertex();
-//        vertex.position[0] = x;
-//        vertex.position[1] = y;
-//        render.lineVertices.push_back(vertex);
+        auto vertex = LineVertex(x, y);
+        render.lineVertices.push_back(vertex);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
@@ -96,10 +92,8 @@ int main() {
         float x = getRandomX(mt);
         float y = getRandomY(mt);
         float r = getRandomRadius(mt);
-
-        auto circle = CircleModel(x, y, r);
-        circle.fill(i % 2);
-        render.add(circle);
+        bool fill = i % 3;
+        render.add(CircleModel(x, y, r, fill));
     }
 
     while (!glfwWindowShouldClose(window)) {

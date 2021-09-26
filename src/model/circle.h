@@ -7,14 +7,12 @@ struct CircleVertex {
     float center[2];
     float radius;
     float fill;
-    float color[3];
+    CircleVertex();
+    CircleVertex(float x, float y, float cx, float cy, float r, float fill);
 };
 
 struct CircleModel {
-    std::vector<CircleVertex> vertices;
-    std::vector<Face> faces;
-    CircleModel() = default;
-    CircleModel(float x, float y, float r);
-    void fill(bool value);
-    void color(const glm::vec3& color);
+    CircleVertex vertex[4];
+    Face face[2];
+    CircleModel(float x, float y, float r, bool filled);
 };

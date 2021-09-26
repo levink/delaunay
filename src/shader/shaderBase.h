@@ -40,7 +40,7 @@ protected:
     }
     static void attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset);
 
-    static void set3(const Uniform& uniform, const float* value);
+    static void set3(const Uniform& uniform, const glm::vec3& value);
     static void set4(const Uniform& uniform, const glm::mat4& value);
 
 //    static void set1(GLint uniformId, int value);
