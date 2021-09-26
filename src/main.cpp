@@ -92,6 +92,7 @@ int main() {
         float r = getRandomRadius(mt);
 
         auto circle = CircleModel(x, y, r);
+        circle.fill(i % 2);
         render.add(circle);
     }
 

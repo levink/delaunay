@@ -34,14 +34,14 @@ protected:
     static GLuint compile(GLenum shaderType, const char* shaderText);
     static GLuint link(GLuint vertexShader, GLuint fragmentShader);
 
-    static void set3(const Uniform& uniform, const float* value);
-    static void set4(const Uniform& uniform, const glm::mat4& value);
-
     template <typename T>
     static void attr(const Attribute& attribute, const std::vector<T>& items, GLsizei stride, GLuint offset){
         attr(attribute, items.data(), stride, offset);
     }
     static void attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset);
+
+    static void set3(const Uniform& uniform, const float* value);
+    static void set4(const Uniform& uniform, const glm::mat4& value);
 
 //    static void set1(GLint uniformId, int value);
 //    static void set1(GLint uniformId, float value);

@@ -20,6 +20,7 @@ CircleModel::CircleModel(float x, float y, float r) {
         vertex.center[0] = x;
         vertex.center[1] = y;
         vertex.radius = r;
+        vertex.fill = 0.0;
         vertex.color[0] = Color::teal.r;
         vertex.color[1] = Color::teal.g;
         vertex.color[2] = Color::teal.b;
@@ -29,6 +30,12 @@ CircleModel::CircleModel(float x, float y, float r) {
         {0,1,2},
         {2,3,0},
     };
+}
+
+void CircleModel::fill(bool value) {
+    for(auto& v : vertices) {
+        v.fill = value ? 1.0 : 0.0;
+    }
 }
 
 

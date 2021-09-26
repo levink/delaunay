@@ -23,9 +23,6 @@ add_executable(delone
         src/main.cpp
         src/render.cpp
         src/ui.cpp)
-target_precompile_headers(delone PUBLIC
-        src/pch.h
-        include/glad/glad.h
-        lib/glfw-3.3.4/include/GLFW/glfw3.h)
+target_precompile_headers(delone PUBLIC src/pch.h)
 target_link_libraries(delone glad glfw)
 

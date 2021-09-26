@@ -1,9 +1,5 @@
-//
-// Created by Konst on 22.09.2021.
-//
-#include <glad/glad.h>
 #include "camera.h"
-
+#include <glad/glad.h>
 
 void Camera::reshape(int w, int h) {
     viewSize.x = std::clamp(w, 0,4096);

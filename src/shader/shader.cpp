@@ -1,11 +1,12 @@
 #include "shader.h"
 
-CircleShader::CircleShader() : Shader(1, 4) {
+CircleShader::CircleShader() : Shader(1, 5) {
     u[0] = Uniform("Ortho");
     a[0] = Attribute(VEC_2, "in_Position");
     a[1] = Attribute(VEC_3, "in_Color");
     a[2] = Attribute(VEC_2 ,"in_Center");
     a[3] = Attribute(FLOAT, "in_Radius");
+    a[4] = Attribute(FLOAT, "in_Fill");
 }
 void CircleShader::link(const Camera* camera) {
     context.camera = camera;
@@ -22,6 +23,7 @@ void CircleShader::draw(const std::vector<CircleVertex>& vertex, const std::vect
     attr(a[1], vertex, sizeof(CircleVertex), offsetof(CircleVertex, color));
     attr(a[2], vertex, sizeof(CircleVertex), offsetof(CircleVertex, center));
     attr(a[3], vertex, sizeof(CircleVertex), offsetof(CircleVertex, radius));
+    attr(a[4], vertex, sizeof(CircleVertex), offsetof(CircleVertex, fill));
 
     glDrawElements(GL_TRIANGLES, (int)face.size() * 3, GL_UNSIGNED_SHORT, face.data());
 }
