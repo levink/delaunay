@@ -25,7 +25,6 @@ struct Shaders {
     void destroy();
 };
 
-
 class Render {
     ShaderCache shaderCache;
 public:
