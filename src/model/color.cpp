@@ -2,6 +2,8 @@
 
 glm::vec3 Color::asphalt = Color::parse("424250");
 glm::vec3 Color::teal = Color::parse("009688");
+glm::vec3 Color::orange = Color::parse("e65100");
+
 
 glm::vec3 Color::parse(const std::string &color)  {
     if (color.size() != 6) {

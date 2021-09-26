@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <src/model/color.h>
 #include "render.h"
 #include "ui.h"
 
@@ -28,10 +29,15 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto x = cursor.x;
         auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        auto vertex = LineVertex();
-        vertex.position[0] = x;
-        vertex.position[1] = y;
-        render.lineVertices.push_back(vertex);
+        auto circle = CircleModel(x, y, 3.0);
+        circle.fill(true);
+        circle.color(Color::orange);
+        render.add(circle);
+
+//        auto vertex = LineVertex();
+//        vertex.position[0] = x;
+//        vertex.position[1] = y;
+//        render.lineVertices.push_back(vertex);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
