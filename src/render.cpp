@@ -31,8 +31,6 @@ void Render::init() {
 }
 void Render::destroy() {
     shaders.destroy();
-    shaders.circle.destroy();
-    shaders.line.destroy();
     circlesBatch.destroy();
 }
 void Render::draw() {
@@ -57,6 +55,7 @@ void Render::reshape(int w, int h) {
 void Render::reloadShaders(Platform &platform) {
     ShaderLoader loader(platform);
     shaderCache.load(loader);
+    shaders.destroy();
     shaders.create(shaderCache);
     shaders.link(*this);
 }

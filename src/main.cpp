@@ -80,8 +80,29 @@ int main() {
     render.init();
     render.reshape(WIDTH, HEIGHT);
 
-    CircleItems items(render.camera.viewSize);
-    render.circlesBatch = render.shaders.circle.batch(items);
+    {
+        CircleItems items(render.camera.viewSize);
+        GLuint vbo;
+        auto vertexData = items.vertex.data();
+        auto vertexSize = items.vertex.size() * sizeof(CircleVertex);
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW);
+
+        GLuint ibo;
+        auto faceData = items.face.data();
+        auto faceSize = items.face.size() * sizeof(Face);
+        glGenBuffers(1, &ibo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceSize, faceData, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        render.circlesBatch.vbo = vbo;
+        render.circlesBatch.ibo = ibo;
+        render.circlesBatch.count = items.face.size() * 3;
+    }
 
     while (!glfwWindowShouldClose(window)) {
         render.draw();

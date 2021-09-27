@@ -2,10 +2,10 @@
 #include "shaderBase.h"
 
 Attribute::Attribute(): id(-1), size(-1), type(GL_NONE) { }
-Attribute::Attribute(const GLSLType& info, std::string name):
+Attribute::Attribute(GLSLType type, std::string name):
     id(-1),
-    size(info.size),
-    type(info.type),
+    size(type.size),
+    type(type.type),
     name(std::move(name)) { }
 
 Uniform::Uniform(): id(-1) { }

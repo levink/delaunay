@@ -13,7 +13,7 @@ struct Attribute {
     GLenum type;
     std::string name;
     Attribute();
-    explicit Attribute(const GLSLType& info, std::string name);
+    Attribute(GLSLType type, std::string name);
 };
 
 struct Uniform {
@@ -26,15 +26,12 @@ struct Uniform {
 class Shader {
 
 protected:
-
     constexpr static const GLSLType FLOAT = GLSLType {1, GL_FLOAT};
     constexpr static const GLSLType VEC_2 = GLSLType {2, GL_FLOAT};
     constexpr static const GLSLType VEC_3 = GLSLType {3, GL_FLOAT};
 
     static GLuint compile(GLenum shaderType, const char* shaderText);
     static GLuint link(GLuint vertexShader, GLuint fragmentShader);
-
-protected:
     static void attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset);
     static void attr(const Attribute& attribute, GLsizei stride, GLuint offset);
     static void set3(const Uniform& uniform, const glm::vec3& value);
@@ -50,7 +47,7 @@ public:
     explicit Shader(uint8_t uniforms, uint8_t attributes);
     virtual ~Shader();
 
-    GLuint id() const { return programId; }
+    uint32_t getProgramId() const { return programId; }
     void create(const ShaderSource& source);
     void destroy();
     virtual void enable() const;
