@@ -16,3 +16,9 @@ struct CircleModel {
     Face face[2];
     CircleModel(float x, float y, float r, bool filled);
 };
+
+struct CircleItems {
+    std::vector<CircleVertex> vertex;
+    std::vector<Face> face;
+    explicit CircleItems(const glm::vec2& viewSize);
+};

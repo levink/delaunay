@@ -27,10 +27,9 @@ public:
     Shaders shaders;
     Camera camera;
 
-    std::vector<CircleVertex> circleVertices;
-    std::vector<Face> circleFaces;
-
+    DrawBatch circlesBatch;
     std::vector<LineVertex> lineVertices;
+    std::vector<CircleModel> circles;
 
     void load(Platform& platform);
     void init();

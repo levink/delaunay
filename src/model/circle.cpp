@@ -1,3 +1,4 @@
+#include <random>
 #include "circle.h"
 
 CircleVertex::CircleVertex():
@@ -16,4 +17,32 @@ CircleModel::CircleModel(float x, float y, float r, bool filled) {
 
     face[0] = Face(0,1,2);
     face[1] = Face(2,3,0);
+}
+
+
+CircleItems::CircleItems(const glm::vec2& viewSize) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+
+    for(int i=0; i < 10; i++) {
+
+        std::uniform_real_distribution<float> getRandomX(0.f, (float)viewSize.x);
+        std::uniform_real_distribution<float> getRandomY(0.f, (float)viewSize.y);
+        std::uniform_real_distribution<float> getRandomRadius(50.f, 120.f);
+
+        float x = getRandomX(mt);
+        float y = getRandomY(mt);
+        float r = getRandomRadius(mt);
+        auto circle = CircleModel(x, y, r, !(i % 4));
+
+        auto offset = static_cast<glm::uint16>(vertex.size());
+        vertex.insert(std::end(vertex), std::begin(circle.vertex), std::end(circle.vertex));
+
+        for(auto faceCopy : circle.face) {
+            faceCopy.a += offset;
+            faceCopy.b += offset;
+            faceCopy.c += offset;
+            face.push_back(faceCopy);
+        }
+    }
 }

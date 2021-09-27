@@ -33,6 +33,7 @@ void Render::destroy() {
     shaders.destroy();
     shaders.circle.destroy();
     shaders.line.destroy();
+    circlesBatch.destroy();
 }
 void Render::draw() {
     glClearColor(Color::asphalt.r,
@@ -42,11 +43,12 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.circle.enable();
-    shaders.circle.draw(circleVertices, circleFaces, Color::orange);
+    shaders.circle.draw(circlesBatch, Color::teal);
+    shaders.circle.draw(circles, Color::orange);
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(lineVertices, Color::teal);
+    shaders.line.draw(lineVertices, Color::orange);
     shaders.line.disable();
 }
 void Render::reshape(int w, int h) {
@@ -59,16 +61,7 @@ void Render::reloadShaders(Platform &platform) {
     shaders.link(*this);
 }
 void Render::add(const CircleModel &model) {
-
-    auto offset = static_cast<glm::uint16>(circleVertices.size());
-    circleVertices.insert(end(circleVertices), std::begin(model.vertex), std::end(model.vertex));
-
-    for(auto faceCopy : model.face) {
-        faceCopy.a += offset;
-        faceCopy.b += offset;
-        faceCopy.c += offset;
-        circleFaces.push_back(faceCopy);
-    }
+    circles.push_back(model);
 }
 
 

@@ -4,7 +4,7 @@
 #include "src/model/circle.h"
 #include "src/model/line.h"
 #include "shaderBase.h"
-
+#include "drawBatch.h"
 
 class CircleShader : public Shader {
     struct {
@@ -13,9 +13,12 @@ class CircleShader : public Shader {
 public:
     explicit CircleShader();
     void link(const Camera* camera);
-    void enable() override;
-    void draw(const std::vector<CircleVertex>& vertex, const std::vector<Face>& face, const glm::vec3& color);
-    void disable() override;
+    void enable() const override;
+    void draw(const std::vector<CircleModel>& items, const glm::vec3& color);
+    void draw(const DrawBatch& batch, const glm::vec3& color);
+    void disable() const override;
+
+    DrawBatch batch(const CircleItems& circles);
 };
 
 
@@ -26,7 +29,5 @@ class LineShader : public Shader {
 public:
     explicit LineShader();
     void link(const Camera* camera);
-    void enable() override;
     void draw(const std::vector<LineVertex>& vertex, const glm::vec3& color);
-    void disable() override;
 };

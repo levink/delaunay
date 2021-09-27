@@ -1,6 +1,4 @@
 #include <iostream>
-#include <random>
-#include <src/model/color.h>
 #include "render.h"
 #include "ui.h"
 
@@ -30,7 +28,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto y = (float)render.camera.viewSize.y - cursor.y;
 
         auto circle = CircleModel(x, y, 3.0, true);
-        render.add(circle);
+        render.circles.push_back(circle);
 
         auto vertex = LineVertex(x, y);
         render.lineVertices.push_back(vertex);
@@ -41,7 +39,9 @@ void mouseClick(GLFWwindow*, int button, int action, int mods) {
     mouseCallback(event);
 }
 void mouseMove(GLFWwindow*, double x, double y) {
-    auto event = ui::mouse::MouseEvent(x, y);
+    auto event = ui::mouse::MouseEvent(
+            static_cast<int>(x),
+            static_cast<int>(y));
     mouseCallback(event);
 }
 int main() {
@@ -80,21 +80,8 @@ int main() {
     render.init();
     render.reshape(WIDTH, HEIGHT);
 
-    auto& viewSize = render.camera.viewSize;
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    for(int i=0; i < 10; i++) {
-
-        std::uniform_real_distribution<float> getRandomX(0.f, (float)viewSize.x);
-        std::uniform_real_distribution<float> getRandomY(0.f, (float)viewSize.y);
-        std::uniform_real_distribution<float> getRandomRadius(50.f, 120.f);
-
-        float x = getRandomX(mt);
-        float y = getRandomY(mt);
-        float r = getRandomRadius(mt);
-        bool fill = i % 3;
-        render.add(CircleModel(x, y, r, fill));
-    }
+    CircleItems items(render.camera.viewSize);
+    render.circlesBatch = render.shaders.circle.batch(items);
 
     while (!glfwWindowShouldClose(window)) {
         render.draw();

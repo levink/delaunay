@@ -1,19 +1,17 @@
 #include "src/platform/log.h"
 #include "shaderBase.h"
 
-Attribute::Attribute() : id(-1), size(-1), type(GL_NONE) { }
+Attribute::Attribute(): id(-1), size(-1), type(GL_NONE) { }
 Attribute::Attribute(const GLSLType& info, std::string name):
-        id(-1),
-        size(info.size),
-        type(info.type),
-        name(std::move(name)) { }
+    id(-1),
+    size(info.size),
+    type(info.type),
+    name(std::move(name)) { }
 
-
-Uniform::Uniform() : id(-1) { }
+Uniform::Uniform(): id(-1) { }
 Uniform::Uniform(std::string name):
     id(-1),
     name(std::move(name)) { }
-
 
 Shader::Shader(uint8_t uniforms, uint8_t attributes):
     programId(0),
@@ -134,19 +132,33 @@ GLuint Shader::link(GLuint vertexShader, GLuint fragmentShader) {
     glDeleteProgram(program);
     return 0;
 }
-void Shader::enable() {
+void Shader::enable() const {
     glUseProgram(programId);
+    for (auto& attribute : a) {
+        if (attribute.id != -1) {
+            glEnableVertexAttribArray(attribute.id);
+        }
+    }
 }
-void Shader::disable() {
+void Shader::disable() const {
     for (auto& attribute : a) {
         if (attribute.id != -1) {
             glDisableVertexAttribArray(attribute.id);
         }
-
     }
     glUseProgram(0);
 }
 
+void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
+    if (attribute.id != -1) {
+        glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride,((GLbyte*)data) + offset);
+    }
+}
+void Shader::attr(const Attribute &attribute, GLsizei stride, GLuint offset) {
+    if (attribute.id != -1) {
+        glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride, (void*)(offset));
+    }
+}
 void Shader::set3(const Uniform& uniform, const glm::vec3& value) {
     if (uniform.id != -1) {
         glUniform3fv(uniform.id, 1, value_ptr(value));
@@ -157,82 +169,5 @@ void Shader::set4(const Uniform& uniform, const glm::mat4& value) {
         glUniformMatrix4fv(uniform.id, 1, GL_FALSE, value_ptr(value));
     }
 }
-void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
-    if (attribute.id == -1) {
-        return;
-    }
-    glEnableVertexAttribArray(attribute.id);
-    glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride,((GLbyte*)data) + offset);
-}
-
-//void BaseShader::set1(const GLint uniformId, const int value) {
-//    if (uniformId != -1)
-//        glUniform1i(uniformId, value);
-//}
-//void BaseShader::set1(const GLint uniformId, const float value) {
-//    if (uniformId != -1)
-//        glUniform1f(uniformId, value);
-//}
-//void BaseShader::set2(const GLint uniformId, const glm::vec2& value) {
-//    if (uniformId != -1)
-//        glUniform2fv(uniformId, 1, value_ptr(value));
-//}
-//void BaseShader::set2(const GLint uniformId, const glm::vec2 * value)
-//{
-//    if (uniformId != -1)
-//        glUniform2fv(uniformId, 1, (GLfloat *)value);
-//}
-//void BaseShader::set3(const GLint uniformId, const float* value) {
-//    if (uniformId != -1)
-//        glUniform3fv(uniformId, 1, value);
-//}
-//void BaseShader::set3(const GLint uniformId, const glm::vec3 * value) {
-//    if (uniformId != -1)
-//        glUniform3fv(uniformId, 1, (GLfloat *)value);
-//}
-//void BaseShader::set3(const GLint uniformId, const glm::vec3 & value) {
-//    if (uniformId != -1)
-//        glUniform3fv(uniformId, 1, value_ptr(value));
-//}
-//void BaseShader::set3(const GLint uniformId, const glm::mat3 & value) {
-//    if (uniformId != -1)
-//        glUniformMatrix3fv(uniformId, 1, GL_FALSE, value_ptr(value));
-//}
-//void BaseShader::set3(const GLint uniformId, const glm::mat3 * value) {
-//    if (uniformId != -1)
-//        glUniformMatrix3fv(uniformId, 1, GL_FALSE, (GLfloat*)value);
-//}
-//void BaseShader::set4(const GLint uniformId, const float* value) {
-//    if (uniformId != -1)
-//        glUniform4fv(uniformId, 1, value);
-//}
-//void BaseShader::set4(const GLint uniformId, const glm::vec4 & value) {
-//    if (uniformId != -1)
-//        glUniform4fv(uniformId, 1, value_ptr(value));
-//}
-//void BaseShader::set4(const GLint uniformId, const glm::vec4 * value) {
-//    if (uniformId != -1)
-//        glUniform4fv(uniformId, 1, (GLfloat *)value);
-//}
-//void BaseShader::set4(const GLint uniformId, const glm::mat4 & value) {
-//    if (uniformId != -1)
-//        glUniformMatrix4fv(uniformId, 1, GL_FALSE, value_ptr(value));
-//}
-//void BaseShader::set4(const GLint uniformId, const glm::mat4 * value) {
-//    if (uniformId != -1)
-//        glUniformMatrix4fv(uniformId, 1, GL_FALSE, (GLfloat*)value);
-//}
-//void BaseShader::setAttr(GLuint attributeId, const void* data, AttributeInfo info) {
-//    glEnableVertexAttribArray(attributeId);
-//    glVertexAttribPointer(
-//            attributeId,
-//            info.dimension,
-//            info.dataType,
-//            GL_FALSE,
-//            info.elementSize,
-//            ((GLbyte*)data) + info.offsetBytes);
-//}
-
-
 
 
