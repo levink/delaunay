@@ -1,4 +1,4 @@
-#include <src/model/color.h>
+#include "src/model/color.h"
 #include "render.h"
 
 void ShaderCache::load(const ShaderLoader &loader) {
@@ -28,6 +28,9 @@ void Render::load(Platform &platform) {
 void Render::init() {
     shaders.create(shaderCache);
     shaders.link(*this);
+
+    layer.lineMesh.color = Color::orange;
+    layer.lineMesh.width = 3.5f;
 }
 void Render::destroy() {
     shaders.destroy();
@@ -44,12 +47,15 @@ void Render::draw() {
 
     shaders.circle.enable();
     shaders.circle.draw(circlesBatch, Color::teal);
-    //shaders.circle.draw(circles, Color::orange);
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(line, Color::orange, 3.5);
+    shaders.line.draw(layer.lineMesh);
     shaders.line.disable();
+
+    shaders.circle.enable();
+    shaders.circle.draw(layer.pointsMesh, Color::teal);
+    shaders.circle.disable();
 }
 void Render::reshape(int w, int h) {
     camera.reshape(w, h);

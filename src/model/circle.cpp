@@ -7,7 +7,7 @@ CircleVertex::CircleVertex():
 CircleVertex::CircleVertex(float x, float y, float cx, float cy, float r, float fill):
     position{x, y}, center{cx, cy}, radius(r), fill(fill) { }
 
-CircleModel::CircleModel(float x, float y, float r, bool filled) {
+CircleMesh::CircleMesh(float x, float y, float r, bool filled) {
     float fill = filled ? 1.f : 0.f;
 
     vertex[0] = CircleVertex(x - r, y - r, x, y, r, fill);
@@ -24,7 +24,7 @@ CircleBatch::CircleBatch(const glm::vec2& viewSize) {
     std::random_device rd;
     std::mt19937 mt(rd());
 
-    int count = 10;
+    int count = 20;
     vertex.reserve(4 * count);
     face.reserve(2 * count);
 
@@ -37,7 +37,7 @@ CircleBatch::CircleBatch(const glm::vec2& viewSize) {
         float x = getRandomX(mt);
         float y = getRandomY(mt);
         float r = getRandomRadius(mt);
-        float fill = (i % 5) ? 0.f : 1.f;
+        float fill = (i % 7) ? 0.f : 1.f;
 
         int offset= i * 4;
         vertex.emplace_back(x - r, y - r, x, y, r, fill);

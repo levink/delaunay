@@ -11,10 +11,10 @@ struct CircleVertex {
     CircleVertex(float x, float y, float cx, float cy, float r, float fill);
 };
 
-struct CircleModel {
+struct CircleMesh {
     CircleVertex vertex[4];
     Face face[2];
-    CircleModel(float x, float y, float r, bool filled);
+    CircleMesh(float x, float y, float r, bool filled);
 };
 
 struct CircleBatch {

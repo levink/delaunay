@@ -15,7 +15,7 @@ public:
     void link(const Camera* camera);
     void enable() const override;
     void disable() const override;
-    void draw(const std::vector<CircleModel>& items, const glm::vec3& color);
+    void draw(const std::vector<CircleMesh>& items, const glm::vec3& color);
     void draw(const DrawBatch& batch, const glm::vec3& color);
 };
 
@@ -29,5 +29,5 @@ public:
     void link(const Camera* camera);
     void enable() const override;
     void disable() const override;
-    void draw(const LineMesh& line, const glm::vec3& color, float width);
+    void draw(const LineMesh& line);
 };

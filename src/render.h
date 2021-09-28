@@ -3,7 +3,7 @@
 #include "platform/loader.h"
 #include "shader/shaderSource.h"
 #include "shader/shader.h"
-#include "math/geometry.h"
+#include "layer.h"
 
 class Render;
 
@@ -29,8 +29,7 @@ public:
     Camera camera;
 
     DrawBatch circlesBatch;
-    LineMesh line;
-    std::vector<CircleModel> circles;
+    Layer layer;
 
     void load(Platform& platform);
     void init();

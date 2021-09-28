@@ -21,12 +21,10 @@ void CircleShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
-void CircleShader::draw(const std::vector<CircleModel>& items, const glm::vec3& color) {
+void CircleShader::draw(const std::vector<CircleMesh>& items, const glm::vec3& color) {
     set4(u[0], context.camera->Ortho);
     set3(u[1], color);
-
     for(auto& item : items) {
-
         auto data = item.vertex;
         attr(a[0], data, sizeof(CircleVertex), offsetof(CircleVertex, position));
         attr(a[1], data, sizeof(CircleVertex), offsetof(CircleVertex, center));
@@ -49,7 +47,7 @@ void CircleShader::draw(const DrawBatch& batch, const glm::vec3& color) {
     attr(a[2], sizeof(CircleVertex), offsetof(CircleVertex, radius));
     attr(a[3], sizeof(CircleVertex), offsetof(CircleVertex, fill));
 
-    glDrawElements(GL_TRIANGLES, batch.count, GL_UNSIGNED_SHORT, nullptr);
+    glDrawElements(GL_TRIANGLES, (int)batch.count, GL_UNSIGNED_SHORT, nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
@@ -77,17 +75,17 @@ void LineShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
-void LineShader::draw(const LineMesh& line, const glm::vec3& color, float width) {
+void LineShader::draw(const LineMesh& lineMesh) {
     set4(u[0], context.camera->Ortho);
-    set3(u[1], color);
-    set1(u[2], width);
+    set3(u[1], lineMesh.color);
+    set1(u[2], lineMesh.width);
 
-    auto data = line.vertex.data();
+    auto data = lineMesh.vertex.data();
     attr(a[0], data, sizeof(LineVertex), offsetof(LineVertex, position));
     attr(a[1], data, sizeof(LineVertex), offsetof(LineVertex, e1));
     attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
     attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
 
-    glDrawElements(GL_TRIANGLES, (int)(line.face.size() * 3u), GL_UNSIGNED_SHORT, line.face.data());
+    glDrawElements(GL_TRIANGLES, lineMesh.count(), GL_UNSIGNED_SHORT, lineMesh.data());
 }
 

@@ -1,8 +1,8 @@
 #include "color.h"
 
-glm::vec3 Color::asphalt = Color::parse("424250");
+glm::vec3 Color::asphalt = Color::parse("2B2B2B");//424250");
 glm::vec3 Color::teal = Color::parse("009989");
-glm::vec3 Color::orange = Color::parse("DB5700");
+glm::vec3 Color::orange = Color::parse("CC7832");//"DB5700");
 
 
 glm::vec3 Color::parse(const std::string &color)  {

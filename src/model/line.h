@@ -15,9 +15,17 @@ struct LineVertex {
 };
 
 struct LineMesh {
-    std::vector<glm::vec2> points;
     std::vector<LineVertex> vertex;
     std::vector<Face> face;
-    void addPoint(float x, float y);
+    glm::vec3 color;
+    float width;
+    int count() const { return (int)(face.size() * 3u); }
+    const Face* data() const { return face.data(); }
 };
 
+struct Line {
+    std::vector<glm::vec2> points;
+    LineMesh mesh;
+
+    void appendPoint(float x, float y);
+};

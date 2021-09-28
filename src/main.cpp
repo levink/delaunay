@@ -27,10 +27,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto x = cursor.x;
         auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        auto circle = CircleModel(x, y, 3.0, true);
-        render.circles.push_back(circle);
-
-        render.line.addPoint(x, y);
+        render.layer.addPoint(x, y);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
