@@ -35,8 +35,8 @@ float getDistance(vec2 start, vec2 end, vec2 point) {
 }
 void main() {
     float outer = Width * 0.5;
-    float inner = outer - 1.8;
+    float inner = outer - 1.5;
     float dist = getDistance(E1, E2, Position);
-    float alpha = smoothstep(outer, inner, dist);
+    float alpha = 1.0 - smoothstep(inner, outer, dist);
     gl_FragColor = vec4(Color.rgb, alpha);
 }

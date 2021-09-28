@@ -38,6 +38,4 @@ public:
     void draw();
     void reshape(int width, int height);
     void reloadShaders(Platform& platform);
-
-    void add(const CircleModel &model);
 };

@@ -30,7 +30,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto circle = CircleModel(x, y, 3.0, true);
         render.circles.push_back(circle);
 
-        render.line.add(x, y);
+        render.line.addPoint(x, y);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
@@ -83,14 +83,14 @@ int main() {
         CircleModelBatch items(render.camera.viewSize);
         GLuint vbo;
         auto vertexData = items.vertex.data();
-        auto vertexSize = items.vertex.size() * sizeof(CircleVertex);
+        auto vertexSize = (long)items.vertex.size() * (long)sizeof(CircleVertex);
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW);
 
         GLuint ibo;
         auto faceData = items.face.data();
-        auto faceSize = items.face.size() * sizeof(Face);
+        auto faceSize = (long)items.face.size() * (long)sizeof(Face);
         glGenBuffers(1, &ibo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceSize, faceData, GL_STATIC_DRAW);

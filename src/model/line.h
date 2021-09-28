@@ -18,6 +18,6 @@ struct Line {
     std::vector<glm::vec2> points;
     std::vector<LineVertex> vertex;
     std::vector<Face> face;
-    void add(float x, float y);
+    void addPoint(float x, float y);
 };
 

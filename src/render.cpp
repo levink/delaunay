@@ -36,7 +36,6 @@ void Render::destroy() {
 void Render::draw() {
 
     auto background = glm::vec4(Color::asphalt, 1.0);
-    //auto background = glm::vec4(0.0);
     glClearColor(background.r,
                  background.g,
                  background.b,
@@ -49,7 +48,7 @@ void Render::draw() {
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(line, Color::orange, 5.0);
+    shaders.line.draw(line, Color::orange, 3.5);
     shaders.line.disable();
 }
 void Render::reshape(int w, int h) {
@@ -61,9 +60,6 @@ void Render::reloadShaders(Platform &platform) {
     shaders.destroy();
     shaders.create(shaderCache);
     shaders.link(*this);
-}
-void Render::add(const CircleModel &model) {
-    circles.push_back(model);
 }
 
 

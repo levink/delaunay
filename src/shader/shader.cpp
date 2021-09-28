@@ -88,6 +88,6 @@ void LineShader::draw(const Line& line, const glm::vec3& color, float width) {
     attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
     attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
 
-    glDrawElements(GL_TRIANGLES, line.face.size() * 3, GL_UNSIGNED_SHORT, line.face.data());
+    glDrawElements(GL_TRIANGLES, (int)(line.face.size() * 3u), GL_UNSIGNED_SHORT, line.face.data());
 }
 
