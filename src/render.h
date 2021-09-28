@@ -28,7 +28,8 @@ public:
     Camera camera;
 
     DrawBatch circlesBatch;
-    std::vector<LineVertex> lineVertices;
+    Line line;
+
     std::vector<CircleModel> circles;
 
     void load(Platform& platform);

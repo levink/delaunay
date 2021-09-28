@@ -55,10 +55,14 @@ void CircleShader::draw(const DrawBatch& batch, const glm::vec3& color) {
 }
 
 
-LineShader::LineShader() : Shader(2, 1) {
+LineShader::LineShader() : Shader(3, 4) {
     u[0] = Uniform("Ortho");
     u[1] = Uniform("Color");
+    u[2] = Uniform("Width");
     a[0] = Attribute(VEC_2, "in_Position");
+    a[1] = Attribute(VEC_2, "in_E1");
+    a[2] = Attribute(VEC_2, "in_E2");
+    a[3] = Attribute(VEC_2, "in_Offset");
 }
 void LineShader::link(const Camera *camera) {
     context.camera = camera;
@@ -68,17 +72,22 @@ void LineShader::enable() const {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glLineWidth(2.f);
 }
 void LineShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
-    glLineWidth(1.f);
 }
-void LineShader::draw(const std::vector<LineVertex> &vertex, const glm::vec3& color) {
+void LineShader::draw(const Line& line, const glm::vec3& color, float width) {
     set4(u[0], context.camera->Ortho);
     set3(u[1], color);
-    attr(a[0], vertex.data(), sizeof(LineVertex), offsetof(LineVertex, position));
-    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertex.size());
+    set1(u[2], width);
+
+    auto data = line.vertex.data();
+    attr(a[0], data, sizeof(LineVertex), offsetof(LineVertex, position));
+    attr(a[1], data, sizeof(LineVertex), offsetof(LineVertex, e1));
+    attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
+    attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
+
+    glDrawElements(GL_TRIANGLES, line.face.size() * 3, GL_UNSIGNED_SHORT, line.face.data());
 }
 

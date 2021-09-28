@@ -27,10 +27,7 @@ class LineShader : public Shader {
 public:
     explicit LineShader();
     void link(const Camera* camera);
-
     void enable() const override;
-
     void disable() const override;
-
-    void draw(const std::vector<LineVertex>& vertex, const glm::vec3& color);
+    void draw(const Line& line, const glm::vec3& color, float width);
 };

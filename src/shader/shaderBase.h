@@ -34,6 +34,7 @@ protected:
     static GLuint link(GLuint vertexShader, GLuint fragmentShader);
     static void attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset);
     static void attr(const Attribute& attribute, GLsizei stride, GLuint offset);
+    static void set1(const Uniform& uniform, float value);
     static void set3(const Uniform& uniform, const glm::vec3& value);
     static void set4(const Uniform& uniform, const glm::mat4& value);
 

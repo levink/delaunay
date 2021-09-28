@@ -159,6 +159,11 @@ void Shader::attr(const Attribute &attribute, GLsizei stride, GLuint offset) {
         glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride, (void*)(offset));
     }
 }
+void Shader::set1(const Uniform& uniform, float value) {
+    if (uniform.id != -1) {
+        glUniform1f(uniform.id, value);
+    }
+}
 void Shader::set3(const Uniform& uniform, const glm::vec3& value) {
     if (uniform.id != -1) {
         glUniform3fv(uniform.id, 1, value_ptr(value));
@@ -169,5 +174,7 @@ void Shader::set4(const Uniform& uniform, const glm::mat4& value) {
         glUniformMatrix4fv(uniform.id, 1, GL_FALSE, value_ptr(value));
     }
 }
+
+
 
 

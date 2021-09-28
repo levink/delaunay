@@ -34,19 +34,22 @@ void Render::destroy() {
     circlesBatch.destroy();
 }
 void Render::draw() {
-    glClearColor(Color::asphalt.r,
-                 Color::asphalt.g,
-                 Color::asphalt.b,
-                 1.0);
+
+    auto background = glm::vec4(Color::asphalt, 1.0);
+    //auto background = glm::vec4(0.0);
+    glClearColor(background.r,
+                 background.g,
+                 background.b,
+                 background.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.circle.enable();
     shaders.circle.draw(circlesBatch, Color::teal);
-    shaders.circle.draw(circles, Color::orange);
+    //shaders.circle.draw(circles, Color::orange);
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(lineVertices, Color::orange);
+    shaders.line.draw(line, Color::orange, 5.0);
     shaders.line.disable();
 }
 void Render::reshape(int w, int h) {

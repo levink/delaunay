@@ -3,8 +3,21 @@
 #include "face.h"
 
 struct LineVertex {
-    float position[2];
+    glm::vec2 position;
+    glm::vec2 e1;
+    glm::vec2 e2;
+    glm::vec2 offset;
     LineVertex();
-    LineVertex(float x, float y);
+    LineVertex(glm::vec2 position,
+               glm::vec2 e1,
+               glm::vec2 e2,
+               glm::vec2 offset);
+};
+
+struct Line {
+    std::vector<glm::vec2> points;
+    std::vector<LineVertex> vertex;
+    std::vector<Face> face;
+    void add(float x, float y);
 };
 

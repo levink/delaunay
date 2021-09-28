@@ -20,7 +20,7 @@ CircleModel::CircleModel(float x, float y, float r, bool filled) {
 }
 
 
-CircleItems::CircleItems(const glm::vec2& viewSize) {
+CircleModelBatch::CircleModelBatch(const glm::vec2& viewSize) {
     std::random_device rd;
     std::mt19937 mt(rd());
 

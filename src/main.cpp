@@ -30,8 +30,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto circle = CircleModel(x, y, 3.0, true);
         render.circles.push_back(circle);
 
-        auto vertex = LineVertex(x, y);
-        render.lineVertices.push_back(vertex);
+        render.line.add(x, y);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
@@ -81,7 +80,7 @@ int main() {
     render.reshape(WIDTH, HEIGHT);
 
     {
-        CircleItems items(render.camera.viewSize);
+        CircleModelBatch items(render.camera.viewSize);
         GLuint vbo;
         auto vertexData = items.vertex.data();
         auto vertexSize = items.vertex.size() * sizeof(CircleVertex);
