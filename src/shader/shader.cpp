@@ -77,7 +77,7 @@ void LineShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
-void LineShader::draw(const Line& line, const glm::vec3& color, float width) {
+void LineShader::draw(const LineMesh& line, const glm::vec3& color, float width) {
     set4(u[0], context.camera->Ortho);
     set3(u[1], color);
     set1(u[2], width);

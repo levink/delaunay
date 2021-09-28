@@ -80,7 +80,7 @@ int main() {
     render.reshape(WIDTH, HEIGHT);
 
     {
-        CircleModelBatch items(render.camera.viewSize);
+        CircleBatch items(render.camera.viewSize);
         GLuint vbo;
         auto vertexData = items.vertex.data();
         auto vertexSize = (long)items.vertex.size() * (long)sizeof(CircleVertex);

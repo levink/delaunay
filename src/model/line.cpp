@@ -7,7 +7,7 @@ LineVertex::LineVertex(glm::vec2 position, glm::vec2 e1, glm::vec2 e2, glm::vec2
     e2(e2),
     offset(offset) { }
 
-void Line::addPoint(float x, float y) {
+void LineMesh::addPoint(float x, float y) {
 
     points.emplace_back(x, y);
 

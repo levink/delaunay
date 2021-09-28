@@ -20,11 +20,15 @@ CircleModel::CircleModel(float x, float y, float r, bool filled) {
 }
 
 
-CircleModelBatch::CircleModelBatch(const glm::vec2& viewSize) {
+CircleBatch::CircleBatch(const glm::vec2& viewSize) {
     std::random_device rd;
     std::mt19937 mt(rd());
 
-    for(int i=0; i < 10; i++) {
+    int count = 10;
+    vertex.reserve(4 * count);
+    face.reserve(2 * count);
+
+    for(int i = 0; i < count; i++) {
 
         std::uniform_real_distribution<float> getRandomX(0.f, (float)viewSize.x);
         std::uniform_real_distribution<float> getRandomY(0.f, (float)viewSize.y);
@@ -33,16 +37,15 @@ CircleModelBatch::CircleModelBatch(const glm::vec2& viewSize) {
         float x = getRandomX(mt);
         float y = getRandomY(mt);
         float r = getRandomRadius(mt);
-        auto circle = CircleModel(x, y, r, !(i % 4));
+        float fill = (i % 5) ? 0.f : 1.f;
 
-        auto offset = static_cast<glm::uint16>(vertex.size());
-        vertex.insert(std::end(vertex), std::begin(circle.vertex), std::end(circle.vertex));
+        int offset= i * 4;
+        vertex.emplace_back(x - r, y - r, x, y, r, fill);
+        vertex.emplace_back(x - r, y + r, x, y, r, fill);
+        vertex.emplace_back(x + r, y + r, x, y, r, fill);
+        vertex.emplace_back(x + r, y - r, x, y, r, fill);
 
-        for(auto faceCopy : circle.face) {
-            faceCopy.a += offset;
-            faceCopy.b += offset;
-            faceCopy.c += offset;
-            face.push_back(faceCopy);
-        }
+        face.emplace_back(offset + 0,offset + 1,offset + 2);
+        face.emplace_back(offset + 2,offset + 3,offset + 0);
     }
 }

@@ -14,7 +14,7 @@ struct LineVertex {
                glm::vec2 offset);
 };
 
-struct Line {
+struct LineMesh {
     std::vector<glm::vec2> points;
     std::vector<LineVertex> vertex;
     std::vector<Face> face;

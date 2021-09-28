@@ -1,8 +1,9 @@
 #pragma once
-#include <src/camera/camera.h>
-#include <src/platform/loader.h>
-#include <src/shader/shaderSource.h>
-#include <src/shader/shader.h>
+#include "camera/camera.h"
+#include "platform/loader.h"
+#include "shader/shaderSource.h"
+#include "shader/shader.h"
+#include "math/geometry.h"
 
 class Render;
 
@@ -28,8 +29,7 @@ public:
     Camera camera;
 
     DrawBatch circlesBatch;
-    Line line;
-
+    LineMesh line;
     std::vector<CircleModel> circles;
 
     void load(Platform& platform);

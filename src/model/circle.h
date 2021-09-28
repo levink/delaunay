@@ -17,8 +17,8 @@ struct CircleModel {
     CircleModel(float x, float y, float r, bool filled);
 };
 
-struct CircleModelBatch {
+struct CircleBatch {
     std::vector<CircleVertex> vertex;
     std::vector<Face> face;
-    explicit CircleModelBatch(const glm::vec2& viewSize);
+    explicit CircleBatch(const glm::vec2& viewSize);
 };
