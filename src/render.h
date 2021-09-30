@@ -3,7 +3,7 @@
 #include "platform/loader.h"
 #include "shader/shaderSource.h"
 #include "shader/shader.h"
-#include "layer.h"
+#include "scene/scene.h"
 
 class Render;
 
@@ -27,13 +27,12 @@ class Render {
 public:
     Shaders shaders;
     Camera camera;
+    Scene scene;
 
-    DrawBatch circlesBatch;
-    Layer layer;
-
-    void load(Platform& platform);
-    void init();
+    void loadResources(Platform& platform);
+    void initResources();
     void destroy();
+    void initScene();
     void draw();
     void reshape(int width, int height);
     void reloadShaders(Platform& platform);

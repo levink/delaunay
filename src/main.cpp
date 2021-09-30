@@ -1,6 +1,7 @@
 #include <iostream>
+#include "ui/ui.h"
 #include "render.h"
-#include "ui.h"
+
 
 Render render;
 
@@ -27,7 +28,7 @@ void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
         auto x = cursor.x;
         auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        render.layer.addPoint(x, y);
+        render.scene.addPoint(x, y);
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
@@ -56,7 +57,7 @@ int main() {
 
     glfwMakeContextCurrent(window);
     if (!gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress)) {
-        std::cout << "Failed to init glad" << std::endl;
+        std::cout << "Failed to initResources glad" << std::endl;
         return -1;
     } else {
         printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
@@ -72,33 +73,10 @@ int main() {
     glfwSetTime(0.0);
 
     Platform platform;
-    render.load(platform);
-    render.init();
+    render.loadResources(platform);
+    render.initResources();
     render.reshape(WIDTH, HEIGHT);
-
-    {
-        CircleBatch items(render.camera.viewSize);
-        GLuint vbo;
-        auto vertexData = items.vertex.data();
-        auto vertexSize = (long)items.vertex.size() * (long)sizeof(CircleVertex);
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertexSize, vertexData, GL_STATIC_DRAW);
-
-        GLuint ibo;
-        auto faceData = items.face.data();
-        auto faceSize = (long)items.face.size() * (long)sizeof(Face);
-        glGenBuffers(1, &ibo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceSize, faceData, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        render.circlesBatch.vbo = vbo;
-        render.circlesBatch.ibo = ibo;
-        render.circlesBatch.count = items.face.size() * 3;
-    }
+    render.initScene();
 
     while (!glfwWindowShouldClose(window)) {
         render.draw();

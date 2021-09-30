@@ -4,7 +4,7 @@ CircleShader::CircleShader() : Shader(2, 4) {
     u[0] = Uniform("Ortho");
     u[1] = Uniform("Color");
     a[0] = Attribute(VEC_2, "in_Position");
-    a[1] = Attribute(VEC_2 ,"in_Center");
+    a[1] = Attribute(VEC_2, "in_Center");
     a[2] = Attribute(FLOAT, "in_Radius");
     a[3] = Attribute(FLOAT, "in_Fill");
 }

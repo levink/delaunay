@@ -20,5 +20,4 @@ struct CircleMesh {
 struct CircleBatch {
     std::vector<CircleVertex> vertex;
     std::vector<Face> face;
-    explicit CircleBatch(const glm::vec2& viewSize);
 };

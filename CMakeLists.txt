@@ -17,13 +17,14 @@ add_executable(delone
         src/model/line.cpp
         src/platform/loader.cpp
         src/platform/log.cpp
+        src/scene/scene.cpp
         src/shader/drawBatch.cpp
         src/shader/shader.cpp
         src/shader/shaderBase.cpp
         src/shader/shaderSource.cpp
+        src/ui/ui.cpp
         src/main.cpp
-        src/render.cpp
-        src/ui.cpp)
+        src/render.cpp)
 target_precompile_headers(delone PUBLIC src/pch.h)
 target_link_libraries(delone glad glfw)
 
