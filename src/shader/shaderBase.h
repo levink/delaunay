@@ -48,7 +48,6 @@ public:
     explicit Shader(uint8_t uniforms, uint8_t attributes);
     virtual ~Shader();
 
-    uint32_t getProgramId() const { return programId; }
     void create(const ShaderSource& source);
     void destroy();
     virtual void enable() const;

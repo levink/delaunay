@@ -3,8 +3,8 @@
 #include "src/camera/camera.h"
 #include "src/model/circle.h"
 #include "src/model/line.h"
+#include "src/scene/drawBatch.h"
 #include "shaderBase.h"
-#include "drawBatch.h"
 
 class CircleShader : public Shader {
     struct {

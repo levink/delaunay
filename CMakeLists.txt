@@ -17,8 +17,8 @@ add_executable(delone
         src/model/line.cpp
         src/platform/loader.cpp
         src/platform/log.cpp
+        src/scene/drawBatch.cpp
         src/scene/scene.cpp
-        src/shader/drawBatch.cpp
         src/shader/shader.cpp
         src/shader/shaderBase.cpp
         src/shader/shaderSource.cpp
