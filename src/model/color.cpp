@@ -3,6 +3,8 @@
 glm::vec3 Color::asphalt = Color::parse("424250");
 glm::vec3 Color::teal = Color::parse("009989");
 glm::vec3 Color::orange = Color::parse("DB5700");
+glm::vec3 Color::yellow = Color::parse("c41c00");
+
 
 
 glm::vec3 Color::parse(const std::string &color)  {

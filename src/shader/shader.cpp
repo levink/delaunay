@@ -3,8 +3,8 @@
 CircleShader::CircleShader() : Shader(2, 4) {
     u[0] = Uniform("Ortho");
     u[1] = Uniform("Color");
-    a[0] = Attribute(VEC_2, "in_Position");
-    a[1] = Attribute(VEC_2, "in_Center");
+    a[0] = Attribute(VEC_2, "in_Center");
+    a[1] = Attribute(VEC_2, "in_Offset");
     a[2] = Attribute(FLOAT, "in_Radius");
     a[3] = Attribute(FLOAT, "in_Fill");
 }
@@ -21,35 +21,36 @@ void CircleShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
-void CircleShader::draw(const std::vector<CircleMesh>& items, const glm::vec3& color) {
+void CircleShader::draw(const std::vector<CircleMesh>& items) {
     set4(u[0], context.camera->Ortho);
-    set3(u[1], color);
     for(auto& item : items) {
-        auto data = item.vertex;
-        attr(a[0], data, sizeof(CircleVertex), offsetof(CircleVertex, position));
-        attr(a[1], data, sizeof(CircleVertex), offsetof(CircleVertex, center));
+        set3(u[1], item.color);
+
+        auto data = item.vertex.data();
+        attr(a[0], data, sizeof(CircleVertex), offsetof(CircleVertex, center));
+        attr(a[1], data, sizeof(CircleVertex), offsetof(CircleVertex, offset));
         attr(a[2], data, sizeof(CircleVertex), offsetof(CircleVertex, radius));
         attr(a[3], data, sizeof(CircleVertex), offsetof(CircleVertex, fill));
 
         auto count = 6;
-        glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, item.face);
+        glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, item.face.data());
     }
 }
 void CircleShader::draw(const DrawBatch& batch, const glm::vec3& color) {
 
-    glBindBuffer(GL_ARRAY_BUFFER, batch.vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.ibo);
-
-    set4(u[0], context.camera->Ortho);
-    set3(u[1], color);
-    attr(a[0], sizeof(CircleVertex), offsetof(CircleVertex, position));
-    attr(a[1], sizeof(CircleVertex), offsetof(CircleVertex, center));
-    attr(a[2], sizeof(CircleVertex), offsetof(CircleVertex, radius));
-    attr(a[3], sizeof(CircleVertex), offsetof(CircleVertex, fill));
-
-    glDrawElements(GL_TRIANGLES, (int)batch.count, GL_UNSIGNED_SHORT, nullptr);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//    glBindBuffer(GL_ARRAY_BUFFER, batch.vbo);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.ibo);
+//
+//    set4(u[0], context.camera->Ortho);
+//    set3(u[1], color);
+//    attr(a[0], sizeof(CircleVertex), offsetof(CircleVertex, position));
+//    attr(a[1], sizeof(CircleVertex), offsetof(CircleVertex, center));
+//    attr(a[2], sizeof(CircleVertex), offsetof(CircleVertex, radius));
+//    attr(a[3], sizeof(CircleVertex), offsetof(CircleVertex, fill));
+//
+//    glDrawElements(GL_TRIANGLES, (int)batch.count, GL_UNSIGNED_SHORT, nullptr);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 
@@ -75,17 +76,20 @@ void LineShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
-void LineShader::draw(const LineMesh& lineMesh) {
+void LineShader::draw(const std::vector<LineMesh>& items) {
     set4(u[0], context.camera->Ortho);
-    set3(u[1], lineMesh.color);
-    set1(u[2], lineMesh.width);
+    for(auto& item : items) {
+        set3(u[1], item.color);
+        set1(u[2], item.width);
 
-    auto data = lineMesh.vertex.data();
-    attr(a[0], data, sizeof(LineVertex), offsetof(LineVertex, position));
-    attr(a[1], data, sizeof(LineVertex), offsetof(LineVertex, e1));
-    attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
-    attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
+        auto data = item.vertex.data();
+        attr(a[0], data, sizeof(LineVertex), offsetof(LineVertex, position));
+        attr(a[1], data, sizeof(LineVertex), offsetof(LineVertex, e1));
+        attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
+        attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
 
-    glDrawElements(GL_TRIANGLES, lineMesh.count(), GL_UNSIGNED_SHORT, lineMesh.data());
+        glDrawElements(GL_TRIANGLES, item.count(), GL_UNSIGNED_SHORT, item.faceData());
+    }
+
 }
 

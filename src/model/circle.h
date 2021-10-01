@@ -3,21 +3,21 @@
 #include "face.h"
 
 struct CircleVertex {
-    float position[2];
-    float center[2];
+    glm::vec2 center;
+    glm::vec2 offset;
     float radius;
     float fill;
     CircleVertex();
-    CircleVertex(float x, float y, float cx, float cy, float r, float fill);
+    CircleVertex(float x, float y,
+                 float offsetX, float offsetY,
+                 float radius,
+                 float fill);
+    void move(float x, float y);
 };
 
 struct CircleMesh {
-    CircleVertex vertex[4];
-    Face face[2];
-    CircleMesh(float x, float y, float r, bool filled);
-};
-
-struct CircleBatch {
     std::vector<CircleVertex> vertex;
     std::vector<Face> face;
+    glm::vec3 color;
+    CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color);
 };

@@ -2,7 +2,6 @@
 #include "ui/ui.h"
 #include "render.h"
 
-
 Render render;
 
 void reshape(GLFWwindow*, int w, int h) {
@@ -21,14 +20,25 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
         render.reloadShaders(platform);
     }
 }
-void mouseCallback(ui::mouse::MouseEvent mouseEvent) {
+void mouseCallback(ui::mouse::MouseEvent event) {
     using namespace ui::mouse;
-    if (mouseEvent.is(Action::PRESS, Button::LEFT)) {
-        auto cursor = mouseEvent.getCursor();
-        auto x = cursor.x;
-        auto y = (float)render.camera.viewSize.y - cursor.y;
 
-        render.scene.addPoint(x, y);
+    auto cursor = event.getCursor();
+    auto x = cursor.x;
+    auto y = (float)render.camera.viewSize.y - cursor.y;
+    auto& scene = render.scene;
+
+    if (event.is(Action::PRESS, Button::LEFT)) {
+        scene.selectPoint(x, y);
+    }
+    else if (event.is(Action::MOVE, Button::LEFT)) {
+        scene.movePoint(x, y);
+    }
+    else if (event.is(Action::PRESS, Button::RIGHT)) {
+        scene.addPoint(x, y);
+    }
+    else if (event.is(Action::RELEASE, ui::mouse::LEFT)) {
+        scene.clearSelection();
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {

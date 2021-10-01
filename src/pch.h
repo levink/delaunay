@@ -1,11 +1,12 @@
 #pragma once
 #include <algorithm>
 #include <vector>
+#include <map>
+#include <stack>
 #include <string>
 #include <string_view>
 #include <cstdint>
 #include <stdexcept>
-#include <map>
 #include <fstream>
 #include <functional>
 

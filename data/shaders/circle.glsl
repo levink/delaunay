@@ -8,13 +8,16 @@ varying float Radius;
 varying float Fill;
 
 //#vertex
-attribute vec2 in_Position;
 attribute vec2 in_Center;
+attribute vec2 in_Offset;
 attribute float in_Radius;
 attribute float in_Fill;
 void main() {
-	gl_Position = Ortho * vec4(in_Position, 0.0, 1.0);
-	Position = in_Position;
+
+	vec2 position = in_Center + in_Offset * in_Radius;
+	gl_Position = Ortho * vec4(position, 0.0, 1.0);
+
+	Position = position;
 	Center = in_Center;
 	Radius = in_Radius;
 	Fill = in_Fill;

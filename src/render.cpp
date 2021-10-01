@@ -19,7 +19,6 @@ void Shaders::destroy() {
     circle.destroy();
     line.destroy();
 }
-
 void Render::loadResources(Platform &platform) {
     if (shaderCache.loaded) {
         return;
@@ -38,8 +37,6 @@ void Render::initScene() {
     //layer
     {
         auto padding = 100.f;
-        scene.lineMesh.color = Color::teal;
-        scene.lineMesh.width = 3.5f;
         scene.addPoint(padding, padding);
         scene.addPoint(static_cast<float>(camera.viewSize.x) - padding, padding);
         scene.addPoint(padding, static_cast<float>(camera.viewSize.y) - padding);
@@ -112,11 +109,11 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.line.enable();
-    shaders.line.draw(scene.lineMesh);
+    shaders.line.draw(scene.edgesMesh);
     shaders.line.disable();
 
     shaders.circle.enable();
-    shaders.circle.draw(scene.pointsMesh, Color::orange);
+    shaders.circle.draw(scene.pointsMesh);
     shaders.circle.disable();
 }
 void Render::reshape(int w, int h) {

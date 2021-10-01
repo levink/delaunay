@@ -12,6 +12,9 @@ struct LineVertex {
                glm::vec2 e1,
                glm::vec2 e2,
                glm::vec2 offset);
+    void set(const glm::vec2& position,
+             const glm::vec2& e1,
+             const glm::vec2& e2);
 };
 
 struct LineMesh {
@@ -20,12 +23,7 @@ struct LineMesh {
     glm::vec3 color;
     float width;
     int count() const { return (int)(face.size() * 3u); }
-    const Face* data() const { return face.data(); }
-};
-
-struct Line {
-    std::vector<glm::vec2> points;
-    LineMesh mesh;
-
-    void appendPoint(float x, float y);
+    const Face* faceData() const { return face.data(); }
+    static LineMesh create(const glm::vec2& start, const glm::vec2& end, const glm::vec3& color, float width);
+    void move(const glm::vec2& start, const glm::vec2& end);
 };
