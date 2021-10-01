@@ -113,6 +113,7 @@ void Render::draw() {
     shaders.line.disable();
 
     shaders.circle.enable();
+    shaders.circle.draw(scene.circlesMesh);
     shaders.circle.draw(scene.pointsMesh);
     shaders.circle.disable();
 }

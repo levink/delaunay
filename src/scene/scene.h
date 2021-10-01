@@ -11,7 +11,7 @@ struct Scene {
         Circle();
         Circle(float x, float y, float radius);
         bool contains(float x, float y) const;
-        static Circle get(float x1, float y1, float x2, float y2,float x3, float y3);
+        static Circle create(float x1, float y1, float x2, float y2, float x3, float y3);
     };
 
     struct Edge {
@@ -21,6 +21,8 @@ struct Scene {
     struct Triangle {
         int v0, v1, v2;
         Circle circle;
+        Triangle();
+        Triangle(int v0, int v1, int v2);
     };
 
     //model
@@ -30,6 +32,7 @@ struct Scene {
 
     //view
     std::vector<CircleMesh> pointsMesh;
+    std::vector<CircleMesh> circlesMesh;
     std::vector<LineMesh> edgesMesh;
 
     //Builder
@@ -41,4 +44,5 @@ struct Scene {
     void triangulate();
 
     Triangle createTriangle(int v0, int v1, int v2);
+    static CircleMesh createCircle(const Triangle& t);
 };

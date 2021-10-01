@@ -11,19 +11,31 @@ void CircleVertex::move(float x, float y) {
     center.x = x;
     center.y = y;
 }
+void CircleVertex::set(float x, float y, float radius) {
+    this->center.x = x;
+    this->center.y = y;
+    this->radius = radius;
+}
 
-CircleMesh::CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color) {
+CircleMesh::CircleMesh(float x, float y, float radius, bool filled, glm::vec3 color) {
     float fill = filled ? 1.f : 0.f;
 
     vertex.resize(4);
-    vertex[0] = CircleVertex {center.x, center.y, -1, -1, radius, fill };
-    vertex[1] = CircleVertex {center.x, center.y, +1, -1, radius, fill };
-    vertex[2] = CircleVertex {center.x, center.y, +1, +1, radius, fill };
-    vertex[3] = CircleVertex {center.x, center.y, -1, +1, radius, fill };
+    vertex[0] = CircleVertex {x, y, -1, -1, radius, fill };
+    vertex[1] = CircleVertex {x, y, +1, -1, radius, fill };
+    vertex[2] = CircleVertex {x, y, +1, +1, radius, fill };
+    vertex[3] = CircleVertex {x, y, -1, +1, radius, fill };
 
     face.resize(2);
     face[0] = Face(0,1,2);
     face[1] = Face(2,3,0);
 
     this->color = color;
+}
+
+void CircleMesh::move(float x, float y, float radius) {
+    vertex[0].set(x, y, radius);
+    vertex[1].set(x, y, radius);
+    vertex[2].set(x, y, radius);
+    vertex[3].set(x, y, radius);
 }

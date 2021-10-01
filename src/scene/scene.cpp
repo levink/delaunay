@@ -2,16 +2,18 @@
 #include "scene.h"
 #include "../model/color.h"
 
+
+
+
+Scene::Circle::Circle() : radius(0) { }
+Scene::Circle::Circle(float x, float y, float radius) : center(x,y), radius(radius) { }
 bool Scene::Circle::contains(float x, float y) const {
     float dx = center.x -  x;
     float dy = center.y - y;
     float distance = sqrt(dx * dx + dy * dy);
     return distance < radius;
 }
-
-Scene::Circle::Circle() : radius(0) { }
-Scene::Circle::Circle(float x, float y, float radius) : center(x,y), radius(radius) { }
-Scene::Circle Scene::Circle::get(float x1, float y1, float x2, float y2,float x3, float y3) {
+Scene::Circle Scene::Circle::create(float x1, float y1, float x2, float y2, float x3, float y3) {
     float m1 = (x1 * x1 + y1 * y1);
     float m2 = (x2 * x2 + y2 * y2);
     float m3 = (x3 * x3 + y3 * y3);
@@ -28,10 +30,13 @@ Scene::Circle Scene::Circle::get(float x1, float y1, float x2, float y2,float x3
     return Circle(x,y,r);
 }
 
+Scene::Triangle::Triangle() : v0(0), v1(0), v2(0) { }
+Scene::Triangle::Triangle(int v0, int v1, int v2) : v0(v0), v1(v1), v2(v2) { }
+
 void Scene::addPoint(float x, float y) {
     points.emplace_back(x, y);
 
-    auto circleMesh = CircleMesh(glm::vec2(x, y), 10.f, true, Color::teal);
+    auto circleMesh = CircleMesh(x, y, 10.f, true, Color::teal);
     pointsMesh.push_back(circleMesh);
 
     if (points.size() == 3) {
@@ -44,11 +49,17 @@ void Scene::addPoint(float x, float y) {
         edges.push_back({2, 0});
 
         edgesMesh.reserve(edges.size());
+        edgesMesh.clear();
         for(auto& e : edges) {
             auto& start = points[e.v0];
             auto& end = points[e.v1];
             auto mesh = LineMesh::create(start, end, Color::orange, 3.5f);
             edgesMesh.push_back(mesh);
+        }
+
+        circlesMesh.reserve(triangles.size());
+        for(auto& t : triangles) {
+            circlesMesh.emplace_back(createCircle(t));
         }
     }
 
@@ -107,6 +118,17 @@ void Scene::movePoint(float x, float y) {
         auto& end = points[edge.v1];
         edgesMesh[i].move(start, end);
     }
+
+    for (size_t i = 0; i < triangles.size(); i++) {
+        auto& triangle = triangles[i];
+        auto& p1 = points[triangle.v0];
+        auto& p2 = points[triangle.v1];
+        auto& p3 = points[triangle.v2];
+        triangle.circle = Circle::create(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+
+        auto& circle = triangle.circle;
+        circlesMesh[i].move(circle.center.x, circle.center.y, circle.radius);
+    }
 }
 void Scene::clearSelection() {
     if (selectedIndex != -1) {
@@ -126,16 +148,34 @@ void Scene::triangulate() {
     auto t0 = createTriangle(v0, v1, v3);
     auto t1 = createTriangle(v1, v2, v3);
     auto t2 = createTriangle(v2, v0, v3);
-
     triangles.reserve(triangles.size() + 2);
     triangles[triangleIndex] = t0;
     triangles.push_back(t1);
     triangles.push_back(t2);
 
-
     auto e0 = Edge {v0, v3};
     auto e1 = Edge {v1, v3};
     auto e2 = Edge {v2, v3};
+    edges.reserve(edges.size() + 3);
+    edges.push_back(e0);
+    edges.push_back(e1);
+    edges.push_back(e2);
+
+    edgesMesh.reserve(edges.size());
+    edgesMesh.clear();
+    for(auto& e : edges) {
+        auto& start = points[e.v0];
+        auto& end = points[e.v1];
+        auto mesh = LineMesh::create(start, end, Color::orange, 3.5f);
+        edgesMesh.push_back(mesh);
+    }
+
+    circlesMesh.resize(triangles.size());
+    for(size_t i = 0; i < triangles.size(); i++) {
+        auto& t = triangles[i];
+        circlesMesh[i] = createCircle(t);
+    }
+
 }
 
 Scene::Triangle Scene::createTriangle(int v0, int v1, int v2) {
@@ -144,9 +184,14 @@ Scene::Triangle Scene::createTriangle(int v0, int v1, int v2) {
     auto& p3 = points[v2];
 
     Triangle triangle {v0, v1, v2};
-    triangle.circle = Circle::get(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+    triangle.circle = Circle::create(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 
     return triangle;
 }
+
+CircleMesh Scene::createCircle(const Scene::Triangle& triangle) {
+    return CircleMesh(triangle.circle.center.x, triangle.circle.center.y, triangle.circle.radius, false, Color::teal);
+}
+
 
 
