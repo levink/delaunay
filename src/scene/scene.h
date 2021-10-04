@@ -23,6 +23,9 @@ struct Scene {
         Circle circle;
         Triangle();
         Triangle(int v0, int v1, int v2);
+        static bool contains(const glm::vec2& pt, const glm::vec2& t0, const glm::vec2& t1, const glm::vec2& t2);
+        static bool contains(const glm::vec3& pt, const glm::vec3& dir, const glm::vec3& t0, const glm::vec3& t1, const glm::vec3& t2);
+
     };
 
     //model

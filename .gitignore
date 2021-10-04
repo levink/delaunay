@@ -23,3 +23,6 @@
 # CMake
 cmake-build-*/
 .build/
+
+# Visual studio
+.vs

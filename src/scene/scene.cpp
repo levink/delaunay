@@ -3,8 +3,6 @@
 #include "../model/color.h"
 
 
-
-
 Scene::Circle::Circle() : radius(0) { }
 Scene::Circle::Circle(float x, float y, float radius) : center(x,y), radius(radius) { }
 bool Scene::Circle::contains(float x, float y) const {
@@ -32,6 +30,26 @@ Scene::Circle Scene::Circle::create(float x1, float y1, float x2, float y2, floa
 
 Scene::Triangle::Triangle() : v0(0), v1(0), v2(0) { }
 Scene::Triangle::Triangle(int v0, int v1, int v2) : v0(v0), v1(v1), v2(v2) { }
+
+bool Scene::Triangle::contains(const glm::vec2& pt, const glm::vec2& t0, const glm::vec2& t1, const glm::vec2& t2) {
+    return contains(
+        glm::vec3(pt, 0),
+        glm::vec3(0, 0, 1),
+        glm::vec3(t0, 0),
+        glm::vec3(t1, 0),
+        glm::vec3(t2, 0)
+    );
+}
+
+bool Scene::Triangle::contains(const glm::vec3& pt, const glm::vec3& dir, const glm::vec3& t0, const glm::vec3& t1, const glm::vec3& t2) {
+    const float eps = 0.00000001f;
+
+    if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
+    if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
+    if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
+
+    return true;
+}
 
 void Scene::addPoint(float x, float y) {
     points.emplace_back(x, y);
@@ -91,12 +109,27 @@ void Scene::selectPoint(float x, float y) {
 
     if (minDistance >= 20.f) {
         selectedIndex = -1;
-        return;
+    }
+    else {
+        selectedIndex = index;
+        pointsMesh[selectedIndex].color = Color::yellow;
+        //std::cout << selectedIndex << std::endl;
     }
 
-    selectedIndex = index;
-    pointsMesh[selectedIndex].color = Color::yellow;
-    std::cout << selectedIndex << std::endl;
+    
+
+    for (size_t i = 0; i < triangles.size(); i++) {
+        
+        auto& t = triangles[i];
+        auto& p1 = points[t.v0];
+        auto& p2 = points[t.v1];
+        auto& p3 = points[t.v2];
+
+        bool contains = Triangle::contains(cursor, p1, p2, p3);
+        if (contains) {
+            std::cout << "t = " << i << std::endl;
+        }
+    }
 }
 void Scene::movePoint(float x, float y) {
     if (selectedIndex == -1) {
@@ -192,6 +225,4 @@ Scene::Triangle Scene::createTriangle(int v0, int v1, int v2) {
 CircleMesh Scene::createCircle(const Scene::Triangle& triangle) {
     return CircleMesh(triangle.circle.center.x, triangle.circle.center.y, triangle.circle.radius, false, Color::teal);
 }
-
-
 

@@ -31,12 +31,21 @@ std::string ShaderLoader::getShaderText(const char* fileName) {
     return result;
 }
 ShaderSource ShaderLoader::load(const char* path) const {
-    static const auto vertexTag = "//#vertex";
-    static const auto fragmentTag = "//#fragment";
-
     std::string text = getShaderText(path);
+
+    static const auto vertexTag = "//#vertex";
     auto vertexPosition = text.find(vertexTag);
+    if (vertexPosition == std::string::npos) {
+        Log::warn("Vertex tag not found in shader", path);
+        return ShaderSource();
+    }
+
+    static const auto fragmentTag = "//#fragment";
     auto fragmentPosition = text.find(fragmentTag);
+    if (fragmentPosition == std::string::npos) {
+        Log::warn("Fragment tag not found in shader", path);
+        return ShaderSource();
+    }
 
     auto uniforms = text.substr(0, vertexPosition);
     auto vertex = text.substr(0, fragmentPosition);
