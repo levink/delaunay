@@ -37,9 +37,9 @@ void Render::initScene() {
     //layer
     {
         auto padding = 100.f;
-        scene.addPoint(padding, padding);
-        scene.addPoint(static_cast<float>(camera.viewSize.x) - padding, padding);
-        scene.addPoint(padding, static_cast<float>(camera.viewSize.y) - padding);
+        scene.addPoint({padding, padding});
+        scene.addPoint({static_cast<float>(camera.viewSize.x) - padding, padding});
+        scene.addPoint({padding, static_cast<float>(camera.viewSize.y) - padding});
     }
 
 #if 0 //circles batch
@@ -113,7 +113,7 @@ void Render::draw() {
     shaders.line.disable();
 
     shaders.circle.enable();
-    //shaders.circle.draw(scene.circlesMesh);
+    shaders.circle.draw(scene.getSelectedCircle());
     shaders.circle.draw(scene.pointsMesh);
     shaders.circle.disable();
 }

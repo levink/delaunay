@@ -21,6 +21,7 @@ struct CircleMesh {
     std::vector<Face> face;
     glm::vec3 color;
     CircleMesh() = default;
-    CircleMesh(float x, float y, float radius, bool filled, glm::vec3 color);
+    CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color);
     void move(float x, float y, float radius);
+    void move(const glm::vec2& center, float radius);
 };

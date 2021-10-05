@@ -10,8 +10,8 @@ struct Scene {
         float radius;
         Circle();
         Circle(float x, float y, float radius);
+        Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c);
         bool contains(float x, float y) const;
-        static Circle create(float x1, float y1, float x2, float y2, float x3, float y3);
     };
 
     struct Edge {
@@ -25,7 +25,6 @@ struct Scene {
         Triangle(int v0, int v1, int v2);
         static bool contains(const glm::vec2& pt, const glm::vec2& t0, const glm::vec2& t1, const glm::vec2& t2);
         static bool contains(const glm::vec3& pt, const glm::vec3& dir, const glm::vec3& t0, const glm::vec3& t1, const glm::vec3& t2);
-
     };
 
     //model
@@ -37,15 +36,24 @@ struct Scene {
     std::vector<CircleMesh> pointsMesh;
     std::vector<CircleMesh> circlesMesh;
     std::vector<LineMesh> edgesMesh;
+    CircleMesh selectedCircle;
+    const CircleMesh* getSelectedCircle();
 
     //Builder
-    int selectedIndex = -1;
-    void addPoint(float x, float y);
-    void selectPoint(float x, float y);
-    void movePoint(float x, float y);
+    int selectedPoint = -1;
+    int selectedTriangle = -1;
+    void addPoint(const glm::vec2& point);
+    void movePoint(const glm::vec2& cursor);
+    void selectPoint(const glm::vec2& cursor);
+    void selectTriangle(const glm::vec2& cursor);
     void clearSelection();
-    void triangulate();
 
+    void triangulate(const glm::vec2& point);
+    int findTriangle(const glm::vec2& point);
     Triangle createTriangle(int v0, int v1, int v2);
-    static CircleMesh createCircle(const Triangle& t);
+
+    void updateView();
+    LineMesh createLineMesh(const Edge& edge);
+    CircleMesh createPointMesh(const glm::vec2& point);
+    CircleMesh createCircleMesh(const Triangle& triangle);
 };

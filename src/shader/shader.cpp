@@ -21,6 +21,23 @@ void CircleShader::disable() const {
     Shader::disable();
     glDisable(GL_BLEND);
 }
+void CircleShader::draw(const CircleMesh *mesh) {
+    if (mesh == nullptr) {
+        return;
+    }
+
+    set4(u[0], context.camera->Ortho);
+    set3(u[1], mesh->color);
+
+    auto data = mesh->vertex.data();
+    attr(a[0], data, sizeof(CircleVertex), offsetof(CircleVertex, center));
+    attr(a[1], data, sizeof(CircleVertex), offsetof(CircleVertex, offset));
+    attr(a[2], data, sizeof(CircleVertex), offsetof(CircleVertex, radius));
+    attr(a[3], data, sizeof(CircleVertex), offsetof(CircleVertex, fill));
+
+    auto count = 6;
+    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, mesh->face.data());
+}
 void CircleShader::draw(const std::vector<CircleMesh>& items) {
     set4(u[0], context.camera->Ortho);
     for(auto& item : items) {

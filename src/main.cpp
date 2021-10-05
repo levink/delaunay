@@ -24,18 +24,20 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     using namespace ui::mouse;
 
     auto cursor = event.getCursor();
-    auto x = cursor.x;
-    auto y = (float)render.camera.viewSize.y - cursor.y;
+    cursor.y = (float)render.camera.viewSize.y - cursor.y;
     auto& scene = render.scene;
 
     if (event.is(Action::PRESS, Button::LEFT)) {
-        scene.selectPoint(x, y);
+        scene.selectPoint(cursor);
+    }
+    else if (event.is(Action::MOVE, Button::NO)) {
+        scene.selectTriangle(cursor);
     }
     else if (event.is(Action::MOVE, Button::LEFT)) {
-        scene.movePoint(x, y);
+        scene.movePoint(cursor);
     }
     else if (event.is(Action::PRESS, Button::RIGHT)) {
-        scene.addPoint(x, y);
+        scene.addPoint(cursor);
     }
     else if (event.is(Action::RELEASE, ui::mouse::LEFT)) {
         scene.clearSelection();
