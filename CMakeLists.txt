@@ -26,6 +26,5 @@ add_executable(delone
         src/main.cpp
         src/render.cpp)
 target_precompile_headers(delone PUBLIC src/pch.h)
-target_include_directories(delone PUBLIC ${GLFW_SOURCE_DIR}/include)
-target_link_libraries(delone glad ${GLFW_BINARY_DIR}/src/glfw3.lib)
+target_link_libraries(delone glad glfw)
 
