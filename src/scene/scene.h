@@ -38,6 +38,7 @@ struct Scene {
     std::vector<LineMesh> edgesMesh;
     CircleMesh selectedCircle;
     const CircleMesh* getSelectedCircle();
+    glm::vec2 dragDropDelta;
 
     //Builder
     int selectedPoint = -1;

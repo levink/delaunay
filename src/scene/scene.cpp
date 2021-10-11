@@ -51,7 +51,6 @@ bool Scene::Triangle::contains(const glm::vec3& pt, const glm::vec3& dir, const 
     return true;
 }
 
-
 const CircleMesh *Scene::getSelectedCircle() {
     if (selectedTriangle == -1) {
         return nullptr;
@@ -87,13 +86,13 @@ void Scene::movePoint(const glm::vec2& cursor) {
         return;
     }
 
+    auto offset = cursor - dragDropDelta;
     auto& point = points[selectedPoint];
-    point.x = cursor.x;
-    point.y = cursor.y;
+    point = offset;
 
     auto& vertex = pointsMesh[selectedPoint].vertex;
     for(auto& v : vertex) {
-        v.move(cursor.x, cursor.y);
+        v.move(point.x, point.y);
     }
 
     for(size_t i = 0; i < edges.size(); i++) {
@@ -115,11 +114,13 @@ void Scene::movePoint(const glm::vec2& cursor) {
     }
 }
 void Scene::selectPoint(const glm::vec2& cursor) {
+
     if (points.empty()) {
         return;
     }
 
     auto minDistance = glm::distance(points[0], cursor);
+    dragDropDelta = cursor - points[0];
     auto index = 0;
 
     for(int i = 1; i < points.size(); i++) {
@@ -128,6 +129,7 @@ void Scene::selectPoint(const glm::vec2& cursor) {
         if (distance < minDistance) {
             minDistance = distance;
             index = i;
+            dragDropDelta = cursor - points[i];
         }
     }
 
@@ -159,6 +161,7 @@ void Scene::clearSelection() {
         pointsMesh[selectedPoint].color = Color::teal;
     }
     selectedPoint = -1;
+    dragDropDelta.x = dragDropDelta.y = 0;
 }
 
 void Scene::triangulate(const glm::vec2 &point) {
