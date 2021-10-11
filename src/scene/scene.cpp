@@ -163,9 +163,12 @@ void Scene::clearSelection() {
     selectedPoint = -1;
     dragDropDelta.x = dragDropDelta.y = 0;
 }
-
 void Scene::triangulate(const glm::vec2 &point) {
     int triangleIndex = findTriangle(point);
+    if (triangleIndex == -1) {
+        return;
+    }
+
     auto triangleForSplit = triangles[triangleIndex];
 
     //vertex
