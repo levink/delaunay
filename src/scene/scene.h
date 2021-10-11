@@ -20,7 +20,6 @@ struct Scene {
 
     struct Triangle {
         int v0, v1, v2;
-        Circle circle;
         Triangle();
         Triangle(int v0, int v1, int v2);
         static bool contains(const glm::vec2& pt, const glm::vec2& t0, const glm::vec2& t1, const glm::vec2& t2);
@@ -31,6 +30,7 @@ struct Scene {
     std::vector<glm::vec2> points;
     std::vector<Edge> edges;
     std::vector<Triangle> triangles;
+    std::vector<Circle> circles;
 
     //view
     std::vector<CircleMesh> pointsMesh;
@@ -50,10 +50,10 @@ struct Scene {
 
     void triangulate(const glm::vec2& point);
     int findTriangle(const glm::vec2& point);
-    Triangle createTriangle(int v0, int v1, int v2);
+    Circle createCircle(const Triangle& triangle);
 
     void updateView();
     LineMesh createLineMesh(const Edge& edge);
     CircleMesh createPointMesh(const glm::vec2& point);
-    CircleMesh createCircleMesh(const Triangle& triangle);
+    CircleMesh createCircleMesh(const Circle& circle);
 };

@@ -65,8 +65,11 @@ void Scene::addPoint(const glm::vec2& cursor) {
 
     if (points.size() == 3) {
 
-        auto t = createTriangle(0, 1, 2);
-        triangles.push_back(t);
+        Triangle triangle {0, 1, 2};
+        triangles.push_back(triangle);
+
+        Circle circle = createCircle(triangle);
+        circles.push_back(circle);
 
         edges.push_back({0, 1});
         edges.push_back({1, 2});
@@ -105,9 +108,9 @@ void Scene::movePoint(const glm::vec2& cursor) {
         auto& p1 = points[triangle.v0];
         auto& p2 = points[triangle.v1];
         auto& p3 = points[triangle.v2];
-        triangle.circle = Circle(p1, p2, p3);
+        circles[i] = Circle(p1, p2, p3);
 
-        auto& circle = triangle.circle;
+        auto& circle = circles[i];
         circlesMesh[i].move(circle.center.x, circle.center.y, circle.radius);
     }
 }
@@ -147,8 +150,8 @@ void Scene::selectTriangle(const glm::vec2& cursor) {
     selectedTriangle = findTriangle(cursor);
 
     if (selectedTriangle != -1) {
-        auto& triangle = triangles[selectedTriangle];
-        selectedCircle = createCircleMesh(triangle);
+        auto& circle = circles[selectedTriangle];
+        selectedCircle = createCircleMesh(circle);
     }
 }
 void Scene::clearSelection() {
@@ -169,13 +172,22 @@ void Scene::triangulate(const glm::vec2 &point) {
     auto v3 = static_cast<int>(points.size() - 1);
 
     //triangle
-    auto t0 = createTriangle(v0, v1, v3);
-    auto t1 = createTriangle(v1, v2, v3);
-    auto t2 = createTriangle(v2, v0, v3);
+    auto t0 = Triangle {v0, v1, v3};
+    auto t1 = Triangle {v1, v2, v3};
+    auto t2 = Triangle {v2, v0, v3};
     triangles.reserve(triangles.size() + 2);
     triangles[triangleIndex] = t0;
     triangles.push_back(t1);
     triangles.push_back(t2);
+
+    //circle
+    auto c0 = createCircle(t0);
+    auto c1 = createCircle(t1);
+    auto c2 = createCircle(t2);
+    circles.reserve(triangles.size());
+    circles[triangleIndex] = c0;
+    circles.push_back(c1);
+    circles.push_back(c2);
 
     //edge
     auto e0 = Edge {v0, v3};
@@ -202,15 +214,11 @@ int Scene::findTriangle(const glm::vec2 &point) {
 
     return -1;
 }
-Scene::Triangle Scene::createTriangle(int v0, int v1, int v2) {
-    auto& p1 = points[v0];
-    auto& p2 = points[v1];
-    auto& p3 = points[v2];
-
-    Triangle triangle {v0, v1, v2};
-    triangle.circle = Circle(p1, p2, p3);
-
-    return triangle;
+Scene::Circle Scene::createCircle(const Triangle& triangle) {
+    auto& p1 = points[triangle.v0];
+    auto& p2 = points[triangle.v1];
+    auto& p3 = points[triangle.v2];
+    return Circle {p1, p2, p3};
 }
 
 void Scene::updateView() {
@@ -226,10 +234,10 @@ void Scene::updateView() {
         edgesMesh[i] = createLineMesh(edge);
     }
 
-    circlesMesh.resize(triangles.size());
-    for(size_t i = 0; i < triangles.size(); i++) {
-        auto& triangle = triangles[i];
-        circlesMesh[i] = createCircleMesh(triangle);
+    circlesMesh.resize(circles.size());
+    for(size_t i = 0; i < circles.size(); i++) {
+        auto& circle = circles[i];
+        circlesMesh[i] = createCircleMesh(circle);
     }
 }
 LineMesh Scene::createLineMesh(const Scene::Edge &edge) {
@@ -240,8 +248,8 @@ LineMesh Scene::createLineMesh(const Scene::Edge &edge) {
 CircleMesh Scene::createPointMesh(const glm::vec2& point) {
     return CircleMesh(point, 7.f, true, Color::teal);
 }
-CircleMesh Scene::createCircleMesh(const Scene::Triangle& t) {
-    return CircleMesh {t.circle.center, t.circle.radius, false, Color::teal };
+CircleMesh Scene::createCircleMesh(const Circle& circle) {
+    return CircleMesh {circle.center, circle.radius, false, Color::teal };
 }
 
 
