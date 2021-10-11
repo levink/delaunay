@@ -31,6 +31,7 @@ struct Scene {
     std::vector<Edge> edges;
     std::vector<Triangle> triangles;
     std::vector<Circle> circles;
+    std::map<int, std::vector<int>> pointToTriangle;
 
     //view
     std::vector<CircleMesh> pointsMesh;
@@ -57,4 +58,7 @@ struct Scene {
     LineMesh createLineMesh(const Edge& edge);
     CircleMesh createPointMesh(const glm::vec2& point);
     CircleMesh createCircleMesh(const Circle& circle);
+
+    void addTriangleToIndex(int index);
+    void removeTriangleFromIndex(int index);
 };

@@ -73,6 +73,10 @@ void Scene::addPoint(const glm::vec2& cursor) {
         edges.push_back({0, 1});
         edges.push_back({1, 2});
         edges.push_back({2, 0});
+
+        pointToTriangle[0].push_back(0);
+        pointToTriangle[1].push_back(0);
+        pointToTriangle[2].push_back(0);
     }
 
     if (points.size() > 3) {
@@ -164,34 +168,42 @@ void Scene::clearSelection() {
     dragDropDelta.x = dragDropDelta.y = 0;
 }
 void Scene::triangulate(const glm::vec2 &point) {
-    int triangleIndex = findTriangle(point);
-    if (triangleIndex == -1) {
+    int triangleIndex0 = findTriangle(point);
+    if (triangleIndex0 == -1) {
         return;
     }
 
-    auto triangleForSplit = triangles[triangleIndex];
+    auto triangleForSplit = triangles[triangleIndex0];
 
     //vertex
     auto v0 = triangleForSplit.v0;
     auto v1 = triangleForSplit.v1;
     auto v2 = triangleForSplit.v2;
     auto v3 = static_cast<int>(points.size() - 1);
+    removeTriangleFromIndex(triangleIndex0);
 
     //triangle
     auto t0 = Triangle {v0, v1, v3};
     auto t1 = Triangle {v1, v2, v3};
     auto t2 = Triangle {v2, v0, v3};
     triangles.reserve(triangles.size() + 2);
-    triangles[triangleIndex] = t0;
+    triangles[triangleIndex0] = t0;
     triangles.push_back(t1);
     triangles.push_back(t2);
+
+    //triangleIndex
+    int triangleIndex1 = static_cast<int>(triangles.size()-2);
+    int triangleIndex2 = static_cast<int>(triangles.size()-1);
+    addTriangleToIndex(triangleIndex0);
+    addTriangleToIndex(triangleIndex1);
+    addTriangleToIndex(triangleIndex2);
 
     //circle
     auto c0 = createCircle(t0);
     auto c1 = createCircle(t1);
     auto c2 = createCircle(t2);
     circles.reserve(triangles.size());
-    circles[triangleIndex] = c0;
+    circles[triangleIndex0] = c0;
     circles.push_back(c1);
     circles.push_back(c2);
 
@@ -204,6 +216,19 @@ void Scene::triangulate(const glm::vec2 &point) {
     edges.push_back(e1);
     edges.push_back(e2);
 }
+void Scene::addTriangleToIndex(int index) {
+    auto& triangle = triangles[index];
+    pointToTriangle[triangle.v0].push_back(index);
+    pointToTriangle[triangle.v1].push_back(index);
+    pointToTriangle[triangle.v2].push_back(index);
+}
+void Scene::removeTriangleFromIndex(int index) {
+    auto& triangle = triangles[index];
+    std::erase_if(pointToTriangle[triangle.v0], [index](int t) { return t == index; });
+    std::erase_if(pointToTriangle[triangle.v1], [index](int t) { return t == index; });
+    std::erase_if(pointToTriangle[triangle.v2], [index](int t) { return t == index; });
+}
+
 int Scene::findTriangle(const glm::vec2 &point) {
     for (size_t i = 0; i < triangles.size(); i++) {
 
@@ -257,5 +282,6 @@ CircleMesh Scene::createPointMesh(const glm::vec2& point) {
 CircleMesh Scene::createCircleMesh(const Circle& circle) {
     return CircleMesh {circle.center, circle.radius, false, Color::teal };
 }
+
 
 
