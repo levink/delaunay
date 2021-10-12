@@ -27,21 +27,25 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     cursor.y = (float)render.camera.viewSize.y - cursor.y;
     auto& scene = render.scene;
 
-    if (event.is(Action::PRESS, Button::LEFT)) {
-        scene.selectPoint(cursor);
-    }
-    else if (event.is(Action::MOVE, Button::NO)) {
+    if (event.is(Action::MOVE, Button::NO)) {
         scene.selectTriangle(cursor);
+    }
+    else if (event.is(Action::PRESS, Button::LEFT)) {
+        scene.selectPoint(cursor);
     }
     else if (event.is(Action::MOVE, Button::LEFT)) {
         scene.movePoint(cursor);
     }
-    else if (event.is(Action::PRESS, Button::RIGHT)) {
-        scene.addPoint(cursor);
-    }
     else if (event.is(Action::RELEASE, ui::mouse::LEFT)) {
         scene.clearSelection();
     }
+    else if (event.is(Action::PRESS, Button::RIGHT)) {
+        scene.addPoint(cursor);
+    }
+    else if (event.is(Action::PRESS, ui::Mod::ALT, Button::RIGHT)) {
+        scene.deletePoint(cursor);
+    }
+
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
     auto event = ui::mouse::MouseEvent(button, action, mods);

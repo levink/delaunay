@@ -105,6 +105,48 @@ void Scene::movePoint(const glm::vec2& cursor) {
     createCircles();
     updateView();
 }
+void Scene::deletePoint(const glm::vec2 &cursor) {
+    if (points.empty()) {
+        return;
+    }
+
+    auto pointIndex = 0;
+    auto distance = glm::distance(points[0], cursor);
+    for(int i = 1; i < points.size(); i++) {
+        float d = glm::distance(points[i], cursor);
+        if (d < distance) {
+            distance = d;
+            pointIndex = i;
+        }
+    }
+
+    if (distance >= 20.f) {
+        return;
+    }
+
+    auto trianglesForDelete = pointToTriangle[pointIndex];
+    std::sort(trianglesForDelete.begin(), trianglesForDelete.end(), [](int left, int right) {
+        return left >= right;
+    });
+    for(auto& tIndex : trianglesForDelete){
+        triangles.erase(triangles.begin() + tIndex);
+    }
+    for(int i = 0; i < edges.size(); /* nothing */ ) {
+        auto& edge = edges[i];
+        if (edge.v0 == pointIndex || edge.v1 == pointIndex) {
+            edges.erase(edges.begin() + i);
+        } else {
+            i++;
+        }
+    }
+
+    bool last = pointIndex == points.size() - 1;
+    if (last) {
+        points.erase(points.end() - 1);
+    }
+    createCircles();
+    updateView();
+}
 void Scene::selectPoint(const glm::vec2& cursor) {
 
     if (points.empty()) {
@@ -208,7 +250,6 @@ void Scene::removeTriangleFromIndex(int index) {
     std::erase_if(pointToTriangle[triangle.v1], [index](int t) { return t == index; });
     std::erase_if(pointToTriangle[triangle.v2], [index](int t) { return t == index; });
 }
-
 int Scene::findTriangle(const glm::vec2 &point) {
     for (size_t i = 0; i < triangles.size(); i++) {
 
@@ -224,12 +265,6 @@ int Scene::findTriangle(const glm::vec2 &point) {
     }
 
     return -1;
-}
-Scene::Circle Scene::createCircle(const Triangle& triangle) {
-    auto& p1 = points[triangle.v0];
-    auto& p2 = points[triangle.v1];
-    auto& p3 = points[triangle.v2];
-    return Circle {p1, p2, p3};
 }
 
 void Scene::updateView() {
@@ -250,6 +285,19 @@ void Scene::updateView() {
         auto& circle = circles[i];
         circlesMesh[i] = createCircleMesh(circle);
     }
+}
+void Scene::createCircles() {
+    circles.resize(triangles.size());
+    for (size_t i = 0; i < triangles.size(); i++) {
+        auto& triangle = triangles[i];
+        circles[i] = createCircle(triangle);
+    }
+}
+Scene::Circle Scene::createCircle(const Triangle& triangle) {
+    auto& p1 = points[triangle.v0];
+    auto& p2 = points[triangle.v1];
+    auto& p3 = points[triangle.v2];
+    return Circle {p1, p2, p3};
 }
 LineMesh Scene::createLineMesh(const Scene::Edge &edge) {
     auto& start = points[edge.v0];
@@ -284,7 +332,6 @@ void Scene::normalizePoints() {
         p = (p - offset) / scale;
     }
 }
-
 void Scene::restorePoints() {
     if (points.empty()) {
         return;
@@ -295,13 +342,9 @@ void Scene::restorePoints() {
     }
 }
 
-void Scene::createCircles() {
-    circles.resize(triangles.size());
-    for (size_t i = 0; i < triangles.size(); i++) {
-        auto& triangle = triangles[i];
-        circles[i] = createCircle(triangle);
-    }
-}
+
+
+
 
 
 

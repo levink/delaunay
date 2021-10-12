@@ -44,17 +44,21 @@ struct Scene {
     //Builder
     int selectedPoint = -1;
     int selectedTriangle = -1;
-    void addPoint(const glm::vec2& point);
-    void movePoint(const glm::vec2& cursor);
+
     void selectPoint(const glm::vec2& cursor);
     void selectTriangle(const glm::vec2& cursor);
     void clearSelection();
+    void addPoint(const glm::vec2& point);
+    void movePoint(const glm::vec2& cursor);
+    void deletePoint(const glm::vec2& point);
 
     void triangulate(const glm::vec2& point);
     int findTriangle(const glm::vec2& point);
+    void createCircles();
     Circle createCircle(const Triangle& triangle);
 
     void updateView();
+
     LineMesh createLineMesh(const Edge& edge);
     CircleMesh createPointMesh(const glm::vec2& point);
     CircleMesh createCircleMesh(const Circle& circle);
@@ -66,8 +70,5 @@ struct Scene {
     float scale;
     glm::vec2 offset;
     void normalizePoints();
-
     void restorePoints();
-
-    void createCircles();
 };

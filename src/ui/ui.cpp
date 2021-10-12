@@ -141,10 +141,9 @@ namespace ui {
                     (button == this->button);
             bool modCheck = UIState::is(mod);
 
-            return
-                    this->action == action &&
-                    buttonCheck &&
-                    modCheck;
+            return this->action == action &&
+                buttonCheck &&
+                modCheck;
         }
         glm::vec2 MouseEvent::getDelta() const {
             return glm::vec2(dx, dy);
