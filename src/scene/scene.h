@@ -61,4 +61,13 @@ struct Scene {
 
     void addTriangleToIndex(int index);
     void removeTriangleFromIndex(int index);
+
+
+    float scale;
+    glm::vec2 offset;
+    void normalizePoints();
+
+    void restorePoints();
+
+    void createCircles();
 };

@@ -80,7 +80,10 @@ void Scene::addPoint(const glm::vec2& cursor) {
     }
 
     if (points.size() > 3) {
+        normalizePoints();
         triangulate(cursor);
+        restorePoints();
+        createCircles();
     }
 
     updateView();
@@ -99,23 +102,8 @@ void Scene::movePoint(const glm::vec2& cursor) {
         v.move(point.x, point.y);
     }
 
-    for(size_t i = 0; i < edges.size(); i++) {
-        auto& edge = edges[i];
-        auto& start = points[edge.v0];
-        auto& end = points[edge.v1];
-        edgesMesh[i].move(start, end);
-    }
-
-    for (size_t i = 0; i < triangles.size(); i++) {
-        auto& triangle = triangles[i];
-        auto& p1 = points[triangle.v0];
-        auto& p2 = points[triangle.v1];
-        auto& p3 = points[triangle.v2];
-        circles[i] = Circle(p1, p2, p3);
-
-        auto& circle = circles[i];
-        circlesMesh[i].move(circle.center.x, circle.center.y, circle.radius);
-    }
+    createCircles();
+    updateView();
 }
 void Scene::selectPoint(const glm::vec2& cursor) {
 
@@ -168,7 +156,8 @@ void Scene::clearSelection() {
     dragDropDelta.x = dragDropDelta.y = 0;
 }
 void Scene::triangulate(const glm::vec2 &point) {
-    int triangleIndex0 = findTriangle(point);
+    auto normalizedPoint = (point - offset) / scale;
+    int triangleIndex0 = findTriangle(normalizedPoint);
     if (triangleIndex0 == -1) {
         return;
     }
@@ -197,15 +186,6 @@ void Scene::triangulate(const glm::vec2 &point) {
     addTriangleToIndex(triangleIndex0);
     addTriangleToIndex(triangleIndex1);
     addTriangleToIndex(triangleIndex2);
-
-    //circle
-    auto c0 = createCircle(t0);
-    auto c1 = createCircle(t1);
-    auto c2 = createCircle(t2);
-    circles.reserve(triangles.size());
-    circles[triangleIndex0] = c0;
-    circles.push_back(c1);
-    circles.push_back(c2);
 
     //edge
     auto e0 = Edge {v0, v3};
@@ -281,6 +261,46 @@ CircleMesh Scene::createPointMesh(const glm::vec2& point) {
 }
 CircleMesh Scene::createCircleMesh(const Circle& circle) {
     return CircleMesh {circle.center, circle.radius, false, Color::teal };
+}
+
+void Scene::normalizePoints() {
+    if (points.empty()) {
+        return;
+    }
+
+    auto min = points[0];
+    auto max = points[0];
+    for(auto& p : points) {
+        min.x = std::min(min.x, p.x);
+        min.y = std::min(min.y, p.y);
+        max.x = std::max(max.x, p.x);
+        max.y = std::max(max.y, p.y);
+    }
+
+    scale = std::max(max.x - min.x, max.y - min.y);
+    offset = min;
+
+    for(auto& p : points) {
+        p = (p - offset) / scale;
+    }
+}
+
+void Scene::restorePoints() {
+    if (points.empty()) {
+        return;
+    }
+
+    for(auto& p : points) {
+        p = p * scale + offset;
+    }
+}
+
+void Scene::createCircles() {
+    circles.resize(triangles.size());
+    for (size_t i = 0; i < triangles.size(); i++) {
+        auto& triangle = triangles[i];
+        circles[i] = createCircle(triangle);
+    }
 }
 
 
