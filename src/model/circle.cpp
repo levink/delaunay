@@ -7,16 +7,6 @@ CircleVertex::CircleVertex():
 CircleVertex::CircleVertex(float x, float y, float offsetX, float offsetY, float radius, float fill):
         center(x,y), offset(offsetX, offsetY), radius(radius), fill(fill) { }
 
-void CircleVertex::move(float x, float y) {
-    center.x = x;
-    center.y = y;
-}
-void CircleVertex::set(float x, float y, float radius) {
-    this->center.x = x;
-    this->center.y = y;
-    this->radius = radius;
-}
-
 CircleMesh::CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color) {
     float x = center.x;
     float y = center.y;
@@ -35,13 +25,9 @@ CircleMesh::CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 co
     this->color = color;
 }
 
-void CircleMesh::move(float x, float y, float radius) {
-    vertex[0].set(x, y, radius);
-    vertex[1].set(x, y, radius);
-    vertex[2].set(x, y, radius);
-    vertex[3].set(x, y, radius);
-}
-
-void CircleMesh::move(const glm::vec2& center, float radius) {
-    move(center.x, center.y, radius);
+void CircleMesh::setPosition(const glm::vec2& position) {
+    vertex[0].center = position;
+    vertex[1].center = position;
+    vertex[2].center = position;
+    vertex[3].center = position;
 }

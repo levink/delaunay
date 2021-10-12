@@ -28,7 +28,7 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     auto& scene = render.scene;
 
     if (event.is(Action::MOVE, Button::NO)) {
-        scene.selectTriangle(cursor);
+        //scene.selectTriangle(cursor);
     }
     else if (event.is(Action::PRESS, Button::LEFT)) {
         scene.selectPoint(cursor);

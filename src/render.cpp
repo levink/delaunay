@@ -36,10 +36,9 @@ void Render::destroy() {
 void Render::initScene() {
     //layer
     {
-        auto padding = 100.f;
-        scene.addPoint({padding, padding});
-        scene.addPoint({static_cast<float>(camera.viewSize.x) - padding, padding});
-        scene.addPoint({padding, static_cast<float>(camera.viewSize.y) - padding});
+
+        scene.initView(camera.viewSize);
+
     }
 
 #if 0 //circles batch
@@ -109,7 +108,7 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.line.enable();
-    shaders.line.draw(scene.edgesMesh);
+    shaders.line.draw(scene.trianglesMesh);
     shaders.line.disable();
 
     shaders.circle.enable();

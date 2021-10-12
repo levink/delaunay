@@ -12,8 +12,6 @@ struct CircleVertex {
                  float offsetX, float offsetY,
                  float radius,
                  float fill);
-    void move(float x, float y);
-    void set(float x, float y, float radius);
 };
 
 struct CircleMesh {
@@ -22,6 +20,5 @@ struct CircleMesh {
     glm::vec3 color;
     CircleMesh() = default;
     CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color);
-    void move(float x, float y, float radius);
-    void move(const glm::vec2& center, float radius);
+    void setPosition(const glm::vec2& position);
 };
