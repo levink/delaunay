@@ -2,7 +2,9 @@
 #include "circle.h"
 
 CircleVertex::CircleVertex():
-    center(0,0), offset(0,0), radius(0.f), fill(0.f) { }
+    center(0,0), offset(0,0), radius(0.f), fill(0.f) {
+
+}
 
 CircleVertex::CircleVertex(float x, float y, float offsetX, float offsetY, float radius, float fill):
         center(x,y), offset(offsetX, offsetY), radius(radius), fill(fill) { }
@@ -26,6 +28,9 @@ CircleMesh::CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 co
 }
 
 void CircleMesh::setPosition(const glm::vec2& position) {
+    if (vertex.size() < 4){
+        vertex.resize(4);
+    }
     vertex[0].center = position;
     vertex[1].center = position;
     vertex[2].center = position;

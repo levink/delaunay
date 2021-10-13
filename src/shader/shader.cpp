@@ -22,7 +22,7 @@ void CircleShader::disable() const {
     glDisable(GL_BLEND);
 }
 void CircleShader::draw(const CircleMesh *mesh) {
-    if (mesh == nullptr) {
+    if (mesh == nullptr || mesh->face.empty()) {
         return;
     }
 
@@ -41,6 +41,10 @@ void CircleShader::draw(const CircleMesh *mesh) {
 void CircleShader::draw(const std::vector<CircleMesh>& items) {
     set4(u[0], context.camera->Ortho);
     for(auto& item : items) {
+        if (item.face.empty()) {
+            continue;
+        }
+
         set3(u[1], item.color);
 
         auto data = item.vertex.data();

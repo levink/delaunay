@@ -44,11 +44,7 @@ void Scene::addPoint(const glm::vec2& cursor) {
     auto mesh = createPointMesh(points.back());
     pointsMesh.emplace_back(mesh);
 
-    normalizePoints();
-    addSuperTriangle();
     triangulate();
-    removeSuperTriangle();
-    restorePoints();
     updateView();
 }
 void Scene::movePoint(const glm::vec2& cursor) {
@@ -58,11 +54,6 @@ void Scene::movePoint(const glm::vec2& cursor) {
 
     auto position = cursor - dragDrop;
     points[selectedPoint] = position;
-
-    //todo: fix this
-    triangles[0].point0 = points[0];
-    triangles[0].point1 = points[1];
-    triangles[0].point2 = points[2];
 
     updateView();
 }
@@ -123,7 +114,7 @@ void Scene::initView(const glm::vec2& viewSize) {
         pointsMesh.push_back(mesh);
     }
 
-    triangles.push_back(Triangle {points[0], points[1], points[2]});
+    triangulate();
     updateView();
 }
 void Scene::updateView() {
@@ -184,6 +175,12 @@ void Scene::restorePoints() {
     for(auto& p : points) {
         p = p * scale + offset;
     }
+
+    for(auto& t : triangles) {
+        t.point0 = points[t.index0];
+        t.point1 = points[t.index1];
+        t.point2 = points[t.index2];
+    }
 }
 void Scene::addSuperTriangle() {
     /* All existing points in [0,1] */
@@ -224,69 +221,77 @@ void Scene::removeSuperTriangle() {
 }
 void Scene::triangulate() {
 
+    normalizePoints();
+    addSuperTriangle();
+
     /* All points except super triangle */
     for(auto pointIndex = 0; pointIndex + 3 < points.size(); pointIndex++) {
+        triangulatePoint(pointIndex);
+    }
 
-        auto& point = points[pointIndex];
-        auto triangleIndexForSplit = findTriangle(point);
-        if (triangleIndexForSplit == -1) {
-            Log::warn("Triangle not found!");
-            continue;
+    //removeSuperTriangle();
+    restorePoints();
+}
+void Scene::triangulatePoint(unsigned int pointIndex) {
+    auto& point = points[pointIndex];
+    auto triangleIndexForSplit = findTriangle(point);
+    if (triangleIndexForSplit == -1) {
+        Log::warn("Triangle not found!");
+        return;
+    }
+
+
+    auto triangleForSplit = triangles[triangleIndexForSplit];
+    std::vector<unsigned int> checkAdjacentList(3);
+    for (auto& tIndex : triangleForSplit.adjacent){
+        if (tIndex){
+            checkAdjacentList.push_back(tIndex);
         }
+    }
 
+    auto i0 = triangleForSplit.index0;
+    auto i1 = triangleForSplit.index1;
+    auto i2 = triangleForSplit.index2;
+    auto i3 = static_cast<unsigned int>(pointIndex);
 
-        auto triangleForSplit = triangles[triangleIndexForSplit];
-        std::vector<unsigned int> checkAdjacentList(3);
-        for (auto& tIndex : triangleForSplit.adjacent){
-            if (tIndex){
-                checkAdjacentList.push_back(tIndex);
-            }
-        }
+    auto p0 = triangleForSplit.point0;
+    auto p1 = triangleForSplit.point1;
+    auto p2 = triangleForSplit.point2;
+    auto p3 = point;
 
-        auto i0 = triangleForSplit.index0;
-        auto i1 = triangleForSplit.index1;
-        auto i2 = triangleForSplit.index2;
-        auto i3 = static_cast<unsigned int>(pointIndex);
+    auto t0 = Triangle {p0, p1, p3, i0, i1, i3};
+    auto t1 = Triangle {p1, p2, p3, i1, i2, i3};
+    auto t2 = Triangle {p2, p0, p3, i2, i0, i3};
 
-        auto p0 = triangleForSplit.point0;
-        auto p1 = triangleForSplit.point1;
-        auto p2 = triangleForSplit.point2;
-        auto p3 = point;
+    triangles.resize(triangles.size() + 2);
+    auto triangleIndex0 = triangleIndexForSplit;
+    auto triangleIndex1 = triangles.size() - 2;
+    auto triangleIndex2 = triangles.size() - 1;
 
-        auto t0 = Triangle {p0, p1, p3, i0, i1, i3};
-        auto t1 = Triangle {p1, p2, p3, i1, i2, i3};
-        auto t2 = Triangle {p2, p0, p3, i2, i0, i3};
+    t0.adjacent[0] = triangleForSplit.adjacent[0];
+    t0.adjacent[1] = triangleIndex1;
+    t0.adjacent[2] = triangleIndex2;
 
-        triangles.resize(triangles.size() + 2);
-        auto triangleIndex0 = triangleIndexForSplit;
-        auto triangleIndex1 = triangles.size();
-        auto triangleIndex2 = triangleIndex1 + 1;
+    t1.adjacent[0] = triangleForSplit.adjacent[1];
+    t1.adjacent[1] = triangleIndex2;
+    t1.adjacent[2] = triangleIndex0;
 
-        t0.adjacent[0] = triangleForSplit.adjacent[0];
-        t0.adjacent[1] = triangleIndex1;
-        t0.adjacent[2] = triangleIndex2;
+    t2.adjacent[0] = triangleForSplit.adjacent[2];
+    t2.adjacent[1] = triangleIndex0;
+    t2.adjacent[2] = triangleIndex1;
 
-        t1.adjacent[0] = triangleForSplit.adjacent[1];
-        t1.adjacent[1] = triangleIndex2;
-        t1.adjacent[2] = triangleIndex0;
+    triangles[triangleIndex0] = t0;
+    triangles[triangleIndex1] = t1;
+    triangles[triangleIndex2] = t2;
 
-        t2.adjacent[0] = triangleForSplit.adjacent[2];
-        t2.adjacent[1] = triangleIndex0;
-        t2.adjacent[2] = triangleIndex1;
-
-        triangles[triangleIndex0] = t0;
-        triangles[triangleIndex1] = t1;
-        triangles[triangleIndex2] = t2;
-
-        for(auto i : checkAdjacentList) {
-            auto& t = triangles[i];
-            if (t.isAdjacentWith(t0)) {
-                t.replaceAdjacent(triangleIndexForSplit, triangleIndex0);
-            } else if (t.isAdjacentWith(t1)) {
-                t.replaceAdjacent(triangleIndexForSplit, triangleIndex1);
-            } else if (t.isAdjacentWith(t2)) {
-                t.replaceAdjacent(triangleIndexForSplit, triangleIndex2);
-            }
+    for(auto i : checkAdjacentList) {
+        auto& t = triangles[i];
+        if (t.isAdjacentWith(t0)) {
+            t.replaceAdjacent(triangleIndexForSplit, triangleIndex0);
+        } else if (t.isAdjacentWith(t1)) {
+            t.replaceAdjacent(triangleIndexForSplit, triangleIndex1);
+        } else if (t.isAdjacentWith(t2)) {
+            t.replaceAdjacent(triangleIndexForSplit, triangleIndex2);
         }
     }
 }

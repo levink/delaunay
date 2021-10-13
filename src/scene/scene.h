@@ -11,6 +11,12 @@ struct Circle {
     Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c);
 };
 
+struct EdgeIndex {
+    unsigned int v0, v1;
+    EdgeIndex();
+    EdgeIndex(unsigned int v0, unsigned int v1);
+};
+
 struct Triangle {
     glm::vec2 point0, point1, point2;
     unsigned int index0, index1, index2;
@@ -46,6 +52,10 @@ struct Triangle {
         return match >= 2;
     }
     void replaceAdjacent(unsigned int old_value, unsigned int new_value) {
+        if (old_value == new_value){
+            return;
+        }
+
         for(auto& adj : adjacent) {
             if (adj == old_value) {
                 adj = new_value;
@@ -53,12 +63,6 @@ struct Triangle {
             }
         }
     }
-};
-
-struct EdgeIndex {
-    unsigned int v0, v1;
-    EdgeIndex();
-    EdgeIndex(unsigned int v0, unsigned int v1);
 };
 
 struct Scene {
@@ -95,5 +99,6 @@ struct Scene {
     void addSuperTriangle();
     void removeSuperTriangle();
     void triangulate();
+    void triangulatePoint(unsigned int pointIndex);
     int findTriangle(const glm::vec2& point);
 };
