@@ -226,13 +226,13 @@ void Scene::triangulate() {
 
     /* All points except super triangle */
     for(auto pointIndex = 0; pointIndex + 3 < points.size(); pointIndex++) {
-        triangulatePoint(pointIndex);
+        addPointToTriangulation(pointIndex);
     }
 
     //removeSuperTriangle();
     restorePoints();
 }
-void Scene::triangulatePoint(unsigned int pointIndex) {
+void Scene::addPointToTriangulation(unsigned int pointIndex) {
     auto& point = points[pointIndex];
     auto triangleIndexForSplit = findTriangle(point);
     if (triangleIndexForSplit == -1) {
@@ -242,10 +242,10 @@ void Scene::triangulatePoint(unsigned int pointIndex) {
 
 
     auto triangleForSplit = triangles[triangleIndexForSplit];
-    std::vector<unsigned int> checkAdjacentList(3);
-    for (auto& tIndex : triangleForSplit.adjacent){
-        if (tIndex){
-            checkAdjacentList.push_back(tIndex);
+    std::vector<unsigned int> checkAdjacentList;
+    for (auto& adjacentIndex : triangleForSplit.adjacent){
+        if (adjacentIndex != -1){
+            checkAdjacentList.push_back(adjacentIndex);
         }
     }
 
@@ -288,11 +288,29 @@ void Scene::triangulatePoint(unsigned int pointIndex) {
         auto& t = triangles[i];
         if (t.isAdjacentWith(t0)) {
             t.replaceAdjacent(triangleIndexForSplit, triangleIndex0);
-        } else if (t.isAdjacentWith(t1)) {
+        }
+        else if (t.isAdjacentWith(t1)) {
             t.replaceAdjacent(triangleIndexForSplit, triangleIndex1);
-        } else if (t.isAdjacentWith(t2)) {
+        }
+        else if (t.isAdjacentWith(t2)) {
             t.replaceAdjacent(triangleIndexForSplit, triangleIndex2);
         }
+    }
+    t0 = triangles[triangleIndex0];
+    t1 = triangles[triangleIndex1];
+    t2 = triangles[triangleIndex2];
+
+
+    std::stack<int> adjacent;
+    auto a0 = t0.getAdjacent(pointIndex);
+    auto a1 = t1.getAdjacent(pointIndex);
+    auto a2 = t2.getAdjacent(pointIndex);
+    if (a0 != -1) adjacent.push(a0);
+    if (a1 != -1) adjacent.push(a1);
+    if (a2 != -1) adjacent.push(a2);
+
+    while(!adjacent.empty()) {
+        //todo: check delaynay and swap diagonal
     }
 }
 int Scene::findTriangle(const glm::vec2& point) {

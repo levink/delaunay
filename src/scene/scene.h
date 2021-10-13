@@ -20,7 +20,11 @@ struct EdgeIndex {
 struct Triangle {
     glm::vec2 point0, point1, point2;
     unsigned int index0, index1, index2;
-    unsigned int adjacent[3] = {0};
+    unsigned int adjacent[3] = {
+        static_cast<unsigned int>(-1),
+        static_cast<unsigned int>(-1),
+        static_cast<unsigned int>(-1)
+    };
 
     bool contains(unsigned int index) const {
         return
@@ -63,6 +67,12 @@ struct Triangle {
             }
         }
     }
+    unsigned int getAdjacent(unsigned int pointIndex) {
+        if (pointIndex == index0) return adjacent[1];
+        if (pointIndex == index1) return adjacent[2];
+        if (pointIndex == index2) return adjacent[0];
+        return -1;
+    }
 };
 
 struct Scene {
@@ -99,6 +109,6 @@ struct Scene {
     void addSuperTriangle();
     void removeSuperTriangle();
     void triangulate();
-    void triangulatePoint(unsigned int pointIndex);
+    void addPointToTriangulation(unsigned int pointIndex);
     int findTriangle(const glm::vec2& point);
 };
