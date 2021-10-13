@@ -1,6 +1,8 @@
 #include <iostream>
+#include "src/platform/log.h"
+#include "src/model/color.h"
 #include "scene.h"
-#include "../model/color.h"
+
 
 Circle::Circle() : radius(0) { }
 Circle::Circle(float x, float y, float radius) : center(x,y), radius(radius) { }
@@ -23,21 +25,9 @@ Circle::Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
     radius = sqrt((B * B + C * C - 4 * A * D) / (4 * A * A));
 }
 
-bool Triangle::contains(const glm::vec2& point) const {
 
-    const float eps = 0.00000001f;
-    auto pt = glm::vec3(point, 0);
-    auto dir = glm::vec3(0, 0, 1);
-    auto t0 = glm::vec3(p0, 0);
-    auto t1 = glm::vec3(p1, 0);
-    auto t2 = glm::vec3(p2, 0);
-
-    if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
-    if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
-    if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
-
-    return true;
-}
+EdgeIndex::EdgeIndex(): v0(0), v1(0) { }
+EdgeIndex::EdgeIndex(unsigned int v0, unsigned int v1) : v0(std::min(v0, v1)), v1(std::max(v0, v1)) {}
 
 
 const CircleMesh *Scene::getSelectedCircle() {
@@ -55,6 +45,9 @@ void Scene::addPoint(const glm::vec2& cursor) {
     pointsMesh.emplace_back(mesh);
 
     normalizePoints();
+    addSuperTriangle();
+    triangulate();
+    removeSuperTriangle();
     restorePoints();
     updateView();
 }
@@ -67,9 +60,9 @@ void Scene::movePoint(const glm::vec2& cursor) {
     points[selectedPoint] = position;
 
     //todo: fix this
-    triangles[0].p0 = points[0];
-    triangles[0].p1 = points[1];
-    triangles[0].p2 = points[2];
+    triangles[0].point0 = points[0];
+    triangles[0].point1 = points[1];
+    triangles[0].point2 = points[2];
 
     updateView();
 }
@@ -143,9 +136,9 @@ void Scene::updateView() {
     trianglesMesh.resize(3 * triangles.size());
     for(auto i = 0; i < triangles.size(); i++) {
         auto& t = triangles[i];
-        trianglesMesh[3*i+0] = createLineMesh(t.p0, t.p1);
-        trianglesMesh[3*i+1] = createLineMesh(t.p1, t.p2);
-        trianglesMesh[3*i+2] = createLineMesh(t.p2, t.p0);
+        trianglesMesh[3*i+0] = createLineMesh(t.point0, t.point1);
+        trianglesMesh[3*i+1] = createLineMesh(t.point1, t.point2);
+        trianglesMesh[3*i+2] = createLineMesh(t.point2, t.point0);
     }
 }
 CircleMesh Scene::createPointMesh(const glm::vec2& point) {
@@ -192,8 +185,120 @@ void Scene::restorePoints() {
         p = p * scale + offset;
     }
 }
+void Scene::addSuperTriangle() {
+    /* All existing points in [0,1] */
+    points.reserve(points.size() + 3);
+    points.emplace_back(-50, -50);
+    points.emplace_back(50, -50);
+    points.emplace_back(0, 50);
+
+    auto index0 = static_cast<unsigned int>(points.size() - 3);
+    auto index1 = index0 + 1;
+    auto index2 = index0 + 2;
+    auto point0 = points[index0];
+    auto point1 = points[index1];
+    auto point2 = points[index2];
+    triangles.push_back({point0, point1, point2, index0, index1, index2});
+}
+void Scene::removeSuperTriangle() {
+    unsigned int pointIndex0 = points.size() - 3;
+    unsigned int pointIndex1 = points.size() - 2;
+    unsigned int pointIndex2 = points.size() - 1;
+
+    std::vector<unsigned int> trianglesForDelete;
+    for(size_t i = 0; i < triangles.size(); i++) {
+        auto& t = triangles[i];
+        if (t.contains(pointIndex0) || t.contains(pointIndex1) || t.contains(pointIndex2)){
+            trianglesForDelete.push_back(i);
+        }
+    }
+    std::reverse(trianglesForDelete.begin(), trianglesForDelete.end());
+
+    for(auto index : trianglesForDelete) {
+        triangles.erase(triangles.begin() + index);
+    }
+
+    points.erase(points.begin() + pointIndex2);
+    points.erase(points.begin() + pointIndex1);
+    points.erase(points.begin() + pointIndex0);
+}
+void Scene::triangulate() {
+
+    /* All points except super triangle */
+    for(auto pointIndex = 0; pointIndex + 3 < points.size(); pointIndex++) {
+
+        auto& point = points[pointIndex];
+        auto triangleIndexForSplit = findTriangle(point);
+        if (triangleIndexForSplit == -1) {
+            Log::warn("Triangle not found!");
+            continue;
+        }
 
 
+        auto triangleForSplit = triangles[triangleIndexForSplit];
+        std::vector<unsigned int> checkAdjacentList(3);
+        for (auto& tIndex : triangleForSplit.adjacent){
+            if (tIndex){
+                checkAdjacentList.push_back(tIndex);
+            }
+        }
+
+        auto i0 = triangleForSplit.index0;
+        auto i1 = triangleForSplit.index1;
+        auto i2 = triangleForSplit.index2;
+        auto i3 = static_cast<unsigned int>(pointIndex);
+
+        auto p0 = triangleForSplit.point0;
+        auto p1 = triangleForSplit.point1;
+        auto p2 = triangleForSplit.point2;
+        auto p3 = point;
+
+        auto t0 = Triangle {p0, p1, p3, i0, i1, i3};
+        auto t1 = Triangle {p1, p2, p3, i1, i2, i3};
+        auto t2 = Triangle {p2, p0, p3, i2, i0, i3};
+
+        triangles.resize(triangles.size() + 2);
+        auto triangleIndex0 = triangleIndexForSplit;
+        auto triangleIndex1 = triangles.size();
+        auto triangleIndex2 = triangleIndex1 + 1;
+
+        t0.adjacent[0] = triangleForSplit.adjacent[0];
+        t0.adjacent[1] = triangleIndex1;
+        t0.adjacent[2] = triangleIndex2;
+
+        t1.adjacent[0] = triangleForSplit.adjacent[1];
+        t1.adjacent[1] = triangleIndex2;
+        t1.adjacent[2] = triangleIndex0;
+
+        t2.adjacent[0] = triangleForSplit.adjacent[2];
+        t2.adjacent[1] = triangleIndex0;
+        t2.adjacent[2] = triangleIndex1;
+
+        triangles[triangleIndex0] = t0;
+        triangles[triangleIndex1] = t1;
+        triangles[triangleIndex2] = t2;
+
+        for(auto i : checkAdjacentList) {
+            auto& t = triangles[i];
+            if (t.isAdjacentWith(t0)) {
+                t.replaceAdjacent(triangleIndexForSplit, triangleIndex0);
+            } else if (t.isAdjacentWith(t1)) {
+                t.replaceAdjacent(triangleIndexForSplit, triangleIndex1);
+            } else if (t.isAdjacentWith(t2)) {
+                t.replaceAdjacent(triangleIndexForSplit, triangleIndex2);
+            }
+        }
+    }
+}
+int Scene::findTriangle(const glm::vec2& point) {
+    for (size_t i = 0; i < triangles.size(); i++) {
+        auto& triangle = triangles[i];
+        if (triangle.contains(point)) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
 
 
 
@@ -238,22 +343,7 @@ void Scene::restorePoints() {
 //    addTriangleToIndex(triangleIndex1);
 //    addTriangleToIndex(triangleIndex2);
 //}
-//int Scene::findTriangle(const glm::vec2 &point) {
-//    for (size_t i = 0; i < triangles.size(); i++) {
-//
-//        auto& t = triangles[i];
-//        auto& p1 = points[t.v0];
-//        auto& p2 = points[t.v1];
-//        auto& p3 = points[t.v2];
-//
-//        bool contains = Triangle::contains(point, p1, p2, p3);
-//        if (contains) {
-//            return static_cast<int>(i);
-//        }
-//    }
-//
-//    return -1;
-//}
+
 //void Scene::createCircles() {
 //    circles.resize(triangles.size());
 //    for (size_t i = 0; i < triangles.size(); i++) {
@@ -262,18 +352,11 @@ void Scene::restorePoints() {
 //    }
 //}
 //Scene::Circle Scene::createCircle(const Triangle& triangle) {
-//    auto& p1 = points[triangle.v0];
-//    auto& p2 = points[triangle.v1];
+//    auto& point1 = points[triangle.v0];
+//    auto& point2 = points[triangle.v1];
 //    auto& p3 = points[triangle.v2];
-//    return Circle {p1, p2, p3};
+//    return Circle {point1, point2, p3};
 //}
-
-
-
-
-
-
-
 
 
 

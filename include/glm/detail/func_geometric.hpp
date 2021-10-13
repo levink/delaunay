@@ -27,7 +27,7 @@ namespace glm
 	GLM_FUNC_DECL T length(
 		vecType<T, P> const & x);
 
-	/// Returns the distance betwwen p0 and p1, i.e., length(p0 - p1).
+	/// Returns the distance betwwen point0 and point1, i.e., length(point0 - point1).
 	///
 	/// @tparam genType Floating-point vector types.
 	/// 

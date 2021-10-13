@@ -12,12 +12,53 @@ struct Circle {
 };
 
 struct Triangle {
-    glm::vec2 p0, p1, p2;
-    bool contains(const glm::vec2& point) const;
+    glm::vec2 point0, point1, point2;
+    unsigned int index0, index1, index2;
+    unsigned int adjacent[3] = {0};
+
+    bool contains(unsigned int index) const {
+        return
+                index0 == index ||
+                index1 == index ||
+                index2 == index;
+    }
+    bool contains(const glm::vec2& point) const {
+        const float eps = 0.00000001f;
+        auto pt = glm::vec3(point, 0);
+        auto dir = glm::vec3(0, 0, 1);
+        auto t0 = glm::vec3(point0, 0);
+        auto t1 = glm::vec3(point1, 0);
+        auto t2 = glm::vec3(point2, 0);
+
+        if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
+        if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
+        if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
+
+        return true;
+    }
+    bool isAdjacentWith(const Triangle& triangle) const {
+
+        int match = 0;
+        if (triangle.contains(index0)) match++;
+        if (triangle.contains(index1)) match++;
+        if (triangle.contains(index2)) match++;
+
+        return match >= 2;
+    }
+    void replaceAdjacent(unsigned int old_value, unsigned int new_value) {
+        for(auto& adj : adjacent) {
+            if (adj == old_value) {
+                adj = new_value;
+                return;
+            }
+        }
+    }
 };
 
-struct TriangleIndex {
-    int i0, i1, i2;
+struct EdgeIndex {
+    unsigned int v0, v1;
+    EdgeIndex();
+    EdgeIndex(unsigned int v0, unsigned int v1);
 };
 
 struct Scene {
@@ -51,4 +92,8 @@ struct Scene {
     glm::vec2 offset;
     void normalizePoints();
     void restorePoints();
+    void addSuperTriangle();
+    void removeSuperTriangle();
+    void triangulate();
+    int findTriangle(const glm::vec2& point);
 };
