@@ -275,9 +275,13 @@ void Scene::addPointToTriangulation(int pointIndex) {
         }
 
         auto& t = triangles[i];
-        t.link(t0);
-        t.link(t1);
-        t.link(t2);
+        bool linked = t.link(t0);
+        linked = linked || t.link(t1);
+        linked = linked || t.link(t2);
+
+        if (!linked) {
+            Log::warn("Can not link triangle");
+        }
     }
 
 //    struct TrianglePair {

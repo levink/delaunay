@@ -47,9 +47,9 @@ struct Triangle {
 
     bool has(int pointIndex) const {
         return
-                point[0].index == pointIndex ||
-                point[1].index == pointIndex ||
-                point[2].index == pointIndex;
+            point[0].index == pointIndex ||
+            point[1].index == pointIndex ||
+            point[2].index == pointIndex;
     }
     bool has(const Point& p) const {
         auto pointIndex = p.index;
@@ -57,6 +57,9 @@ struct Triangle {
             point[0].index == pointIndex ||
             point[1].index == pointIndex ||
             point[2].index == pointIndex;
+    }
+    bool has(const Point& p1, const Point& p2) const {
+        return has(p1.index) && has(p2.index);
     }
     bool contains(const glm::vec2& p) const {
         const float eps = 0.00000001f;
@@ -114,11 +117,23 @@ struct Triangle {
         return -1;
     }
     bool link(const Triangle& triangle) {
-//        auto& i0 = index[0];
-//        auto& i1 = index[1];
-//        auto& i2 = index[2];
+        auto& p0 = point[0];
+        auto& p1 = point[1];
+        auto& p2 = point[2];
 
-        //todo this
+        if (triangle.has(p0, p1)) {
+            adjacent[0] = triangle.index;
+            return true;
+        }
+        else if (triangle.has(p1, p2)) {
+            adjacent[1] = triangle.index;
+            return true;
+        }
+        else if (triangle.has(p2, p0)) {
+            adjacent[2] = triangle.index;
+            return true;
+        }
+
         return false;
     }
     Circle getCircle() const {
