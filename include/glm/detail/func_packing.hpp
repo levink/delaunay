@@ -135,7 +135,7 @@ namespace glm
 
 	/// Returns a two-component unsigned integer vector representation of v. 
 	/// The bit-level representation of v is preserved. 
-	/// The first component of the vector contains the 32 least significant bits of the double; 
+	/// The first component of the vector has the 32 least significant bits of the double;
 	/// the second component consists the 32 most significant bits.
 	/// 
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/unpackDouble2x32.xml">GLSL unpackDouble2x32 man page</a>

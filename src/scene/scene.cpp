@@ -39,9 +39,10 @@ const CircleMesh *Scene::getSelectedCircle() {
 }
 
 void Scene::addPoint(const glm::vec2& cursor) {
-    points.emplace_back(cursor);
+    int lastIndex = static_cast<int>(points.size());
+    points.emplace_back(lastIndex, cursor);
 
-    auto mesh = createPointMesh(points.back());
+    auto mesh = createPointMesh(points.back().position);
     pointsMesh.emplace_back(mesh);
 
     triangulate();
@@ -53,7 +54,7 @@ void Scene::movePoint(const glm::vec2& cursor) {
     }
 
     auto position = cursor - dragDrop;
-    points[selectedPoint] = position;
+    points[selectedPoint].position = position;
 
     updateView();
 }
@@ -66,17 +67,17 @@ void Scene::selectPoint(const glm::vec2& cursor) {
         return;
     }
 
-    auto minDistance = glm::distance(points[0], cursor);
-    dragDrop = cursor - points[0];
+    auto minDistance = glm::distance(points[0].position, cursor);
+    dragDrop = cursor - points[0].position;
     auto index = 0;
 
     for(int i = 1; i < points.size(); i++) {
         auto& point = points[i];
-        float distance = glm::distance(point, cursor);
+        float distance = glm::distance(point.position, cursor);
         if (distance < minDistance) {
             minDistance = distance;
             index = i;
-            dragDrop = cursor - points[i];
+            dragDrop = cursor - points[i].position;
         }
     }
 
@@ -91,9 +92,6 @@ void Scene::selectPoint(const glm::vec2& cursor) {
         selectedPoint = index;
         pointsMesh[selectedPoint].color = Color::yellow;
     }
-
-//    int triangleIndex = findTriangle(cursor);
-//    std::cout << "triangleIndex = " << triangleIndex << std::endl;
 }
 void Scene::clearSelection() {
     if (selectedPoint != -1) {
@@ -105,12 +103,13 @@ void Scene::clearSelection() {
 
 void Scene::initView(const glm::vec2& viewSize) {
     auto padding = 100.f;
-    points.emplace_back(padding, padding);
-    points.emplace_back(static_cast<float>(viewSize.x) - padding, padding);
-    points.emplace_back(padding, static_cast<float>(viewSize.y) - padding);
+    int lastIndex = static_cast<int>(points.size());
+    points.emplace_back(lastIndex + 0, padding, padding);
+    points.emplace_back(lastIndex + 1, static_cast<float>(viewSize.x) - padding, padding);
+    points.emplace_back(lastIndex + 2, padding, static_cast<float>(viewSize.y) - padding);
     pointsMesh.reserve(points.size());
-    for(auto& p : points) {
-        auto mesh = createPointMesh(p);
+    for(auto& point : points) {
+        auto mesh = createPointMesh(point.position);
         pointsMesh.push_back(mesh);
     }
 
@@ -121,15 +120,15 @@ void Scene::updateView() {
     pointsMesh.resize(points.size());
     for(size_t i = 0; i < points.size(); i++) {
         auto& point = points[i];
-        pointsMesh[i].setPosition(point);
+        pointsMesh[i].setPosition(point.position);
     }
 
     trianglesMesh.resize(3 * triangles.size());
     for(auto i = 0; i < triangles.size(); i++) {
         auto& t = triangles[i];
-        trianglesMesh[3*i+0] = createLineMesh(t.point0, t.point1);
-        trianglesMesh[3*i+1] = createLineMesh(t.point1, t.point2);
-        trianglesMesh[3*i+2] = createLineMesh(t.point2, t.point0);
+        trianglesMesh[3*i+0] = createLineMesh(t.point[0].position, t.point[1].position);
+        trianglesMesh[3*i+1] = createLineMesh(t.point[1].position, t.point[2].position);
+        trianglesMesh[3*i+2] = createLineMesh(t.point[2].position, t.point[0].position);
     }
 }
 CircleMesh Scene::createPointMesh(const glm::vec2& point) {
@@ -147,13 +146,13 @@ void Scene::normalizePoints() {
         return;
     }
 
-    auto min = points[0];
-    auto max = points[0];
+    auto min = points[0].position;
+    auto max = points[0].position;
     for(auto& p : points) {
-        min.x = std::min(min.x, p.x);
-        min.y = std::min(min.y, p.y);
-        max.x = std::max(max.x, p.x);
-        max.y = std::max(max.y, p.y);
+        min.x = std::min(min.x, p.position.x);
+        min.y = std::min(min.y, p.position.y);
+        max.x = std::max(max.x, p.position.x);
+        max.y = std::max(max.y, p.position.y);
     }
 
     scale = std::max(max.x - min.x, max.y - min.y);
@@ -164,7 +163,7 @@ void Scene::normalizePoints() {
 
 
     for(auto& p : points) {
-        p = (p - offset) / scale;
+        p.position = (p.position - offset) / scale;
     }
 }
 void Scene::restorePoints() {
@@ -173,39 +172,40 @@ void Scene::restorePoints() {
     }
 
     for(auto& p : points) {
-        p = p * scale + offset;
+        p.position = p.position * scale + offset;
     }
 
     for(auto& t : triangles) {
-        t.point0 = points[t.index0];
-        t.point1 = points[t.index1];
-        t.point2 = points[t.index2];
+        t.point[0] = points[t.point[0].index];
+        t.point[1] = points[t.point[1].index];
+        t.point[2] = points[t.point[2].index];
     }
 }
 void Scene::addSuperTriangle() {
     /* All existing points in [0,1] */
     points.reserve(points.size() + 3);
-    points.emplace_back(-50, -50);
-    points.emplace_back(50, -50);
-    points.emplace_back(0, 50);
 
-    auto index0 = static_cast<unsigned int>(points.size() - 3);
-    auto index1 = index0 + 1;
-    auto index2 = index0 + 2;
-    auto point0 = points[index0];
-    auto point1 = points[index1];
-    auto point2 = points[index2];
-    triangles.push_back({point0, point1, point2, index0, index1, index2});
+    int pointIndex = static_cast<int>(points.size());
+    points.emplace_back(pointIndex + 0, -50, -50);
+    points.emplace_back(pointIndex + 1, 50, -50);
+    points.emplace_back(pointIndex + 2, 0, 50);
+
+    triangles.emplace_back(
+        static_cast<int>(triangles.size()),
+        points[pointIndex],
+        points[pointIndex + 1],
+        points[pointIndex + 2]
+    );
 }
 void Scene::removeSuperTriangle() {
-    unsigned int pointIndex0 = points.size() - 3;
-    unsigned int pointIndex1 = points.size() - 2;
-    unsigned int pointIndex2 = points.size() - 1;
+    int pointIndex0 = points.size() - 3;
+    int pointIndex1 = points.size() - 2;
+    int pointIndex2 = points.size() - 1;
 
     std::vector<unsigned int> trianglesForDelete;
     for(size_t i = 0; i < triangles.size(); i++) {
         auto& t = triangles[i];
-        if (t.contains(pointIndex0) || t.contains(pointIndex1) || t.contains(pointIndex2)){
+        if (t.has(pointIndex0) || t.has(pointIndex1) || t.has(pointIndex2)){
             trianglesForDelete.push_back(i);
         }
     }
@@ -232,86 +232,64 @@ void Scene::triangulate() {
     //removeSuperTriangle();
     restorePoints();
 }
-void Scene::addPointToTriangulation(unsigned int pointIndex) {
+void Scene::addPointToTriangulation(int pointIndex) {
     auto& point = points[pointIndex];
-    auto triangleIndexForSplit = findTriangle(point);
+    auto triangleIndexForSplit = findTriangle(point.position);
     if (triangleIndexForSplit == -1) {
         Log::warn("Triangle not found!");
         return;
     }
 
-
     auto triangleForSplit = triangles[triangleIndexForSplit];
-    std::vector<unsigned int> checkAdjacentList;
-    for (auto& adjacentIndex : triangleForSplit.adjacent){
-        if (adjacentIndex != -1){
-            checkAdjacentList.push_back(adjacentIndex);
-        }
-    }
+    auto p0 = triangleForSplit.point[0];
+    auto p1 = triangleForSplit.point[1];
+    auto p2 = triangleForSplit.point[2];
 
-    auto i0 = triangleForSplit.index0;
-    auto i1 = triangleForSplit.index1;
-    auto i2 = triangleForSplit.index2;
-    auto i3 = static_cast<unsigned int>(pointIndex);
-
-    auto p0 = triangleForSplit.point0;
-    auto p1 = triangleForSplit.point1;
-    auto p2 = triangleForSplit.point2;
-    auto p3 = point;
-
-    auto t0 = Triangle {p0, p1, p3, i0, i1, i3};
-    auto t1 = Triangle {p1, p2, p3, i1, i2, i3};
-    auto t2 = Triangle {p2, p0, p3, i2, i0, i3};
-
+    int tIndex0 = triangleForSplit.index;
+    int tIndex1 = static_cast<int>(triangles.size());
+    int tIndex2 = tIndex1 + 1;
     triangles.resize(triangles.size() + 2);
-    auto triangleIndex0 = triangleIndexForSplit;
-    auto triangleIndex1 = triangles.size() - 2;
-    auto triangleIndex2 = triangles.size() - 1;
+    triangles[tIndex0] = Triangle {tIndex0, p0, p1, point};
+    triangles[tIndex1] = Triangle {tIndex1, p1, p2, point};
+    triangles[tIndex2] = Triangle {tIndex2, p2, p0, point};
+
+    auto& t0 = triangles[tIndex0];
+    auto& t1 = triangles[tIndex1];
+    auto& t2 = triangles[tIndex2];
 
     t0.adjacent[0] = triangleForSplit.adjacent[0];
-    t0.adjacent[1] = triangleIndex1;
-    t0.adjacent[2] = triangleIndex2;
+    t0.adjacent[1] = t1.index;
+    t0.adjacent[2] = t2.index;
 
     t1.adjacent[0] = triangleForSplit.adjacent[1];
-    t1.adjacent[1] = triangleIndex2;
-    t1.adjacent[2] = triangleIndex0;
+    t1.adjacent[1] = t2.index;
+    t1.adjacent[2] = t0.index;
 
     t2.adjacent[0] = triangleForSplit.adjacent[2];
-    t2.adjacent[1] = triangleIndex0;
-    t2.adjacent[2] = triangleIndex1;
+    t2.adjacent[1] = t0.index;
+    t2.adjacent[2] = t1.index;
 
-    triangles[triangleIndex0] = t0;
-    triangles[triangleIndex1] = t1;
-    triangles[triangleIndex2] = t2;
+    for(auto i : triangleForSplit.adjacent) {
+        if (i == -1) {
+            continue;
+        }
 
-    for(auto i : checkAdjacentList) {
         auto& t = triangles[i];
-        if (t.isAdjacentWith(t0)) {
-            t.replaceAdjacent(triangleIndexForSplit, triangleIndex0);
-        }
-        else if (t.isAdjacentWith(t1)) {
-            t.replaceAdjacent(triangleIndexForSplit, triangleIndex1);
-        }
-        else if (t.isAdjacentWith(t2)) {
-            t.replaceAdjacent(triangleIndexForSplit, triangleIndex2);
-        }
+        t.link(t0);
+        t.link(t1);
+        t.link(t2);
     }
-    t0 = triangles[triangleIndex0];
-    t1 = triangles[triangleIndex1];
-    t2 = triangles[triangleIndex2];
 
-
-    std::stack<int> adjacent;
-    auto a0 = t0.getAdjacent(pointIndex);
-    auto a1 = t1.getAdjacent(pointIndex);
-    auto a2 = t2.getAdjacent(pointIndex);
-    if (a0 != -1) adjacent.push(a0);
-    if (a1 != -1) adjacent.push(a1);
-    if (a2 != -1) adjacent.push(a2);
-
-    while(!adjacent.empty()) {
-        //todo: check delaynay and swap diagonal
-    }
+//    struct TrianglePair {
+//        int centerPoint;
+//        int splittedTriangle;
+//        int oppositeTriangle;
+//    };
+//
+//    std::stack<TrianglePair> adjacent;
+//    adjacent.push({pointIndex, t0.index, t0.getOpposite(pointIndex)});
+//    adjacent.push({pointIndex, t1.index, t1.getOpposite(pointIndex)});
+//    adjacent.push({pointIndex, t2.index, t2.getOpposite(pointIndex)});
 }
 int Scene::findTriangle(const glm::vec2& point) {
     for (size_t i = 0; i < triangles.size(); i++) {
@@ -380,6 +358,7 @@ int Scene::findTriangle(const glm::vec2& point) {
 //    auto& p3 = points[triangle.v2];
 //    return Circle {point1, point2, p3};
 //}
+
 
 
 

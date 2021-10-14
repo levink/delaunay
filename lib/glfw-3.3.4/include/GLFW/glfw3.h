@@ -5302,7 +5302,7 @@ GLFWAPI void glfwSetClipboardString(GLFWwindow* window, const char* string);
 
 /*! @brief Returns the contents of the clipboard as a string.
  *
- *  This function returns the contents of the system clipboard, if it contains
+ *  This function returns the contents of the system clipboard, if it has
  *  or is convertible to a UTF-8 encoded string.  If the clipboard is empty or
  *  if its contents cannot be converted, `NULL` is returned and a @ref
  *  GLFW_FORMAT_UNAVAILABLE error is generated.

@@ -9,6 +9,10 @@ struct Circle {
     Circle();
     Circle(float x, float y, float radius);
     Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c);
+    bool contains(const glm::vec2& point) const {
+        auto delta = point - center;
+        return delta.x * delta.x + delta.y * delta.y <= radius * radius;
+    }
 };
 
 struct EdgeIndex {
@@ -17,28 +21,50 @@ struct EdgeIndex {
     EdgeIndex(unsigned int v0, unsigned int v1);
 };
 
-struct Triangle {
-    glm::vec2 point0, point1, point2;
-    unsigned int index0, index1, index2;
-    unsigned int adjacent[3] = {
-        static_cast<unsigned int>(-1),
-        static_cast<unsigned int>(-1),
-        static_cast<unsigned int>(-1)
-    };
+struct Point {
+    int index = -1;
+    glm::vec2 position;
+    Point() = default;
+    Point(int index, float x, float y) : index(index), position(x,y) { }
+    Point(int index, const glm::vec2& position) : index(index), position(position) { }
+};
 
-    bool contains(unsigned int index) const {
-        return
-                index0 == index ||
-                index1 == index ||
-                index2 == index;
+
+struct Triangle {
+    int index = -1;
+    Point point[3];
+    int adjacent[3] = {
+            -1, //edge for point0 - point1
+            -1, //edge for point1 - point2
+            -1  //edge for point2 - point0
+    };
+    Triangle() = default;
+    Triangle(int index, Point p0, Point p1, Point p2) : index(index) {
+        point[0] = p0;
+        point[1] = p1;
+        point[2] = p2;
     }
-    bool contains(const glm::vec2& point) const {
+
+    bool has(int pointIndex) const {
+        return
+                point[0].index == pointIndex ||
+                point[1].index == pointIndex ||
+                point[2].index == pointIndex;
+    }
+    bool has(const Point& p) const {
+        auto pointIndex = p.index;
+        return
+            point[0].index == pointIndex ||
+            point[1].index == pointIndex ||
+            point[2].index == pointIndex;
+    }
+    bool contains(const glm::vec2& p) const {
         const float eps = 0.00000001f;
-        auto pt = glm::vec3(point, 0);
+        auto pt = glm::vec3(p, 0);
         auto dir = glm::vec3(0, 0, 1);
-        auto t0 = glm::vec3(point0, 0);
-        auto t1 = glm::vec3(point1, 0);
-        auto t2 = glm::vec3(point2, 0);
+        auto t0 = glm::vec3(point[0].position, 0);
+        auto t1 = glm::vec3(point[1].position, 0);
+        auto t2 = glm::vec3(point[2].position, 0);
 
         if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
         if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
@@ -49,13 +75,13 @@ struct Triangle {
     bool isAdjacentWith(const Triangle& triangle) const {
 
         int match = 0;
-        if (triangle.contains(index0)) match++;
-        if (triangle.contains(index1)) match++;
-        if (triangle.contains(index2)) match++;
+        if (triangle.has(point[0])) match++;
+        if (triangle.has(point[1])) match++;
+        if (triangle.has(point[2])) match++;
 
         return match >= 2;
     }
-    void replaceAdjacent(unsigned int old_value, unsigned int new_value) {
+    void replaceAdjacent(int old_value, int new_value) {
         if (old_value == new_value){
             return;
         }
@@ -67,18 +93,47 @@ struct Triangle {
             }
         }
     }
-    unsigned int getAdjacent(unsigned int pointIndex) {
-        if (pointIndex == index0) return adjacent[1];
-        if (pointIndex == index1) return adjacent[2];
-        if (pointIndex == index2) return adjacent[0];
+    int getOpposite(int pointIndex) {
+        if (pointIndex == point[0].index) return adjacent[1];
+        if (pointIndex == point[1].index) return adjacent[2];
+        if (pointIndex == point[2].index) return adjacent[0];
         return -1;
+    }
+    int getAdjacent(int pointIndex0, int pointIndex1) {
+
+        //todo this;
+        return -1;
+        if (pointIndex0 == point[0].index && pointIndex1 == point[1].index) return adjacent[0];
+        if (pointIndex0 == point[1].index && pointIndex1 == point[2].index) return adjacent[1];
+        if (pointIndex0 == point[2].index && pointIndex1 == point[0].index) return adjacent[2];
+
+//        if (pointIndex1 == index[0] && pointIndex0 == index[1]) return adjacent[0];
+//        if (pointIndex1 == index[1] && pointIndex0 == index[2]) return adjacent[1];
+//        if (pointIndex1 == index[2] && pointIndex0 == index[0]) return adjacent[2];
+
+        return -1;
+    }
+    bool link(const Triangle& triangle) {
+//        auto& i0 = index[0];
+//        auto& i1 = index[1];
+//        auto& i2 = index[2];
+
+        //todo this
+        return false;
+    }
+    Circle getCircle() const {
+        return {
+            point[0].position,
+            point[1].position,
+            point[2].position
+        };
     }
 };
 
 struct Scene {
 
     //model
-    std::vector<glm::vec2> points;
+    std::vector<Point> points;
     std::vector<Triangle> triangles;
 
     //view
@@ -109,6 +164,23 @@ struct Scene {
     void addSuperTriangle();
     void removeSuperTriangle();
     void triangulate();
-    void addPointToTriangulation(unsigned int pointIndex);
+    void addPointToTriangulation(int pointIndex);
     int findTriangle(const glm::vec2& point);
+    bool hasDelaunayConstraint(int triangleIndex) const {
+        auto& triangle = triangles[triangleIndex];
+        auto circle = triangle.getCircle();
+
+        return false;
+//        for(auto i = 0; i < points.size(); i++) {
+//            if (triangle.has(i)) {
+//                continue;
+//            }
+//
+//            auto& point = points[i];
+//            if (circle.contains(point)) {
+//                return false;
+//            }
+//        }
+//        return true;
+    }
 };
