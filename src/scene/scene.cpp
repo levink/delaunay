@@ -287,12 +287,7 @@ void Scene::addPointToTriangulation(int pointIndex) {
     }
 
 
-    struct TrianglePair {
-        int forSplit;
-        int forCheck;
-    };
-
-    std::stack<TrianglePair> checkItems;
+    std::stack<SplitPair> checkItems;
     checkItems.push({t0.index, t0.getOppositeTriangleIndex(pointIndex)});
     checkItems.push({t1.index, t1.getOppositeTriangleIndex(pointIndex)});
     checkItems.push({t2.index, t2.getOppositeTriangleIndex(pointIndex)});
@@ -302,28 +297,34 @@ void Scene::addPointToTriangulation(int pointIndex) {
         checkItems.pop();
 
         if (!hasDelaunayConstraint(item.forCheck)) {
-            swapEdge(point, item.forSplit, item.forCheck);
+            auto pairs = swapEdge(point, item.forSplit, item.forCheck);
+
+
+            checkItems.push({item.forSplit, pair.item1);
+            //todo: use this (add to stack)
+            int check1 = triangles[item.forSplit].adjacent[1];
+            int check2 = new2.adjacent[1];
         }
 
         checkItems.pop();
     }
 }
-void Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
+Pair Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 
     auto& old1 = triangles[index1];
     auto& old2 = triangles[index2];
     if (!old1.linkedWith(old2) || !old2.linkedWith(old1)) {
         Log::warn("Triangles are not linked!");
-        return;
+        return Pair{-1, -1};
     }
 
     old1.setFirst(splitPoint.index);
     old2.setLast(old1.point[1].index);
 
-    auto p1 = old1.point[0];
-    auto p2 = old1.point[1];
-    auto p3 = old1.point[2];
-    auto p4 = old2.point[0];
+    auto& p1 = old1.point[0];
+    auto& p2 = old1.point[1];
+    auto& p3 = old1.point[2];
+    auto& p4 = old2.point[0];
 
     auto new1 = Triangle {index1, p1, p4, p3};
     auto new2 = Triangle {index2, p1, p2, p4};
@@ -347,10 +348,7 @@ void Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
     triangles[index1] = new1;
     triangles[index2] = new2;
 
-    //todo: use this (add to stack)
-    int check1 = new1.adjacent[1];
-    int check2 = new2.adjacent[1];
-
+    return {new1.adjacent[1], new2.adjacent[1]};
 }
 int Scene::findTriangle(const glm::vec2& point) {
     for (size_t i = 0; i < triangles.size(); i++) {

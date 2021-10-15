@@ -26,6 +26,11 @@ struct Circle {
     }
 };
 
+struct SplitPair {
+    int forSplit;
+    int forCheck;
+};
+
 struct Edge {
     int v0, v1;
     Edge() : v0(-1), v1(-1) { }
@@ -238,5 +243,5 @@ struct Scene {
         return true;
     }
 
-    void swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
+    Pair swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };
