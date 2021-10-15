@@ -3,6 +3,17 @@
 #include "../model/line.h"
 #include "../model/circle.h"
 
+struct Util {
+    template<typename T>
+    static void shift(T values[3]){
+        T first = values[0];
+        for(auto i = 0; i < 2; i++) {
+            values[i] = values[i+1];
+        }
+        values[3] = first;
+    }
+};
+
 struct Circle {
     glm::vec2 center;
     float radius;
@@ -15,10 +26,10 @@ struct Circle {
     }
 };
 
-struct EdgeIndex {
-    unsigned int v0, v1;
-    EdgeIndex();
-    EdgeIndex(unsigned int v0, unsigned int v1);
+struct Edge {
+    int v0, v1;
+    Edge() : v0(-1), v1(-1) { }
+    Edge(int v0, int v1) : v0(std::min(v0, v1)), v1(std::max(v0, v1)) {}
 };
 
 struct Point {
@@ -28,7 +39,6 @@ struct Point {
     Point(int index, float x, float y) : index(index), position(x,y) { }
     Point(int index, const glm::vec2& position) : index(index), position(position) { }
 };
-
 
 struct Triangle {
     int index = -1;
@@ -60,6 +70,14 @@ struct Triangle {
     }
     bool has(const Point& p1, const Point& p2) const {
         return has(p1.index) && has(p2.index);
+    }
+    bool linkedWith(const Triangle& t) const {
+        for(auto i : adjacent){
+            if (i == t.index) {
+                return true;
+            }
+        }
+        return false;
     }
     bool contains(const glm::vec2& p) const {
         const float eps = 0.00000001f;
@@ -96,12 +114,6 @@ struct Triangle {
             }
         }
     }
-    int getOpposite(int pointIndex) {
-        if (pointIndex == point[0].index) return adjacent[1];
-        if (pointIndex == point[1].index) return adjacent[2];
-        if (pointIndex == point[2].index) return adjacent[0];
-        return -1;
-    }
     int getAdjacent(int pointIndex0, int pointIndex1) {
 
         //todo this;
@@ -114,6 +126,12 @@ struct Triangle {
 //        if (pointIndex1 == index[1] && pointIndex0 == index[2]) return adjacent[1];
 //        if (pointIndex1 == index[2] && pointIndex0 == index[0]) return adjacent[2];
 
+        return -1;
+    }
+    int getOppositeTriangleIndex(int pointIndex) {
+        if (pointIndex == point[0].index) return adjacent[1];
+        if (pointIndex == point[1].index) return adjacent[2];
+        if (pointIndex == point[2].index) return adjacent[0];
         return -1;
     }
     bool link(const Triangle& triangle) {
@@ -142,6 +160,28 @@ struct Triangle {
             point[1].position,
             point[2].position
         };
+    }
+    void shift(){
+        Util::shift(point);
+        Util::shift(adjacent);
+    }
+    void setFirst(int pointIndex) {
+        if (!has(pointIndex)) {
+            return;
+        }
+
+        while(point[0].index != pointIndex){
+            shift();
+        }
+    }
+    void setLast(int pointIndex) {
+        if (!has(pointIndex)) {
+            return;
+        }
+
+        while(point[2].index != pointIndex) {
+            shift();
+        }
     }
 };
 
@@ -181,21 +221,22 @@ struct Scene {
     void triangulate();
     void addPointToTriangulation(int pointIndex);
     int findTriangle(const glm::vec2& point);
+
     bool hasDelaunayConstraint(int triangleIndex) const {
         auto& triangle = triangles[triangleIndex];
         auto circle = triangle.getCircle();
 
-        return false;
-//        for(auto i = 0; i < points.size(); i++) {
-//            if (triangle.has(i)) {
-//                continue;
-//            }
-//
-//            auto& point = points[i];
-//            if (circle.contains(point)) {
-//                return false;
-//            }
-//        }
-//        return true;
+        for(auto& p : points) {
+            if (triangle.has(p)) {
+                continue;
+            }
+
+            if (circle.contains(p.position)) {
+                return false;
+            }
+        }
+        return true;
     }
+
+    void swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };

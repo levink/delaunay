@@ -26,8 +26,7 @@ Circle::Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
 }
 
 
-EdgeIndex::EdgeIndex(): v0(0), v1(0) { }
-EdgeIndex::EdgeIndex(unsigned int v0, unsigned int v1) : v0(std::min(v0, v1)), v1(std::max(v0, v1)) {}
+
 
 
 const CircleMesh *Scene::getSelectedCircle() {
@@ -198,20 +197,20 @@ void Scene::addSuperTriangle() {
     );
 }
 void Scene::removeSuperTriangle() {
-    int pointIndex0 = points.size() - 3;
-    int pointIndex1 = points.size() - 2;
-    int pointIndex2 = points.size() - 1;
+    int size = static_cast<int>(points.size());
+    int pointIndex0 = size - 3;
+    int pointIndex1 = size - 2;
+    int pointIndex2 = size - 1;
 
-    std::vector<unsigned int> trianglesForDelete;
-    for(size_t i = 0; i < triangles.size(); i++) {
+    std::vector<int> forDelete;
+    for(size_t i = triangles.size() - 1; i >= 0; i--) {
         auto& t = triangles[i];
         if (t.has(pointIndex0) || t.has(pointIndex1) || t.has(pointIndex2)){
-            trianglesForDelete.push_back(i);
+            forDelete.push_back(i);
         }
     }
-    std::reverse(trianglesForDelete.begin(), trianglesForDelete.end());
 
-    for(auto index : trianglesForDelete) {
+    for(auto index : forDelete) {
         triangles.erase(triangles.begin() + index);
     }
 
@@ -257,43 +256,101 @@ void Scene::addPointToTriangulation(int pointIndex) {
     auto& t1 = triangles[tIndex1];
     auto& t2 = triangles[tIndex2];
 
-    t0.adjacent[0] = triangleForSplit.adjacent[0];
-    t0.adjacent[1] = t1.index;
-    t0.adjacent[2] = t2.index;
+    //split triangle
+    {
+        t0.adjacent[0] = triangleForSplit.adjacent[0];
+        t0.adjacent[1] = t1.index;
+        t0.adjacent[2] = t2.index;
 
-    t1.adjacent[0] = triangleForSplit.adjacent[1];
-    t1.adjacent[1] = t2.index;
-    t1.adjacent[2] = t0.index;
+        t1.adjacent[0] = triangleForSplit.adjacent[1];
+        t1.adjacent[1] = t2.index;
+        t1.adjacent[2] = t0.index;
 
-    t2.adjacent[0] = triangleForSplit.adjacent[2];
-    t2.adjacent[1] = t0.index;
-    t2.adjacent[2] = t1.index;
+        t2.adjacent[0] = triangleForSplit.adjacent[2];
+        t2.adjacent[1] = t0.index;
+        t2.adjacent[2] = t1.index;
 
-    for(auto i : triangleForSplit.adjacent) {
-        if (i == -1) {
-            continue;
-        }
+        for(auto i : triangleForSplit.adjacent) {
+            if (i == -1) {
+                continue;
+            }
 
-        auto& t = triangles[i];
-        bool linked = t.link(t0);
-        linked = linked || t.link(t1);
-        linked = linked || t.link(t2);
+            auto& t = triangles[i];
+            bool linked = t.link(t0);
+            linked = linked || t.link(t1);
+            linked = linked || t.link(t2);
 
-        if (!linked) {
-            Log::warn("Can not link triangle");
+            if (!linked) {
+                Log::warn("Can not link triangle");
+            }
         }
     }
 
-//    struct TrianglePair {
-//        int centerPoint;
-//        int splittedTriangle;
-//        int oppositeTriangle;
-//    };
-//
-//    std::stack<TrianglePair> adjacent;
-//    adjacent.push({pointIndex, t0.index, t0.getOpposite(pointIndex)});
-//    adjacent.push({pointIndex, t1.index, t1.getOpposite(pointIndex)});
-//    adjacent.push({pointIndex, t2.index, t2.getOpposite(pointIndex)});
+
+    struct TrianglePair {
+        int forSplit;
+        int forCheck;
+    };
+
+    std::stack<TrianglePair> checkItems;
+    checkItems.push({t0.index, t0.getOppositeTriangleIndex(pointIndex)});
+    checkItems.push({t1.index, t1.getOppositeTriangleIndex(pointIndex)});
+    checkItems.push({t2.index, t2.getOppositeTriangleIndex(pointIndex)});
+
+    while(!checkItems.empty()) {
+        auto item = checkItems.top();
+        checkItems.pop();
+
+        if (!hasDelaunayConstraint(item.forCheck)) {
+            swapEdge(point, item.forSplit, item.forCheck);
+        }
+
+        checkItems.pop();
+    }
+}
+void Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
+
+    auto& old1 = triangles[index1];
+    auto& old2 = triangles[index2];
+    if (!old1.linkedWith(old2) || !old2.linkedWith(old1)) {
+        Log::warn("Triangles are not linked!");
+        return;
+    }
+
+    old1.setFirst(splitPoint.index);
+    old2.setLast(old1.point[1].index);
+
+    auto p1 = old1.point[0];
+    auto p2 = old1.point[1];
+    auto p3 = old1.point[2];
+    auto p4 = old2.point[0];
+
+    auto new1 = Triangle {index1, p1, p4, p3};
+    auto new2 = Triangle {index2, p1, p2, p4};
+
+    new1.adjacent[0] = index2;
+    new1.adjacent[1] = old2.adjacent[1];
+    new1.adjacent[2] = old1.adjacent[2];
+
+    new2.adjacent[0] = old1.adjacent[0];
+    new2.adjacent[1] = old2.adjacent[0];
+    new2.adjacent[2] = index1;
+
+    triangles[new1.adjacent[0]].link(new1); //optional
+    triangles[new1.adjacent[1]].link(new1);
+    triangles[new1.adjacent[2]].link(new1);
+
+    triangles[new2.adjacent[0]].link(new2);
+    triangles[new2.adjacent[1]].link(new2);
+    triangles[new2.adjacent[2]].link(new2); //optional
+
+    triangles[index1] = new1;
+    triangles[index2] = new2;
+
+    //todo: use this (add to stack)
+    int check1 = new1.adjacent[1];
+    int check2 = new2.adjacent[1];
+
 }
 int Scene::findTriangle(const glm::vec2& point) {
     for (size_t i = 0; i < triangles.size(); i++) {
@@ -304,6 +361,8 @@ int Scene::findTriangle(const glm::vec2& point) {
     }
     return -1;
 }
+
+
 
 
 
