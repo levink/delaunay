@@ -37,7 +37,7 @@ void Render::initScene() {
     //layer
     {
 
-        scene.initView(camera.viewSize);
+        scene.initScene(camera.viewSize);
 
     }
 

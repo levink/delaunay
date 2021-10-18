@@ -10,7 +10,7 @@ struct Util {
         for(auto i = 0; i < 2; i++) {
             values[i] = values[i+1];
         }
-        values[3] = first;
+        values[2] = first;
     }
 };
 
@@ -27,8 +27,14 @@ struct Circle {
 };
 
 struct SplitPair {
-    int forSplit;
-    int forCheck;
+    int forSplit = -1;
+    int forCheck = -1;
+};
+
+struct SwapResult {
+    bool success = false;
+    SplitPair first;
+    SplitPair second;
 };
 
 struct Edge {
@@ -39,10 +45,30 @@ struct Edge {
 
 struct Point {
     int index = -1;
-    glm::vec2 position;
+    float position[2] = {0};
     Point() = default;
-    Point(int index, float x, float y) : index(index), position(x,y) { }
-    Point(int index, const glm::vec2& position) : index(index), position(position) { }
+    Point(int index, float x, float y) : index(index) {
+        position[0] = x;
+        position[1] = y;
+    }
+    Point(int index, const glm::vec2& pos) : index(index) {
+        position[0] = pos.x;
+        position[1] = pos.y;
+    }
+    glm::vec2 getPosition() const {
+        return {position[0], position[1]};
+    }
+    void setPosition(const glm::vec2& value) {
+        position[0] = value.x;
+        position[1] = value.y;
+    }
+};
+
+struct Hull {
+    Point a,b,c,d;
+    bool isConcave() const {
+        //todo: this
+    }
 };
 
 struct Triangle {
@@ -88,24 +114,15 @@ struct Triangle {
         const float eps = 0.00000001f;
         auto pt = glm::vec3(p, 0);
         auto dir = glm::vec3(0, 0, 1);
-        auto t0 = glm::vec3(point[0].position, 0);
-        auto t1 = glm::vec3(point[1].position, 0);
-        auto t2 = glm::vec3(point[2].position, 0);
+        auto t0 = glm::vec3(point[0].getPosition(), 0);
+        auto t1 = glm::vec3(point[1].getPosition(), 0);
+        auto t2 = glm::vec3(point[2].getPosition(), 0);
 
         if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
         if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
         if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
 
         return true;
-    }
-    bool isAdjacentWith(const Triangle& triangle) const {
-
-        int match = 0;
-        if (triangle.has(point[0])) match++;
-        if (triangle.has(point[1])) match++;
-        if (triangle.has(point[2])) match++;
-
-        return match >= 2;
     }
     void replaceAdjacent(int old_value, int new_value) {
         if (old_value == new_value){
@@ -139,6 +156,36 @@ struct Triangle {
         if (pointIndex == point[2].index) return adjacent[0];
         return -1;
     }
+    Hull getHull(const Triangle& adjacentTriangle) const {
+        Hull result;
+        if (adjacentTriangle.index == adjacent[0]) {
+            result.a = point[2];
+            result.b = point[0];
+            result.d = point[1];
+        }
+        else if (adjacentTriangle.index == adjacent[1]) {
+            result.a = point[0];
+            result.b = point[1];
+            result.d = point[2];
+        }
+        else if (adjacentTriangle.index == adjacent[2]) {
+            result.a = point[1];
+            result.b = point[2];
+            result.d = point[0];
+        } else {
+            Log::warn("Something goes wrong!");
+        }
+
+        for(auto& p : adjacentTriangle.point) {
+            bool isEdgePoint = p.index == result.b.index || p.index == result.d.index;
+            if (!isEdgePoint) {
+                result.c = p;
+                break;
+            }
+        }
+
+        return result;
+    }
     bool link(const Triangle& triangle) {
         auto& p0 = point[0];
         auto& p1 = point[1];
@@ -161,9 +208,9 @@ struct Triangle {
     }
     Circle getCircle() const {
         return {
-            point[0].position,
-            point[1].position,
-            point[2].position
+            point[0].getPosition(),
+            point[1].getPosition(),
+            point[2].getPosition()
         };
     }
     void shift(){
@@ -211,7 +258,7 @@ struct Scene {
     void selectPoint(const glm::vec2& cursor);
     void clearSelection();
 
-    void initView(const glm::vec2& viewSize);
+    void initScene(const glm::vec2& viewSize);
     void updateView();
     CircleMesh createPointMesh(const glm::vec2& point);
     CircleMesh createCircleMesh(const Circle& circle);
@@ -225,9 +272,30 @@ struct Scene {
     void removeSuperTriangle();
     void triangulate();
     void addPointToTriangulation(int pointIndex);
-    int findTriangle(const glm::vec2& point);
+    int findTriangle(float point[2]);
 
+    bool isConcaveHull(const SplitPair& pair) const {
+
+        auto& t0 = triangles[pair.forSplit];
+        auto& t1 = triangles[pair.forCheck];
+        if (!t0.linkedWith(t1) || !t1.linkedWith(t0)) {
+            Log::warn("Triangles are not linked!");
+            return false;
+        }
+
+        auto hull = t0.getHull(t1);
+
+
+        return true;
+        t0.setFirst(splitPoint.index);
+        old2.setLast(old1.point[1].index);
+
+    }
     bool hasDelaunayConstraint(int triangleIndex) const {
+        if (triangleIndex == -1) {
+            return true;
+        }
+
         auto& triangle = triangles[triangleIndex];
         auto circle = triangle.getCircle();
 
@@ -236,12 +304,15 @@ struct Scene {
                 continue;
             }
 
-            if (circle.contains(p.position)) {
+            if (circle.contains(p.getPosition())) {
                 return false;
             }
         }
-        return true;
+           return true;
     }
 
-    Pair swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
+    SwapResult swapEdge(const Point& splitPoint, const SplitPair& splitPair) {
+        return swapEdge(splitPoint, splitPair.forSplit, splitPair.forCheck);
+    }
+    SwapResult swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };
