@@ -46,16 +46,6 @@ void Scene::initScene(const glm::vec2& viewSize) {
     points.emplace_back(lastIndex + 1, right, bottom);
     points.emplace_back(lastIndex + 2, left, top);
     points.emplace_back(lastIndex + 3, right, top);
-    //points.emplace_back(lastIndex + 4, right-50, bottom+50);
-
-    Hull tmp {
-        points[0],
-        points[1],
-        points[3],
-        points[4]
-    };
-
-    bool test = tmp.isConvex();
 
     pointsMesh.reserve(points.size());
     for(auto& point : points) {
