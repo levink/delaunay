@@ -2,6 +2,7 @@
 #include "src/pch.h"
 #include "../model/line.h"
 #include "../model/circle.h"
+#include "../platform/log.h"
 
 struct Util {
     template<typename T>
@@ -66,8 +67,32 @@ struct Point {
 
 struct Hull {
     Point a,b,c,d;
-    bool isConcave() const {
-        //todo: this
+    bool isConvex() const {
+        const glm::vec2 edge[4] = {
+            b.getPosition() - a.getPosition(),
+            c.getPosition() - b.getPosition(),
+            d.getPosition() - c.getPosition(),
+            a.getPosition() - d.getPosition()
+        };
+
+        float first = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            auto& e1 = edge[i];
+            auto& e2 = edge[(i + 1) % 4];
+
+            if (i == 0) {
+                first = e1.x * e2.y - e1.y * e2.x;
+                continue;
+            }
+
+            auto last = e1.x * e2.y - e1.y * e2.x;
+            if (first < 0 && last > 0 || first > 0 && last < 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 };
 
@@ -274,7 +299,7 @@ struct Scene {
     void addPointToTriangulation(int pointIndex);
     int findTriangle(float point[2]);
 
-    bool isConcaveHull(const SplitPair& pair) const {
+    bool isConvexHull(const SplitPair& pair) const {
 
         auto& t0 = triangles[pair.forSplit];
         auto& t1 = triangles[pair.forCheck];
@@ -282,14 +307,8 @@ struct Scene {
             Log::warn("Triangles are not linked!");
             return false;
         }
-
         auto hull = t0.getHull(t1);
-
-
-        return true;
-        t0.setFirst(splitPoint.index);
-        old2.setLast(old1.point[1].index);
-
+        return hull.isConvex();
     }
     bool hasDelaunayConstraint(int triangleIndex) const {
         if (triangleIndex == -1) {
