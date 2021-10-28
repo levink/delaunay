@@ -289,6 +289,10 @@ void Scene::addPointToTriangulation(int pointIndex) {
     auto& t1 = triangles[tIndex1];
     auto& t2 = triangles[tIndex2];
 
+    t0.checkError();
+    t1.checkError();
+    t2.checkError();
+
     //split triangle
     {
         t0.adjacent[0] = triangleForSplit.adjacent[0];
@@ -338,19 +342,26 @@ void Scene::addPointToTriangulation(int pointIndex) {
             checkItems.push(swap.first);
             checkItems.push(swap.second);
         }
+
     }
 }
 SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 
     auto& old1 = triangles[index1];
     auto& old2 = triangles[index2];
+    old1.checkError();
+    old2.checkError();
+
     if (!old1.linkedWith(old2) || !old2.linkedWith(old1)) {
-        Log::warn("Triangles are not linked!");
+        Log::warn("[swapEdge] Triangles are not linked!");
         return SwapResult{false};
     }
 
     old1.setFirst(splitPoint.index);
     old2.setLast(old1.point[1].index);
+
+    old1.checkError();
+    old2.checkError();
 
     auto& p1 = old1.point[0];
     auto& p2 = old1.point[1];
@@ -359,6 +370,8 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 
     auto new1 = Triangle {index1, p1, p4, p3};
     auto new2 = Triangle {index2, p1, p2, p4};
+    new1.checkError();
+    new2.checkError();
 
     new1.adjacent[0] = index2;
     new1.adjacent[1] = old2.adjacent[0];
@@ -378,6 +391,10 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 
     triangles[index1] = new1;
     triangles[index2] = new2;
+
+
+    new1.checkError();
+    new2.checkError();
 
     return SwapResult{
         true,

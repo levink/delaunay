@@ -111,6 +111,17 @@ struct Triangle {
         point[2] = p2;
     }
 
+    bool hasError() const {
+        if (point[0].index == point[1].index) return true;
+        if (point[1].index == point[2].index) return true;
+        if (point[2].index == point[0].index) return true;
+        return false;
+    }
+    void checkError() const {
+        if (hasError()) {
+            Log::warn("[Triangle::checkError] Triangle is bad");
+        }
+    };
     bool has(int pointIndex) const {
         return
             point[0].index == pointIndex ||
@@ -304,7 +315,7 @@ struct Scene {
         auto& t0 = triangles[pair.forSplit];
         auto& t1 = triangles[pair.forCheck];
         if (!t0.linkedWith(t1) || !t1.linkedWith(t0)) {
-            Log::warn("Triangles are not linked!");
+            Log::warn("[isConvexHull] Triangles are not linked!");
             return false;
         }
         auto hull = t0.getHull(t1);
