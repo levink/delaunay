@@ -36,12 +36,12 @@ const CircleMesh *Scene::getSelectedCircle() {
 
 void Scene::initScene(const glm::vec2& viewSize) {
     auto padding = 100.f;
-    int lastIndex = static_cast<int>(points.size());
     auto left = padding;
     auto right = static_cast<float>(viewSize.x) - padding;
     auto top = static_cast<float>(viewSize.y) - padding;
     auto bottom = padding;
 
+    int lastIndex = static_cast<int>(points.size());
     points.emplace_back(lastIndex + 0, left, bottom);
     points.emplace_back(lastIndex + 1, right, bottom);
     points.emplace_back(lastIndex + 2, left, top);
@@ -56,7 +56,7 @@ void Scene::initScene(const glm::vec2& viewSize) {
     //triangulate();
     //updateView();
 
-    addPoint({375, 29});
+    addPoint({375, 25});
 }
 void Scene::updateView() {
     pointsMesh.resize(points.size());
@@ -73,7 +73,6 @@ void Scene::updateView() {
         trianglesMesh[3*i+2] = createLineMesh(t.point[2].getPosition(), t.point[0].getPosition());
     }
 }
-
 void Scene::addPoint(const glm::vec2& cursor) {
     int lastIndex = static_cast<int>(points.size());
     points.emplace_back(lastIndex, cursor);
@@ -357,19 +356,28 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
         return SwapResult{false};
     }
 
-    old1.setFirst(splitPoint.index);
-    old2.setLast(old1.point[1].index);
+    auto commonEdge = old1.getCommonEdge(old2);
+    old1.setFirst(commonEdge.v0);
+    old2.setFirst(commonEdge.v1);
 
-    old1.checkError();
-    old2.checkError();
+    auto& p1 = points[commonEdge.v0];
+    auto& p2 = points[commonEdge.v1];
+    auto& p3 = points[old1.getOppositePoint(commonEdge)];
+    auto& p4 = points[old2.getOppositePoint(commonEdge)];
 
-    auto& p1 = old1.point[0];
-    auto& p2 = old1.point[1];
-    auto& p3 = old1.point[2];
-    auto& p4 = old2.point[0];
 
-    auto new1 = Triangle {index1, p1, p4, p3};
-    auto new2 = Triangle {index2, p1, p2, p4};
+//    old1.setFirst(splitPoint.index);
+//    old2.setLast(old1.point[1].index);
+//    old1.checkError();
+//    old2.checkError();
+//    auto& p1 = old1.point[0];
+//    auto& p2 = old1.point[1];
+//    auto& p3 = old1.point[2];
+//    auto& p4 = old2.point[0];
+
+//todo this
+    auto new1 = Triangle {index1, p1, p4, p3 }; //p1, p4, p3};
+    auto new2 = Triangle {index2, p2, p3, p4 }; //p1, p2, p4};
     new1.checkError();
     new2.checkError();
 

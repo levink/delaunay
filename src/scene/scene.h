@@ -40,8 +40,9 @@ struct SwapResult {
 
 struct Edge {
     int v0, v1;
-    Edge() : v0(-1), v1(-1) { }
-    Edge(int v0, int v1) : v0(std::min(v0, v1)), v1(std::max(v0, v1)) {}
+    bool containsPoint(int index) const {
+        return v0 == index || v1 == index;
+    }
 };
 
 struct Point {
@@ -100,9 +101,9 @@ struct Triangle {
     int index = -1;
     Point point[3];
     int adjacent[3] = {
-            -1, //edge for point0 - point1
-            -1, //edge for point1 - point2
-            -1  //edge for point2 - point0
+            -1, //triangle index for edge with point0 - point1
+            -1, //triangle index for edge with point1 - point2
+            -1  //triangle index for edge with point2 - point0
     };
     Triangle() = default;
     Triangle(int index, Point p0, Point p1, Point p2) : index(index) {
@@ -270,6 +271,33 @@ struct Triangle {
         while(point[2].index != pointIndex) {
             shift();
         }
+    }
+
+    Edge getCommonEdge(const Triangle& other) {
+        if (other.index == adjacent[0]) return Edge{point[0].index, point[1].index};
+        if (other.index == adjacent[1]) return Edge{point[1].index, point[2].index};
+        if (other.index == adjacent[2]) return Edge{point[2].index, point[0].index};
+        throw std::runtime_error("something goes wrong");
+    }
+    int getOppositePoint(const Edge& edge) {
+        int matches = 0;
+        if (edge.containsPoint(point[0].index)) matches++;
+        if (edge.containsPoint(point[1].index)) matches++;
+        if (edge.containsPoint(point[2].index)) matches++;
+
+        if (matches != 2) {
+            auto msg = "[Triangle::getOppositePoint] Bad edge check";
+            Log::warn(msg);
+            throw std::runtime_error(msg);
+        }
+
+        if (!edge.containsPoint(point[0].index))  return point[0].index;
+        if (!edge.containsPoint(point[1].index))  return point[1].index;
+        if (!edge.containsPoint(point[2].index))  return point[2].index;
+
+        auto msg = "[Triangle::getOppositePoint] Bad edge result";
+        Log::warn(msg);
+        throw std::runtime_error(msg);
     }
 };
 
