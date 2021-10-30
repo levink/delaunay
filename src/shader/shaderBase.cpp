@@ -151,12 +151,27 @@ void Shader::disable() const {
 
 void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
     if (attribute.id != -1) {
-        glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride,((GLbyte*)data) + offset);
+
+        glVertexAttribPointer( 
+            attribute.id, 
+            attribute.size, 
+            attribute.type, 
+            GL_FALSE, 
+            stride,
+            static_cast<const GLbyte*>(data) + offset
+        );
     }
 }
 void Shader::attr(const Attribute &attribute, GLsizei stride, GLuint offset) {
     if (attribute.id != -1) {
-        glVertexAttribPointer(attribute.id, attribute.size, attribute.type, GL_FALSE, stride, reinterpret_cast<void*>(offset));
+        glVertexAttribPointer(
+            attribute.id, 
+            attribute.size, 
+            attribute.type, 
+            GL_FALSE, 
+            stride, 
+            static_cast<const GLubyte*>(nullptr) + offset
+        );
     }
 }
 void Shader::set1(const Uniform& uniform, float value) {
