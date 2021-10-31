@@ -349,24 +349,24 @@ struct Scene {
         auto hull = t0.getHull(t1);
         return hull.isConvex();
     }
-    bool hasDelaunayConstraint(int triangleIndex) const {
+    bool hasDelaunayConstraint(int triangleIndex, int pointIndex) const {
         if (triangleIndex == -1) {
             return true;
         }
 
         auto& triangle = triangles[triangleIndex];
-        auto circle = triangle.getCircle();
-
-        for(auto& p : points) {
-            if (triangle.has(p)) {
-                continue;
-            }
-
-            if (circle.contains(p.getPosition())) {
-                return false;
-            }
+        auto& point = points[pointIndex];
+        
+        if (triangle.has(point)) {
+            return true;
         }
-           return true;
+
+        auto circle = triangle.getCircle();
+        if (circle.contains(point.getPosition())) {
+            return false;
+        }
+
+        return true;
     }
     SwapResult swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };

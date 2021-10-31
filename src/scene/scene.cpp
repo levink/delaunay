@@ -370,35 +370,21 @@ void Scene::addPointToTriangulation(int pointIndex) {
     checkItems.push({t2.index, t2.getOppositeTriangleIndex(pointIndex)});
 
 
-   
-
-
     while(!checkItems.empty()) {
         auto item = checkItems.top();
         checkItems.pop();
 
-        if (item.forCheck == -1 || item.forSplit == -1) continue;
-        if (!isConvexHull(item)) continue;
-        if (hasDelaunayConstraint(item.forCheck)) continue;
-
-        //check
-        if (triangles.size() > 1) {
-            auto& test = triangles[1].adjacent;
-            if (test[0] == 4 && test[1] == -1 && test[2] == 2) {
-                int a = 10;
-            }
+        if (item.forCheck == -1 || item.forSplit == -1) {
+            continue;
+        }
+        if (!isConvexHull(item)) {
+            continue;
+        }
+        if (hasDelaunayConstraint(item.forCheck, pointIndex)) {
+            continue;
         }
 
         auto swap = swapEdge(point, item.forSplit, item.forCheck);
-
-        //check
-        if (triangles.size() > 1) {
-            auto& test = triangles[1].adjacent;
-            if (test[0] == 4 && test[1] == -1 && test[2] == 2) {
-                int a = 10;
-            }
-        }
-
         if (swap.success) {
             checkItems.push(swap.first);
             checkItems.push(swap.second);
