@@ -41,11 +41,18 @@ void Scene::initScene(const glm::vec2& viewSize) {
     auto top = static_cast<float>(viewSize.y) - padding;
     auto bottom = padding;
 
-    int lastIndex = static_cast<int>(points.size());
-    points.emplace_back(lastIndex + 0, left, bottom);
-    points.emplace_back(lastIndex + 1, right, bottom);
-    points.emplace_back(lastIndex + 2, left, top);
-    points.emplace_back(lastIndex + 3, right, top);
+    points.clear();
+    
+    //super triangle points
+    points.emplace_back(0, -10000, -10000);
+    points.emplace_back(1, 10000, -10000);
+    points.emplace_back(2, 0, 10000);
+
+    //visible points
+    points.emplace_back(3, left, bottom);
+    points.emplace_back(4, right, bottom);
+    points.emplace_back(5, right, top);
+    points.emplace_back(6, left, top);
 
     pointsMesh.reserve(points.size());
     for(auto& point : points) {
@@ -53,8 +60,8 @@ void Scene::initScene(const glm::vec2& viewSize) {
         pointsMesh.push_back(mesh);
     }
 
-    //triangulate();
-    //updateView();
+    triangulate();
+    updateView();
 
     addPoint({375, 25});
 }
@@ -133,6 +140,9 @@ void Scene::selectPoint(const glm::vec2& cursor) {
         selectedPoint = index;
         pointsMesh[selectedPoint].color = Color::yellow;
     }
+
+    std::string msg = "Selected point = " + std::to_string(selectedPoint);
+    Log::out(msg);
 }
 void Scene::clearSelection() {
     if (selectedPoint != -1) {
@@ -157,14 +167,19 @@ void Scene::triangulate() {
 
     normalizePoints();
     triangles.clear();
-    addSuperTriangle();
+    
+    triangles.emplace_back(
+        static_cast<int>(triangles.size()),
+        points[0],
+        points[1],
+        points[2]
+    );
 
     /* All points except super triangle */
-    for(auto pointIndex = 0; pointIndex + 3 < points.size(); pointIndex++) {
+    for(auto pointIndex = 3; pointIndex < points.size(); pointIndex++) {
         addPointToTriangulation(pointIndex);
     }
 
-    removeSuperTriangle();
     restorePoints();
 }
 void Scene::normalizePoints() {
@@ -306,7 +321,33 @@ void Scene::addPointToTriangulation(int pointIndex) {
         t2.adjacent[1] = t0.index;
         t2.adjacent[2] = t1.index;
 
-        for(auto i : triangleForSplit.adjacent) {
+        {
+
+            if (triangleForSplit.adjacent[0] != -1) {
+                bool linked1 = triangles[triangleForSplit.adjacent[0]].link(t0);
+                if (!linked1) {
+                    Log::warn("Can not link1");
+                }
+            }
+            
+            if (triangleForSplit.adjacent[1] != -1) {
+                bool linked2 = triangles[triangleForSplit.adjacent[1]].link(t1);
+                if (!linked2) {
+                    Log::warn("Can not link2");
+                }
+            }
+            
+            if (triangleForSplit.adjacent[2] != -1) {
+                bool linked3 = triangles[triangleForSplit.adjacent[2]].link(t2);
+                if (!linked3) {
+                    Log::warn("Can not link3");
+                }
+            }
+        }
+        
+        
+
+        /*for(auto i : triangleForSplit.adjacent) {
             if (i == -1) {
                 continue;
             }
@@ -319,7 +360,7 @@ void Scene::addPointToTriangulation(int pointIndex) {
             if (!linked) {
                 Log::warn("Can not link triangle");
             }
-        }
+        }*/
     }
 
 
@@ -327,6 +368,10 @@ void Scene::addPointToTriangulation(int pointIndex) {
     checkItems.push({t0.index, t0.getOppositeTriangleIndex(pointIndex)});
     checkItems.push({t1.index, t1.getOppositeTriangleIndex(pointIndex)});
     checkItems.push({t2.index, t2.getOppositeTriangleIndex(pointIndex)});
+
+
+   
+
 
     while(!checkItems.empty()) {
         auto item = checkItems.top();
@@ -336,12 +381,37 @@ void Scene::addPointToTriangulation(int pointIndex) {
         if (!isConvexHull(item)) continue;
         if (hasDelaunayConstraint(item.forCheck)) continue;
 
-        auto swap = swapEdge(point, item);
+        //check
+        if (triangles.size() > 1) {
+            auto& test = triangles[1].adjacent;
+            if (test[0] == 4 && test[1] == -1 && test[2] == 2) {
+                int a = 10;
+            }
+        }
+
+        auto swap = swapEdge(point, item.forSplit, item.forCheck);
+
+        //check
+        if (triangles.size() > 1) {
+            auto& test = triangles[1].adjacent;
+            if (test[0] == 4 && test[1] == -1 && test[2] == 2) {
+                int a = 10;
+            }
+        }
+
         if (swap.success) {
             checkItems.push(swap.first);
             checkItems.push(swap.second);
         }
 
+    }
+
+    //check
+    if (triangles.size() > 1) {
+        auto& test = triangles[1].adjacent;
+        if (test[0] == 4 && test[1] == -1 && test[2] == 2) {
+            int a = 10;
+        }
     }
 }
 SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
@@ -375,19 +445,18 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 //    auto& p3 = old1.point[2];
 //    auto& p4 = old2.point[0];
 
-//todo this
     auto new1 = Triangle {index1, p1, p4, p3 }; //p1, p4, p3};
     auto new2 = Triangle {index2, p2, p3, p4 }; //p1, p2, p4};
     new1.checkError();
     new2.checkError();
 
-    new1.adjacent[0] = index2;
-    new1.adjacent[1] = old2.adjacent[0];
+    new1.adjacent[0] = old2.adjacent[1];
+    new1.adjacent[1] = index2;
     new1.adjacent[2] = old1.adjacent[2];
 
-    new2.adjacent[0] = old1.adjacent[0];
-    new2.adjacent[1] = old2.adjacent[2];
-    new2.adjacent[2] = index1;
+    new2.adjacent[0] = old1.adjacent[1];
+    new2.adjacent[1] = index1;
+    new2.adjacent[2] = old2.adjacent[2];
 
     if (new1.adjacent[0] != -1) triangles[new1.adjacent[0]].link(new1); //optional
     if (new1.adjacent[1] != -1) triangles[new1.adjacent[1]].link(new1);

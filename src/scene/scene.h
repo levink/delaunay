@@ -368,9 +368,5 @@ struct Scene {
         }
            return true;
     }
-
-    SwapResult swapEdge(const Point& splitPoint, const SplitPair& splitPair) {
-        return swapEdge(splitPoint, splitPair.forSplit, splitPair.forCheck);
-    }
     SwapResult swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };
