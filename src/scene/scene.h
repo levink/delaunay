@@ -27,15 +27,10 @@ struct Circle {
     }
 };
 
-struct TrianglePair {
-    int splitted = -1;
-    int opposite = -1;
-};
-
 struct SwapResult {
     bool success = false;
-    TrianglePair first;
-    TrianglePair second;
+    int first    = -1;
+    int second   = -1;
 };
 
 struct Edge {
@@ -173,7 +168,7 @@ struct Triangle {
             }
         }
     }
-    int getOppositeTriangleIndex(int pointIndex) {
+    int getOpposite(int pointIndex) {
         if (pointIndex == point[0].index) return adjacent[1];
         if (pointIndex == point[1].index) return adjacent[2];
         if (pointIndex == point[2].index) return adjacent[0];
@@ -240,7 +235,7 @@ struct Triangle {
             point[2].getPosition()
         };
     }
-    void shift(){
+    void shift() {
         Util::shift(point);
         Util::shift(adjacent);
     }
@@ -250,15 +245,6 @@ struct Triangle {
         }
 
         while(point[0].index != pointIndex){
-            shift();
-        }
-    }
-    void setLast(int pointIndex) {
-        if (!has(pointIndex)) {
-            return;
-        }
-
-        while(point[2].index != pointIndex) {
             shift();
         }
     }
@@ -327,38 +313,5 @@ struct Scene {
     void triangulate();
     void addPointToTriangulation(int pointIndex);
     int findTriangle(float point[2]);
-
-    bool separated(const TrianglePair& pair) const {
-        const auto& t0 = triangles[pair.splitted];
-        const auto& t1 = triangles[pair.opposite];
-        if (!t0.linkedWith(t1) || !t1.linkedWith(t0)) {
-            Log::warn("[separated] Triangles are not linked!");
-            return true;
-        }
-        return false;
-    }
-    bool concave(const TrianglePair& pair) const {
-        const auto& t0 = triangles[pair.splitted];
-        const auto& t1 = triangles[pair.opposite];
-        auto hull = t0.getHull(t1);
-        return !hull.isConvex();
-    }
-    bool delaunay(int triangleIndex, int pointIndex) const {
-        if (triangleIndex == -1) {
-            Log::warn("[delaunay] Bad triangle index");
-            return true;
-        }
-
-        auto& triangle = triangles[triangleIndex];
-        auto& point = points[pointIndex];
-        if (triangle.has(point)) {
-            Log::warn("[delaunay] Triangle has point");
-            return true;
-        }
-
-        auto position = point.getPosition();
-        auto circle = triangle.getCircle();
-        return !circle.contains(position);
-    }
-    SwapResult swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
+    SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
 };

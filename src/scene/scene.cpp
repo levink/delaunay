@@ -321,49 +321,62 @@ void Scene::addPointToTriangulation(int pointIndex) {
         t2.adjacent[1] = t0.index;
         t2.adjacent[2] = t1.index;
 
-        {
-
-            if (triangleForSplit.adjacent[0] != -1) {
-                triangles[triangleForSplit.adjacent[0]].link(t0);
-            }
-            
-            if (triangleForSplit.adjacent[1] != -1) {
-                triangles[triangleForSplit.adjacent[1]].link(t1);
-            }
-            
-            if (triangleForSplit.adjacent[2] != -1) {
-                triangles[triangleForSplit.adjacent[2]].link(t2);
-            }
+        if (triangleForSplit.adjacent[0] != -1) {
+            triangles[triangleForSplit.adjacent[0]].link(t0);
         }
+
+        if (triangleForSplit.adjacent[1] != -1) {
+            triangles[triangleForSplit.adjacent[1]].link(t1);
+        }
+
+        if (triangleForSplit.adjacent[2] != -1) {
+            triangles[triangleForSplit.adjacent[2]].link(t2);
+        }
+
     }
 
-    std::stack<TrianglePair> checkItems;
-    checkItems.push({t0.index, t0.getOppositeTriangleIndex(pointIndex)});
-    checkItems.push({t1.index, t1.getOppositeTriangleIndex(pointIndex)});
-    checkItems.push({t2.index, t2.getOppositeTriangleIndex(pointIndex)});
 
+    std::stack<int> checkItems;
+    checkItems.push(t0.index);
+    checkItems.push(t1.index);
+    checkItems.push(t2.index);
 
     while(!checkItems.empty()) {
-        auto item = checkItems.top();
+        auto splitIndex = checkItems.top();
         checkItems.pop();
 
-        if (item.splitted == -1 || item.opposite == -1) continue;
-        if (separated(item)) continue;
-        if (concave(item)) continue;
-        if (delaunay(item.opposite, pointIndex)) continue;
+        if (splitIndex == -1) {
+            continue;
+        }
 
-        auto swap = swapEdge(point, item.splitted, item.opposite);
+        auto& splitted = triangles[splitIndex];
+        auto oppositeIndex = splitted.getOpposite(pointIndex);
+        if (oppositeIndex == -1) {
+            continue;
+        }
+
+        auto& opposite = triangles[oppositeIndex];
+        auto hull = splitted.getHull(opposite);
+        auto concave = !hull.isConvex();
+        if (concave) {
+            continue;
+        }
+        auto position = point.getPosition();
+        auto circle = opposite.getCircle();
+        auto delaunay = !circle.contains(position);
+        if (delaunay) {
+            continue;
+        }
+
+        auto swap = swapEdge(point, splitted, opposite);
         if (swap.success) {
             checkItems.push(swap.first);
             checkItems.push(swap.second);
         }
-
     }
 }
-SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
 
-    auto& old1 = triangles[index1];
-    auto& old2 = triangles[index2];
+SwapResult Scene::swapEdge(const Point &splitPoint, Triangle &old1, Triangle &old2) {
     old1.checkError();
     old2.checkError();
 
@@ -381,17 +394,17 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
     auto& p3 = points[old1.getOppositePoint(commonEdge)];
     auto& p4 = points[old2.getOppositePoint(commonEdge)];
 
-    auto new1 = Triangle {index1, p1, p4, p3 };
-    auto new2 = Triangle {index2, p2, p3, p4 };
+    auto new1 = Triangle {old1.index, p1, p4, p3 };
+    auto new2 = Triangle {old2.index, p2, p3, p4 };
     new1.checkError();
     new2.checkError();
 
     new1.adjacent[0] = old2.adjacent[1];
-    new1.adjacent[1] = index2;
+    new1.adjacent[1] = old2.index;
     new1.adjacent[2] = old1.adjacent[2];
 
     new2.adjacent[0] = old1.adjacent[1];
-    new2.adjacent[1] = index1;
+    new2.adjacent[1] = old1.index;
     new2.adjacent[2] = old2.adjacent[2];
 
     if (new1.adjacent[0] != -1) triangles[new1.adjacent[0]].link(new1);
@@ -402,16 +415,16 @@ SwapResult Scene::swapEdge(const Point& splitPoint, int index1, int index2) {
     if (new2.adjacent[1] != -1) triangles[new2.adjacent[1]].link(new2);
     if (new2.adjacent[2] != -1) triangles[new2.adjacent[2]].link(new2);
 
-    triangles[index1] = new1;
-    triangles[index2] = new2;
+    triangles[old1.index] = new1;
+    triangles[old2.index] = new2;
 
     new1.checkError();
     new2.checkError();
 
-    return SwapResult{
-        true,
-        {new1.index, new1.adjacent[2]},
-        {new2.index, new2.adjacent[0]}
+    return SwapResult {
+            true,
+            new1.index,//, new1.adjacent[2]},
+            new2.index //, new2.adjacent[0]}
     };
 }
 int Scene::findTriangle(float position[2]) {
@@ -424,6 +437,8 @@ int Scene::findTriangle(float position[2]) {
     }
     return -1;
 }
+
+
 
 
 
