@@ -27,15 +27,15 @@ struct Circle {
     }
 };
 
-struct SplitPair {
-    int forSplit = -1;
-    int forCheck = -1;
+struct TrianglePair {
+    int splitted = -1;
+    int opposite = -1;
 };
 
 struct SwapResult {
     bool success = false;
-    SplitPair first;
-    SplitPair second;
+    TrianglePair first;
+    TrianglePair second;
 };
 
 struct Edge {
@@ -173,24 +173,13 @@ struct Triangle {
             }
         }
     }
-    int getAdjacent(int pointIndex0, int pointIndex1) {
-
-        //todo this;
-        return -1;
-        if (pointIndex0 == point[0].index && pointIndex1 == point[1].index) return adjacent[0];
-        if (pointIndex0 == point[1].index && pointIndex1 == point[2].index) return adjacent[1];
-        if (pointIndex0 == point[2].index && pointIndex1 == point[0].index) return adjacent[2];
-
-//        if (pointIndex1 == index[0] && pointIndex0 == index[1]) return adjacent[0];
-//        if (pointIndex1 == index[1] && pointIndex0 == index[2]) return adjacent[1];
-//        if (pointIndex1 == index[2] && pointIndex0 == index[0]) return adjacent[2];
-
-        return -1;
-    }
     int getOppositeTriangleIndex(int pointIndex) {
         if (pointIndex == point[0].index) return adjacent[1];
         if (pointIndex == point[1].index) return adjacent[2];
         if (pointIndex == point[2].index) return adjacent[0];
+
+        std::string msg = "Triangle does not have point with index=" + std::to_string(pointIndex);
+        Log::warn(msg);
         return -1;
     }
     Hull getHull(const Triangle& adjacentTriangle) const {
@@ -241,6 +230,7 @@ struct Triangle {
             return true;
         }
 
+        Log::warn("Can not link");
         return false;
     }
     Circle getCircle() const {
@@ -338,35 +328,37 @@ struct Scene {
     void addPointToTriangulation(int pointIndex);
     int findTriangle(float point[2]);
 
-    bool isConvexHull(const SplitPair& pair) const {
-
-        auto& t0 = triangles[pair.forSplit];
-        auto& t1 = triangles[pair.forCheck];
+    bool separated(const TrianglePair& pair) const {
+        const auto& t0 = triangles[pair.splitted];
+        const auto& t1 = triangles[pair.opposite];
         if (!t0.linkedWith(t1) || !t1.linkedWith(t0)) {
-            Log::warn("[isConvexHull] Triangles are not linked!");
-            return false;
+            Log::warn("[separated] Triangles are not linked!");
+            return true;
         }
-        auto hull = t0.getHull(t1);
-        return hull.isConvex();
+        return false;
     }
-    bool hasDelaunayConstraint(int triangleIndex, int pointIndex) const {
+    bool concave(const TrianglePair& pair) const {
+        const auto& t0 = triangles[pair.splitted];
+        const auto& t1 = triangles[pair.opposite];
+        auto hull = t0.getHull(t1);
+        return !hull.isConvex();
+    }
+    bool delaunay(int triangleIndex, int pointIndex) const {
         if (triangleIndex == -1) {
+            Log::warn("[delaunay] Bad triangle index");
             return true;
         }
 
         auto& triangle = triangles[triangleIndex];
         auto& point = points[pointIndex];
-        
         if (triangle.has(point)) {
+            Log::warn("[delaunay] Triangle has point");
             return true;
         }
 
+        auto position = point.getPosition();
         auto circle = triangle.getCircle();
-        if (circle.contains(point.getPosition())) {
-            return false;
-        }
-
-        return true;
+        return !circle.contains(position);
     }
     SwapResult swapEdge(const Point& splitPoint, int tIndex1, int tIndex2);
 };
