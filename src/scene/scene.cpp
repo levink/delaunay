@@ -72,12 +72,30 @@ void Scene::updateView() {
         pointsMesh[i].setPosition(point.getPosition());
     }
 
-    trianglesMesh.resize(3 * triangles.size());
-    for(auto i = 0; i < triangles.size(); i++) {
-        auto& t = triangles[i];
-        trianglesMesh[3*i+0] = createLineMesh(t.point[0].getPosition(), t.point[1].getPosition());
-        trianglesMesh[3*i+1] = createLineMesh(t.point[1].getPosition(), t.point[2].getPosition());
-        trianglesMesh[3*i+2] = createLineMesh(t.point[2].getPosition(), t.point[0].getPosition());
+    auto pIndex0 = points[0].index;
+    auto pIndex1 = points[1].index;
+    auto pIndex2 = points[2].index;
+    
+    trianglesMesh.reserve(3 * triangles.size());
+    trianglesMesh.clear();
+    
+    for (auto& triangle : triangles) {
+
+        bool superTriangle =
+            triangle.has(pIndex0) ||
+            triangle.has(pIndex1) ||
+            triangle.has(pIndex2);
+        if (superTriangle) {
+            continue;
+        }
+
+        auto p0 = triangle.point[0].getPosition();
+        auto p1 = triangle.point[1].getPosition();
+        auto p2 = triangle.point[2].getPosition();
+
+        trianglesMesh.push_back(createLineMesh(p0, p1));
+        trianglesMesh.push_back(createLineMesh(p1, p2));
+        trianglesMesh.push_back(createLineMesh(p2, p0));
     }
 }
 void Scene::addPoint(const glm::vec2& cursor) {
@@ -152,7 +170,6 @@ void Scene::clearSelection() {
     dragDrop.x = dragDrop.y = 0;
 }
 
-
 CircleMesh Scene::createPointMesh(const glm::vec2& point) {
     return CircleMesh(point, 7.f, true, Color::teal);
 }
@@ -162,7 +179,6 @@ CircleMesh Scene::createCircleMesh(const Circle& circle) {
 LineMesh Scene::createLineMesh(const glm::vec2& start, const glm::vec2& end) {
     return LineMesh::create(start, end, Color::orange, 3.5f);
 }
-
 void Scene::triangulate() {
 
     normalizePoints();
