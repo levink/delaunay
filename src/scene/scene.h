@@ -29,12 +29,6 @@ namespace scene_version_1 {
         }
     };
 
-    struct SwapResult {
-        bool success = false;
-        int first    = -1;
-        int second   = -1;
-    };
-
     struct Edge {
         int v0, v1;
         bool containsPoint(int index) const {
@@ -321,6 +315,12 @@ namespace scene_version_1 {
         void addInnerPoints(const SuperTriangle& tr);
         void addPointToTriangulation(Point& point);
         int findTriangle(float point[2]);
+
+        struct SwapResult {
+            bool success = false;
+            int first = -1;
+            int second = -1;
+        };
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
     };
 

@@ -26,8 +26,6 @@ namespace scene_version_1 {
         radius = sqrt((B * B + C * C - 4 * A * D) / (4 * A * A));
     }
 
-
-
     void SceneModel::init(float w, float h) {
         auto padding = 100.f;
         auto top = static_cast<float>(h) - padding;
@@ -37,12 +35,12 @@ namespace scene_version_1 {
 
         //visible points
         points.clear();
-        points.reserve(4 + 3); //4 - below, 3 - for supertriangle
+        points.reserve(5 + 3); //5 - below, 3 - for supertriangle
         points.emplace_back(0, left, bottom);
         points.emplace_back(1, right, bottom);
         points.emplace_back(2, right, top);
         points.emplace_back(3, left, top);
-        //addPoint({ 375, 25 }); //wtf?
+        points.emplace_back(4, 375, 25);
     }
     void SceneModel::triangulate() {
         auto koefs = normalizePoints();
@@ -258,7 +256,7 @@ namespace scene_version_1 {
             }
         }
     }
-    SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
+    SceneModel::SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
         old1.checkError();
         old2.checkError();
 
