@@ -108,12 +108,12 @@ void Render::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shaders.line.enable();
-    shaders.line.draw(scene.trianglesMesh);
+    shaders.line.draw(scene.view.trianglesMesh);
     shaders.line.disable();
 
     shaders.circle.enable();
     shaders.circle.draw(scene.getSelectedCircle());
-    shaders.circle.draw(scene.pointsMesh);
+    shaders.circle.draw(scene.view.pointsMesh);
     shaders.circle.disable();
 }
 void Render::reshape(int w, int h) {
