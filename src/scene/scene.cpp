@@ -167,7 +167,7 @@ namespace scene_version_1 {
             return;
         }
 
-        auto triangleForSplit = triangles[triangleIndexForSplit];
+        Triangle triangleForSplit = triangles[triangleIndexForSplit];
         const auto& p0 = triangleForSplit.point[0];
         const auto& p1 = triangleForSplit.point[1];
         const auto& p2 = triangleForSplit.point[2];
