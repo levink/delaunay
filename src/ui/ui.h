@@ -4,7 +4,7 @@
 
 
 namespace ui {
-    enum Mod {
+    enum class KeyMod {
         NO = 0,
         SHIFT = 1,
         CTRL = 2,
@@ -45,11 +45,7 @@ namespace ui {
             KEY_0 = GLFW_KEY_0,
             KP_ADD = GLFW_KEY_KP_ADD,
             KP_SUB = GLFW_KEY_KP_SUBTRACT,
-            TAB = GLFW_KEY_TAB,
-            //KEY_SHIFT = GLFW_KEY_LEFT_SHIFT,
-            //KEY_CONTROL = GLFW_KEY_LEFT_CONTROL,
-            //KEY_ALT = GLFW_KEY_LEFT_ALT,
-
+            TAB = GLFW_KEY_TAB,          
             DEL = GLFW_KEY_DELETE
         };
         enum Action {
@@ -63,20 +59,20 @@ namespace ui {
         public:
             KeyEvent(int key, int action, int mod);
             bool is(keyboard::Key key);
-            bool is(Mod mod, keyboard::Key key);
-            bool is(Mod mod, keyboard::Action action);
+            bool is(KeyMod mod, keyboard::Key key);
+            bool is(KeyMod mod, keyboard::Action action);
         };
     }
 
     namespace mouse {
-        enum Button {
+        enum class MouseButton {
             NO = 0,
             LEFT = 1,
             RIGHT = 2,
             MIDDLE = 3,
             ANY = 4
         };
-        enum Action {
+        enum class MouseAction {
             NONE,
             PRESS,
             RELEASE,
@@ -84,15 +80,14 @@ namespace ui {
         };
         class MouseEvent {
         public:
-            mouse::Button button;
-            mouse::Action action;
+            MouseButton button;
+            MouseAction action;
             int dx, dy;
             MouseEvent(int x, int y);
             MouseEvent(int button, int action, int mod);
-            bool is(mouse::Action action);
-            bool is(mouse::Action action, mouse::Button button) const;
-            bool is(mouse::Action action, Mod mod) const;
-            bool is(mouse::Action action, Mod mod, mouse::Button button) const;
+            bool is(MouseAction action) const;
+            bool is(MouseAction action, MouseButton button) const;
+            bool is(MouseAction action, MouseButton button, KeyMod mod) const;
             glm::vec2 getDelta() const;
             glm::vec2 getCursor();
         };
@@ -101,9 +96,9 @@ namespace ui {
     struct UIState {
         static int x;
         static int y;
-        static bool pressed[3];
-        static mouse::Button mousePressed;
-        static bool is(Mod mod);
+        static bool modPressed[3];
+        static mouse::MouseButton mousePressed;
+        static bool is(KeyMod mod);
         static void print();
     };
     glm::vec2 getCursor();
