@@ -18,6 +18,9 @@ namespace ui {
             SPACE = GLFW_KEY_SPACE,
             RIGHT = GLFW_KEY_RIGHT,
             LEFT = GLFW_KEY_LEFT,
+            LEFT_SHIFT = GLFW_KEY_LEFT_SHIFT,
+            LEFT_CONTROL = GLFW_KEY_LEFT_CONTROL,
+            LEFT_ALT = GLFW_KEY_LEFT_ALT,
 
             W = GLFW_KEY_W,
             S = GLFW_KEY_S,
@@ -78,28 +81,37 @@ namespace ui {
             RELEASE,
             MOVE
         };
-        class MouseEvent {
-        public:
+        struct MouseEvent {
             MouseButton button;
             MouseAction action;
-            int dx, dy;
-            MouseEvent(int x, int y);
-            MouseEvent(int button, int action, int mod);
+            int dx;
+            int dy;
+            
             bool is(MouseAction action) const;
             bool is(MouseAction action, MouseButton button) const;
             bool is(MouseAction action, MouseButton button, KeyMod mod) const;
             glm::vec2 getDelta() const;
             glm::vec2 getCursor();
         };
+
+        MouseEvent move(int x, int y);
+        MouseEvent click(int button, int action, int mod);
     }
 
     struct UIState {
-        static int x;
-        static int y;
-        static bool modPressed[3];
-        static mouse::MouseButton mousePressed;
-        static bool is(KeyMod mod);
-        static void print();
+        int x, y;
+        bool keyPressed[3];             
+        mouse::MouseButton mousePressed; 
+
+        bool is(KeyMod mod);
+        void print();
+        glm::vec2 getCursor();
     };
-    glm::vec2 getCursor();
+
+    static UIState ui_state {
+        0, 0,
+        {false, false, false},
+        mouse::MouseButton::NO
+    };
+    
 }

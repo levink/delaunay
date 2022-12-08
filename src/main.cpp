@@ -48,13 +48,13 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     }
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
-    auto event = ui::mouse::MouseEvent(button, action, mods);
+    auto event = ui::mouse::click(button, action, mods);
     mouseCallback(event);
 }
 void mouseMove(GLFWwindow*, double x, double y) {
-    auto event = ui::mouse::MouseEvent(
-            static_cast<int>(x),
-            static_cast<int>(y));
+    auto mx = static_cast<int>(x);
+    auto my = static_cast<int>(y);
+    auto event = ui::mouse::move(mx, my);
     mouseCallback(event);
 }
 int main() {
