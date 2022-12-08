@@ -50,7 +50,7 @@ namespace scene_version_1 {
         restorePoints(koefs);
     }
 
-    SceneModel::Normalization SceneModel::normalizePoints() {
+    Normalization SceneModel::normalizePoints() {
         Normalization normalization;
         if (points.empty()) {
             return normalization;
@@ -80,7 +80,7 @@ namespace scene_version_1 {
 
         return normalization;
     }
-    void SceneModel::restorePoints(const SceneModel::Normalization& normalization) {
+    void SceneModel::restorePoints(const Normalization& normalization) {
         if (points.empty()) {
             return;
         }
@@ -101,7 +101,7 @@ namespace scene_version_1 {
         }
     }
 
-    SceneModel::SuperTriangle SceneModel::addSuperTriangle() {
+    TriangleIndex SceneModel::addSuperTriangle() {
         //super triangle points
         auto index0 = points.size();
         auto index1 = index0 + 1;
@@ -118,13 +118,13 @@ namespace scene_version_1 {
             points[index1],
             points[index2]
         );
-        return SuperTriangle{ 
+        return TriangleIndex{ 
             static_cast<unsigned>(index0), 
             static_cast<unsigned>(index1), 
             static_cast<unsigned>(index2) 
         };
     }
-    void SceneModel::removeSuperTriangle(const SuperTriangle& tr) {
+    void SceneModel::removeSuperTriangle(const TriangleIndex& tr) {
 
         std::vector<int> forDelete;
         for (int i = triangles.size() - 1; i >= 0; i--) {
@@ -152,33 +152,45 @@ namespace scene_version_1 {
         points.erase(points.begin() + tr.pointIndex0);
     }
 
-    void SceneModel::addInnerPoints(const SuperTriangle& tr) { 
+    void SceneModel::addInnerPoints(const TriangleIndex& superTriangle) { 
         for (auto& point : points) {
-            bool innerPoint = !tr.has(point.index);
-            if (innerPoint) {
-                addPointToTriangulation(point);
+            if (superTriangle.has(point.index)) {
+                continue;
             }
+
+            auto triangleIndexForSplit = findTriangle(point.getPosition());
+            if (triangleIndexForSplit == -1) {
+                Log::warn("Triangle not found!");
+                continue;
+            }
+
+            auto triangleForSplit = triangles[triangleIndexForSplit];
+            auto trianglesForCheck = split(triangleForSplit, point);
+            swapEdges(trianglesForCheck, point);
         }
     }
-    void SceneModel::addPointToTriangulation(Point& point) {
-        auto triangleIndexForSplit = findTriangle(point.position);
-        if (triangleIndexForSplit == -1) {
-            Log::warn("Triangle not found!");
-            return;
+    int SceneModel::findTriangle(const glm::vec2& point) {
+        for (size_t i = 0; i < triangles.size(); i++) {
+            auto& triangle = triangles[i];
+            if (triangle.contains(point)) {
+                return static_cast<int>(i);
+            }
         }
+        return -1;
+    }
 
-        Triangle triangleForSplit = triangles[triangleIndexForSplit];
+    std::stack<int> SceneModel::split(Triangle& triangleForSplit, Point& point) {
+        
         const auto& p0 = triangleForSplit.point[0];
         const auto& p1 = triangleForSplit.point[1];
         const auto& p2 = triangleForSplit.point[2];
 
-        int tIndex0 = triangleForSplit.index;
-        int tIndex1 = static_cast<int>(triangles.size());
-        int tIndex2 = tIndex1 + 1;
-        triangles.resize(triangles.size() + 2);
-        triangles[tIndex0] = Triangle{ tIndex0, p0, p1, point };
-        triangles[tIndex1] = Triangle{ tIndex1, p1, p2, point };
-        triangles[tIndex2] = Triangle{ tIndex2, p2, p0, point };
+        const int tIndex0 = triangleForSplit.index;
+        const int tIndex1 = static_cast<int>(triangles.size());
+        const int tIndex2 = tIndex1 + 1;
+        triangles[triangleForSplit.index] = Triangle{ tIndex0, p0, p1, point };
+        triangles.emplace_back(Triangle{ tIndex1, p1, p2, point });
+        triangles.emplace_back(Triangle{ tIndex2, p2, p0, point });
 
         auto& t0 = triangles[tIndex0];
         auto& t1 = triangles[tIndex1];
@@ -213,18 +225,19 @@ namespace scene_version_1 {
             if (triangleForSplit.adjacent[2] != -1) {
                 triangles[triangleForSplit.adjacent[2]].link(t2);
             }
-
         }
 
+        std::stack<int> trianglesForCheck;
+        trianglesForCheck.push(t0.index);
+        trianglesForCheck.push(t1.index);
+        trianglesForCheck.push(t2.index);
 
-        std::stack<int> checkItems;
-        checkItems.push(t0.index);
-        checkItems.push(t1.index);
-        checkItems.push(t2.index);
-
-        while (!checkItems.empty()) {
-            auto splitIndex = checkItems.top();
-            checkItems.pop();
+        return trianglesForCheck;
+    }
+    void SceneModel::swapEdges(std::stack<int>& trianglesForCheck, const Point& point) {
+        while (!trianglesForCheck.empty()) {
+            auto splitIndex = trianglesForCheck.top();
+            trianglesForCheck.pop();
 
             if (splitIndex == -1) {
                 continue;
@@ -243,17 +256,16 @@ namespace scene_version_1 {
                 continue;
             }
 
-            auto position = point.getPosition();
             auto circle = opposite.getCircle();
-            auto delaunay = !circle.contains(position);
+            auto delaunay = !circle.contains(point.getPosition());
             if (delaunay) {
                 continue;
             }
 
             auto swap = swapEdge(point, splitted, opposite);
             if (swap.success) {
-                checkItems.push(swap.first);
-                checkItems.push(swap.second);
+                trianglesForCheck.push(swap.first);
+                trianglesForCheck.push(swap.second);
             }
         }
     }
@@ -308,17 +320,7 @@ namespace scene_version_1 {
                 new2.index //, new2.adjacent[0]}
         };
     }
-    int SceneModel::findTriangle(float position[2]) {
-        const glm::vec2 pos = { position[0], position[1] };
-        for (size_t i = 0; i < triangles.size(); i++) {
-            auto& triangle = triangles[i];
-            if (triangle.contains(pos)) {
-                return static_cast<int>(i);
-            }
-        }
-        return -1;
-    }
-
+    
 
     void Scene::initScene(const glm::vec2& viewSize) {
        

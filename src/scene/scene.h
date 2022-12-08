@@ -38,18 +38,17 @@ namespace scene_version_1 {
 
     struct Point {
         int index = -1;
-        float position[2] = {0};
+        glm::vec2 position;
         Point() = default;
         Point(int index, float x, float y) : index(index) {
-            position[0] = x;
-            position[1] = y;
+            position.x = x;
+            position.y = y;
         }
-        glm::vec2 getPosition() const {
-            return {position[0], position[1]};
+        const glm::vec2& getPosition() const {
+            return position;
         }
         void setPosition(const glm::vec2& value) {
-            position[0] = value.x;
-            position[1] = value.y;
+            position = value;
         }
     };
 
@@ -241,17 +240,14 @@ namespace scene_version_1 {
                 point[2].getPosition()
             };
         }
-        void shift() {
-            Util::shift(point);
-            Util::shift(adjacent);
-        }
         void setFirst(int pointIndex) {
             if (!has(pointIndex)) {
                 return;
             }
 
             while(point[0].index != pointIndex){
-                shift();
+                Util::shift(point);
+                Util::shift(adjacent);
             }
         }
 
@@ -283,6 +279,22 @@ namespace scene_version_1 {
         }
     };
 
+    struct TriangleIndex {
+        unsigned pointIndex0;
+        unsigned pointIndex1;
+        unsigned pointIndex2;
+        bool has(unsigned index) const {
+            return index == pointIndex0 ||
+                index == pointIndex1 ||
+                index == pointIndex2;
+        }
+    };
+
+    struct Normalization {
+        float scale = 1.0;
+        glm::vec2 offset = glm::vec2(0);
+    };
+
     struct SceneModel {
         std::vector<Point> points;
         std::vector<Triangle> triangles;
@@ -293,28 +305,17 @@ namespace scene_version_1 {
         void triangulate();
 
     private:
-        struct Normalization {
-            float scale         = 1.0;
-            glm::vec2 offset    = glm::vec2(0);
-        };
+        
         Normalization normalizePoints();
         void restorePoints(const Normalization& value);
 
-        struct SuperTriangle {
-            unsigned pointIndex0;
-            unsigned pointIndex1;
-            unsigned pointIndex2;
-            bool has(unsigned index) const {
-                return index == pointIndex0 ||
-                    index == pointIndex1 ||
-                    index == pointIndex2;
-            }
-        };
-        SuperTriangle addSuperTriangle();
-        void removeSuperTriangle(const SuperTriangle& tr);
-        void addInnerPoints(const SuperTriangle& tr);
-        void addPointToTriangulation(Point& point);
-        int findTriangle(float point[2]);
+        TriangleIndex addSuperTriangle();
+        void removeSuperTriangle(const TriangleIndex& superTriangle);
+        void addInnerPoints(const TriangleIndex& superTriangle);
+
+        int findTriangle(const glm::vec2& point);
+        std::stack<int> split(Triangle& triangleForSplit, Point& point);
+        void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
 
         struct SwapResult {
             bool success = false;
