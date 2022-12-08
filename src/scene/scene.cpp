@@ -200,39 +200,35 @@ namespace scene_version_1 {
         t1.checkError();
         t2.checkError();
 
-        //split triangle
-        {
-            t0.adjacent[0] = triangleForSplit.adjacent[0];
-            t0.adjacent[1] = t1.index;
-            t0.adjacent[2] = t2.index;
+        t0.adjacent[0] = triangleForSplit.adjacent[0];
+        t0.adjacent[1] = t1.index;
+        t0.adjacent[2] = t2.index;
 
-            t1.adjacent[0] = triangleForSplit.adjacent[1];
-            t1.adjacent[1] = t2.index;
-            t1.adjacent[2] = t0.index;
+        t1.adjacent[0] = triangleForSplit.adjacent[1];
+        t1.adjacent[1] = t2.index;
+        t1.adjacent[2] = t0.index;
 
-            t2.adjacent[0] = triangleForSplit.adjacent[2];
-            t2.adjacent[1] = t0.index;
-            t2.adjacent[2] = t1.index;
+        t2.adjacent[0] = triangleForSplit.adjacent[2];
+        t2.adjacent[1] = t0.index;
+        t2.adjacent[2] = t1.index;
 
-            if (triangleForSplit.adjacent[0] != -1) {
-                triangles[triangleForSplit.adjacent[0]].link(t0);
-            }
-
-            if (triangleForSplit.adjacent[1] != -1) {
-                triangles[triangleForSplit.adjacent[1]].link(t1);
-            }
-
-            if (triangleForSplit.adjacent[2] != -1) {
-                triangles[triangleForSplit.adjacent[2]].link(t2);
-            }
+        if (triangleForSplit.adjacent[0] != -1) {
+            triangles[triangleForSplit.adjacent[0]].link(t0);
         }
 
-        std::stack<int> trianglesForCheck;
-        trianglesForCheck.push(t0.index);
-        trianglesForCheck.push(t1.index);
-        trianglesForCheck.push(t2.index);
+        if (triangleForSplit.adjacent[1] != -1) {
+            triangles[triangleForSplit.adjacent[1]].link(t1);
+        }
 
-        return trianglesForCheck;
+        if (triangleForSplit.adjacent[2] != -1) {
+            triangles[triangleForSplit.adjacent[2]].link(t2);
+        }
+       
+        return std::stack<int>({
+            t0.index,
+            t1.index,
+            t2.index
+        });
     }
     void SceneModel::swapEdges(std::stack<int>& trianglesForCheck, const Point& point) {
         while (!trianglesForCheck.empty()) {
