@@ -1,5 +1,5 @@
 #pragma once
-#include "src/pch.h"
+#include "pch.h"
 class Log {
 public:
     static void out(std::string_view message);

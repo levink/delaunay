@@ -1,6 +1,6 @@
 #pragma once
 #include <GLFW/glfw3.h>
-#include "src/pch.h"
+#include "pch.h"
 
 struct DrawBatch {
     GLuint vbo = 0;

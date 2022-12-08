@@ -1,5 +1,5 @@
 #include <random>
-#include "src/model/color.h"
+#include "model/color.h"
 #include "render.h"
 
 

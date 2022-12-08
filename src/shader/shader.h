@@ -1,9 +1,9 @@
 #pragma once
-#include "src/pch.h"
-#include "src/camera/camera.h"
-#include "src/model/circle.h"
-#include "src/model/line.h"
-#include "src/scene/drawBatch.h"
+#include "pch.h"
+#include "camera/camera.h"
+#include "model/circle.h"
+#include "model/line.h"
+#include "scene/drawBatch.h"
 #include "shaderBase.h"
 
 class CircleShader : public Shader {

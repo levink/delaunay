@@ -4,7 +4,7 @@ project(delone)
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(include)
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(lib/glfw-3.3.4)
 add_subdirectory(lib/glad)

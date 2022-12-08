@@ -1,5 +1,5 @@
 #pragma once
-#include "src/pch.h"
+#include "pch.h"
 
 struct Face {
     uint16_t a, b, c;

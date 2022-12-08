@@ -1,5 +1,5 @@
 #pragma once
-#include "src/pch.h"
+#include "pch.h"
 
 struct Color {
     static glm::vec3 asphalt;

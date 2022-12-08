@@ -1,5 +1,5 @@
 #pragma once
-#include "src/pch.h"
+#include "pch.h"
 #include "face.h"
 
 struct CircleVertex {

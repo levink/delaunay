@@ -1,8 +1,8 @@
 #pragma once
-#include "src/pch.h"
-#include "../model/line.h"
-#include "../model/circle.h"
-#include "../platform/log.h"
+#include "pch.h"
+#include "model/line.h"
+#include "model/circle.h"
+#include "platform/log.h"
 
 namespace scene_version_1 {
 

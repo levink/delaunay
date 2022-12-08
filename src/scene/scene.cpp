@@ -1,6 +1,6 @@
 #include <iostream>
-#include "src/platform/log.h"
-#include "src/model/color.h"
+#include "platform/log.h"
+#include "model/color.h"
 #include "scene.h"
 
 namespace scene_version_1 {
@@ -103,25 +103,25 @@ namespace scene_version_1 {
 
     SceneModel::SuperTriangle SceneModel::addSuperTriangle() {
         //super triangle points
-        auto last0 = points.size();
-        auto last1 = last0 + 1;
-        auto last2 = last0 + 2;
-        points.emplace_back(last0, -100, -100);
-        points.emplace_back(last1, 100, -100);
-        points.emplace_back(last2, 0, 100);
+        auto index0 = points.size();
+        auto index1 = index0 + 1;
+        auto index2 = index0 + 2;
+        points.emplace_back(index0, -100, -100);
+        points.emplace_back(index1, 100, -100);
+        points.emplace_back(index2, 0, 100);
 
         //super triangle
         triangles.clear();
         triangles.emplace_back(
             static_cast<int>(0),
-            points[last0],
-            points[last1],
-            points[last2]
+            points[index0],
+            points[index1],
+            points[index2]
         );
         return SuperTriangle{ 
-            static_cast<unsigned>(last0), 
-            static_cast<unsigned>(last1), 
-            static_cast<unsigned>(last2) 
+            static_cast<unsigned>(index0), 
+            static_cast<unsigned>(index1), 
+            static_cast<unsigned>(index2) 
         };
     }
     void SceneModel::removeSuperTriangle(const SuperTriangle& tr) {
@@ -152,10 +152,10 @@ namespace scene_version_1 {
         points.erase(points.begin() + tr.pointIndex0);
     }
 
-    void SceneModel::addInnerPoints(const SuperTriangle& tr) {
+    void SceneModel::addInnerPoints(const SuperTriangle& tr) { 
         for (auto& point : points) {
-            bool superTriangle = tr.has(point.index);
-            if (!superTriangle) {
+            bool innerPoint = !tr.has(point.index);
+            if (innerPoint) {
                 addPointToTriangulation(point);
             }
         }
@@ -242,6 +242,7 @@ namespace scene_version_1 {
             if (concave) {
                 continue;
             }
+
             auto position = point.getPosition();
             auto circle = opposite.getCircle();
             auto delaunay = !circle.contains(position);
@@ -308,7 +309,7 @@ namespace scene_version_1 {
         };
     }
     int SceneModel::findTriangle(float position[2]) {
-        glm::vec2 pos = { position[0], position[1] };
+        const glm::vec2 pos = { position[0], position[1] };
         for (size_t i = 0; i < triangles.size(); i++) {
             auto& triangle = triangles[i];
             if (triangle.contains(pos)) {

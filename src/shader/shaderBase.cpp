@@ -1,4 +1,4 @@
-#include "src/platform/log.h"
+#include "platform/log.h"
 #include "shaderBase.h"
 
 Attribute::Attribute(): id(-1), size(-1), type(GL_NONE) { }
