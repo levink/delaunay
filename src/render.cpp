@@ -37,7 +37,7 @@ void Render::initScene() {
     //layer
     {
 
-        scene.initScene(camera.viewSize);
+        scene.init(camera.viewSize);
 
     }
 
@@ -112,7 +112,6 @@ void Render::draw() {
     shaders.line.disable();
 
     shaders.circle.enable();
-    shaders.circle.draw(scene.getSelectedCircle());
     shaders.circle.draw(scene.view.pointsMesh);
     shaders.circle.disable();
 }

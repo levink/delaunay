@@ -1,10 +1,8 @@
-
 #include "circle.h"
+#include "model/color.h"
 
-CircleVertex::CircleVertex():
-    center(0,0), offset(0,0), radius(0.f), fill(0.f) {
-
-}
+CircleVertex::CircleVertex() 
+    : center(0,0), offset(0,0), radius(0.f), fill(0.f) { }
 
 CircleVertex::CircleVertex(float x, float y, float offsetX, float offsetY, float radius, float fill):
         center(x,y), offset(offsetX, offsetY), radius(radius), fill(fill) { }
@@ -36,3 +34,10 @@ void CircleMesh::setPosition(const glm::vec2& position) {
     vertex[2].center = position;
     vertex[3].center = position;
 }
+
+CircleMesh CircleMesh::createPoint(const glm::vec2& point, bool selected) {
+    bool filled = true;
+    auto color = selected ? Color::orange : Color::teal;
+    return CircleMesh(point, 7.f, filled, color);
+}
+    

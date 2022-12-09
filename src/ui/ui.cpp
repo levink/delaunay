@@ -90,45 +90,45 @@ namespace ui {
             auto dy = ui_state.y - y;
             ui_state.x = x;
             ui_state.y = y;
-            return MouseEvent{ ui_state.mousePressed, MouseAction::MOVE, dx, dy };
+            return MouseEvent{ ui_state.mousePressed, Action::MOVE, dx, dy };
         }
         MouseEvent click(int button, int action, int mod) {
 
-            auto mouseButton = MouseButton::NO;
-            if (button == GLFW_MOUSE_BUTTON_LEFT)        mouseButton = MouseButton::LEFT;
-            else if (button == GLFW_MOUSE_BUTTON_MIDDLE) mouseButton = MouseButton::MIDDLE;
-            else if (button == GLFW_MOUSE_BUTTON_RIGHT)  mouseButton = MouseButton::RIGHT;
-            else                                         mouseButton = MouseButton::NO;
+            auto mouseButton = Button::NO;
+            if (button == GLFW_MOUSE_BUTTON_LEFT)        mouseButton = Button::LEFT;
+            else if (button == GLFW_MOUSE_BUTTON_MIDDLE) mouseButton = Button::MIDDLE;
+            else if (button == GLFW_MOUSE_BUTTON_RIGHT)  mouseButton = Button::RIGHT;
+            else                                         mouseButton = Button::NO;
 
-            auto mouseAction = MouseAction::NONE;
-            if (action == GLFW_PRESS)        mouseAction = MouseAction::PRESS;
-            else if (action == GLFW_RELEASE) mouseAction = MouseAction::RELEASE;
-            else                             mouseAction = MouseAction::NONE;
+            auto mouseAction = Action::NONE;
+            if (action == GLFW_PRESS)        mouseAction = Action::PRESS;
+            else if (action == GLFW_RELEASE) mouseAction = Action::RELEASE;
+            else                             mouseAction = Action::NONE;
 
             auto pressed = (action == GLFW_PRESS || action == GLFW_REPEAT);
-            ui_state.mousePressed = pressed ? mouseButton : MouseButton::NO;
+            ui_state.mousePressed = pressed ? mouseButton : Button::NO;
 
             return MouseEvent{ mouseButton, mouseAction, 0, 0 };
         }
-        bool MouseEvent::is(MouseAction action) const {
+        bool MouseEvent::is(Action action) const {
 
-            if (action == MouseAction::MOVE) {
-                return is(MouseAction::MOVE, MouseButton::NO, KeyMod::NO);
+            if (action == Action::MOVE) {
+                return is(Action::MOVE, Button::NO, KeyMod::NO);
             }
 
             throw std::runtime_error("Not implemented");
         }
-        bool MouseEvent::is(MouseAction action, MouseButton button) const {
+        bool MouseEvent::is(Action action, Button button) const {
             return is(action, button, KeyMod::NO);
         }
-        bool MouseEvent::is(MouseAction action, MouseButton button, KeyMod mod) const {
+        bool MouseEvent::is(Action action, Button button, KeyMod mod) const {
             if (action != this->action) {
                 return false;
             }
             
             bool buttonCheck = 
                 (button == this->button) ||
-                (button == MouseButton::ANY && this->button != MouseButton::NO);
+                (button == Button::ANY && this->button != Button::NO);
             if (!buttonCheck) {
                 return false;
             }

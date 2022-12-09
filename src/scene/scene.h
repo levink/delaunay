@@ -4,7 +4,7 @@
 #include "model/circle.h"
 #include "platform/log.h"
 
-namespace scene_version_1 {
+namespace delaunay {
 
     struct Util {
         template<typename T>
@@ -37,18 +37,26 @@ namespace scene_version_1 {
     };
 
     struct Point {
-        int index = -1;
+        int index;
         glm::vec2 position;
+        bool selected;
         Point() = default;
         Point(int index, float x, float y) : index(index) {
             position.x = x;
             position.y = y;
+            selected = false;
         }
         const glm::vec2& getPosition() const {
             return position;
         }
         void setPosition(const glm::vec2& value) {
             position = value;
+        }
+        bool getSelected() const {
+            return selected;
+        }
+        void setSelected(bool value) {
+            selected = value;
         }
     };
 
@@ -295,6 +303,12 @@ namespace scene_version_1 {
         glm::vec2 offset = glm::vec2(0);
     };
 
+    struct SwapResult {
+        bool success = false;
+        int first = -1;
+        int second = -1;
+    };
+
     struct SceneModel {
         std::vector<Point> points;
         std::vector<Triangle> triangles;
@@ -302,54 +316,47 @@ namespace scene_version_1 {
         int selectedTriangle = -1;
 
         void init(float widthPx, float heightPx);
+        void addPoint(float x, float y);
         void triangulate();
 
     private:
         
         Normalization normalizePoints();
         void restorePoints(const Normalization& value);
-
         TriangleIndex addSuperTriangle();
         void removeSuperTriangle(const TriangleIndex& superTriangle);
         void addInnerPoints(const TriangleIndex& superTriangle);
-
         int findTriangle(const glm::vec2& point);
         std::stack<int> split(Triangle& triangleForSplit, Point& point);
         void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
-
-        struct SwapResult {
-            bool success = false;
-            int first = -1;
-            int second = -1;
-        };
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
     };
 
     struct SceneView {
         std::vector<CircleMesh> pointsMesh;
         std::vector<LineMesh> trianglesMesh;
+        void init(const SceneModel& model);
+        void addPoint(const Point& point);
+        void updateTriangles(const SceneModel& model);
     };
 
     struct Scene {
-
         SceneModel model;
         SceneView view;
-        
         glm::vec2 dragDrop;
-
-        void initScene(const glm::vec2& viewSize);
-        void updateView();
-
+        void init(const glm::vec2& viewSize);
+    private:
+        struct Nearest {
+            int pointIndex;
+            float distance;
+        };
+        Nearest nearestPoint(const glm::vec2& cursor);
+    
+    public:
         void addPoint(const glm::vec2& cursor);
         void movePoint(const glm::vec2& cursor);
         void deletePoint(const glm::vec2& cursor);
         void selectPoint(const glm::vec2& cursor);
         void clearSelection();
-
-
-        const CircleMesh* getSelectedCircle();
-        CircleMesh createPointMesh(const glm::vec2& point);
-        CircleMesh createCircleMesh(const Circle& circle);
-        LineMesh createLineMesh(const glm::vec2& start, const glm::vec2& end);
     };
 };

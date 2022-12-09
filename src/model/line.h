@@ -20,10 +20,9 @@ struct LineVertex {
 struct LineMesh {
     std::vector<LineVertex> vertex;
     std::vector<Face> face;
-    glm::vec3 color;
-    float width;
+    LineMesh();
+    LineMesh(const glm::vec2& start, const glm::vec2& end);
     int count() const { return (int)(face.size() * 3u); }
     const Face* faceData() const { return face.data(); }
-    static LineMesh create(const glm::vec2& start, const glm::vec2& end, const glm::vec3& color, float width);
     void move(const glm::vec2& start, const glm::vec2& end);
 };

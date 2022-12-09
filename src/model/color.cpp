@@ -6,7 +6,6 @@ glm::vec3 Color::orange = Color::parse("DB5700");
 glm::vec3 Color::yellow = Color::parse("c41c00");
 
 
-
 glm::vec3 Color::parse(const std::string &color)  {
     if (color.size() != 6) {
         throw std::runtime_error("Bad format");

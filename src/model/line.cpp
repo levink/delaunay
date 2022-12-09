@@ -1,4 +1,5 @@
 #include "line.h"
+#include "model/color.h"
 
 LineVertex::LineVertex() = default;
 LineVertex::LineVertex(glm::vec2 position, glm::vec2 e1, glm::vec2 e2, glm::vec2 offset) :
@@ -6,36 +7,37 @@ LineVertex::LineVertex(glm::vec2 position, glm::vec2 e1, glm::vec2 e2, glm::vec2
     e1(e1),
     e2(e2),
     offset(offset) { }
-
-void LineVertex::set(
-        const glm::vec2& position,
-        const glm::vec2& e1,
-        const glm::vec2& e2) {
+void LineVertex::set(const glm::vec2& position, const glm::vec2& e1, const glm::vec2& e2) {
     this->position = position;
     this->e1 = e1;
     this->e2 = e2;
 }
 
-LineMesh LineMesh::create(const glm::vec2 &start, const glm::vec2 &end, const glm::vec3& color, float width) {
+LineMesh::LineMesh() {
+    glm::vec2 start(0, 0);
+    glm::vec2 end(0, 0);
 
-    LineMesh mesh;
+    vertex.reserve(4);
+    vertex.emplace_back(LineVertex(start, start, end, { -1, -1 }));
+    vertex.emplace_back(LineVertex(end, start, end, { -1, +1 }));
+    vertex.emplace_back(LineVertex(end, start, end, { +1, +1 }));
+    vertex.emplace_back(LineVertex(start, start, end, { +1, -1 }));
 
-    mesh.vertex.reserve(4);
-    mesh.vertex.emplace_back(LineVertex(start,  start, end, {-1, -1}));
-    mesh.vertex.emplace_back(LineVertex(end,    start, end, {-1, +1}));
-    mesh.vertex.emplace_back(LineVertex(end,    start, end, {+1, +1}));
-    mesh.vertex.emplace_back(LineVertex(start,  start, end, {+1, -1}));
-
-    mesh.face.reserve(mesh.face.size() + 2);
-    mesh.face.emplace_back(Face(0, 1, 2));
-    mesh.face.emplace_back(Face(2, 3, 0));
-
-    mesh.color = color;
-    mesh.width = width;
-
-    return mesh;
+    face.reserve(2);
+    face.emplace_back(Face(0, 1, 2));
+    face.emplace_back(Face(2, 3, 0));
 }
+LineMesh::LineMesh(const glm::vec2& start, const glm::vec2& end) {
+    vertex.reserve(4);
+    vertex.emplace_back(LineVertex(start, start, end, { -1, -1 }));
+    vertex.emplace_back(LineVertex(end, start, end, { -1, +1 }));
+    vertex.emplace_back(LineVertex(end, start, end, { +1, +1 }));
+    vertex.emplace_back(LineVertex(start, start, end, { +1, -1 }));
 
+    face.reserve(2);
+    face.emplace_back(Face(0, 1, 2));
+    face.emplace_back(Face(2, 3, 0));
+}
 void LineMesh::move(const glm::vec2 &start, const glm::vec2 &end) {
     vertex[0].set(start, start, end);
     vertex[1].set(end, start, end);

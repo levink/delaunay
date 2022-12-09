@@ -4,7 +4,7 @@
 #include "shader/shaderSource.h"
 #include "shader/shader.h"
 #include "scene/scene.h"
-using namespace scene_version_1;
+using namespace delaunay;
 
 class Render;
 

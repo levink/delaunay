@@ -68,28 +68,28 @@ namespace ui {
     }
 
     namespace mouse {
-        enum class MouseButton {
+        enum class Button {
             NO = 0,
             LEFT = 1,
             RIGHT = 2,
             MIDDLE = 3,
             ANY = 4
         };
-        enum class MouseAction {
+        enum class Action {
             NONE,
             PRESS,
             RELEASE,
             MOVE
         };
         struct MouseEvent {
-            MouseButton button;
-            MouseAction action;
+            Button button;
+            Action action;
             int dx;
             int dy;
             
-            bool is(MouseAction action) const;
-            bool is(MouseAction action, MouseButton button) const;
-            bool is(MouseAction action, MouseButton button, KeyMod mod) const;
+            bool is(Action action) const;
+            bool is(Action action, Button button) const;
+            bool is(Action action, Button button, KeyMod mod) const;
             glm::vec2 getDelta() const;
             glm::vec2 getCursor();
         };
@@ -101,7 +101,7 @@ namespace ui {
     struct UIState {
         int x, y;
         bool keyPressed[3];             
-        mouse::MouseButton mousePressed; 
+        mouse::Button mousePressed;
 
         bool is(KeyMod mod);
         void print();
@@ -111,7 +111,7 @@ namespace ui {
     static UIState ui_state {
         0, 0,
         {false, false, false},
-        mouse::MouseButton::NO
+        mouse::Button::NO
     };
     
 }

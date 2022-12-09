@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "model/color.h"
 
 CircleShader::CircleShader() : Shader(2, 4) {
     u[0] = Uniform("Ortho");
@@ -103,8 +104,9 @@ void LineShader::disable() const {
 void LineShader::draw(const std::vector<LineMesh>& items) {
     set4(u[0], context.camera->Ortho);
     for(auto& item : items) {
-        set3(u[1], item.color);
-        set1(u[2], item.width);
+
+        set3(u[1], Color::orange);
+        set1(u[2], 3.5f);
 
         auto data = item.vertex.data();
         attr(a[0], data, sizeof(LineVertex), offsetof(LineVertex, position));

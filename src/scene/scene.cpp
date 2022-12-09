@@ -3,7 +3,7 @@
 #include "model/color.h"
 #include "scene.h"
 
-namespace scene_version_1 {
+namespace delaunay {
 
     Circle::Circle() : radius(0) { }
     Circle::Circle(float x, float y, float radius) : center(x, y), radius(radius) { }
@@ -26,6 +26,7 @@ namespace scene_version_1 {
         radius = sqrt((B * B + C * C - 4 * A * D) / (4 * A * A));
     }
 
+
     void SceneModel::init(float w, float h) {
         auto padding = 100.f;
         auto top = static_cast<float>(h) - padding;
@@ -42,6 +43,10 @@ namespace scene_version_1 {
         points.emplace_back(3, left, top);
         points.emplace_back(4, 375, 25);
     }
+    void SceneModel::addPoint(float x, float y) {
+        int lastIndex = static_cast<int>(points.size());
+        points.emplace_back(lastIndex, x, y);
+    }
     void SceneModel::triangulate() {
         auto koefs = normalizePoints();
         auto tr = addSuperTriangle();
@@ -49,7 +54,6 @@ namespace scene_version_1 {
         removeSuperTriangle(tr);
         restorePoints(koefs);
     }
-
     Normalization SceneModel::normalizePoints() {
         Normalization normalization;
         if (points.empty()) {
@@ -100,11 +104,10 @@ namespace scene_version_1 {
             p2 = points[p2.index];
         }
     }
-
     TriangleIndex SceneModel::addSuperTriangle() {
         //super triangle points
         auto index0 = points.size();
-        auto index1 = index0 + 1;
+        auto index1 = index0 + 1; 
         auto index2 = index0 + 2;
         points.emplace_back(index0, -100, -100);
         points.emplace_back(index1, 100, -100);
@@ -118,10 +121,10 @@ namespace scene_version_1 {
             points[index1],
             points[index2]
         );
-        return TriangleIndex{ 
-            static_cast<unsigned>(index0), 
-            static_cast<unsigned>(index1), 
-            static_cast<unsigned>(index2) 
+        return TriangleIndex{
+            static_cast<unsigned>(index0),
+            static_cast<unsigned>(index1),
+            static_cast<unsigned>(index2)
         };
     }
     void SceneModel::removeSuperTriangle(const TriangleIndex& tr) {
@@ -129,7 +132,7 @@ namespace scene_version_1 {
         std::vector<int> forDelete;
         for (int i = triangles.size() - 1; i >= 0; i--) {
             auto& t = triangles[i];
-            auto canDelete = 
+            auto canDelete =
                 t.has(tr.pointIndex0) ||
                 t.has(tr.pointIndex1) ||
                 t.has(tr.pointIndex2);
@@ -151,8 +154,7 @@ namespace scene_version_1 {
         points.erase(points.begin() + tr.pointIndex1);
         points.erase(points.begin() + tr.pointIndex0);
     }
-
-    void SceneModel::addInnerPoints(const TriangleIndex& superTriangle) { 
+    void SceneModel::addInnerPoints(const TriangleIndex& superTriangle) {
         for (auto& point : points) {
             if (superTriangle.has(point.index)) {
                 continue;
@@ -178,9 +180,8 @@ namespace scene_version_1 {
         }
         return -1;
     }
-
     std::stack<int> SceneModel::split(Triangle& triangleForSplit, Point& point) {
-        
+
         const auto& p0 = triangleForSplit.point[0];
         const auto& p1 = triangleForSplit.point[1];
         const auto& p2 = triangleForSplit.point[2];
@@ -223,12 +224,12 @@ namespace scene_version_1 {
         if (triangleForSplit.adjacent[2] != -1) {
             triangles[triangleForSplit.adjacent[2]].link(t2);
         }
-       
+
         return std::stack<int>({
             t0.index,
             t1.index,
             t2.index
-        });
+            });
     }
     void SceneModel::swapEdges(std::stack<int>& trianglesForCheck, const Point& point) {
         while (!trianglesForCheck.empty()) {
@@ -265,7 +266,7 @@ namespace scene_version_1 {
             }
         }
     }
-    SceneModel::SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
+    SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
         old1.checkError();
         old2.checkError();
 
@@ -316,51 +317,72 @@ namespace scene_version_1 {
                 new2.index //, new2.adjacent[0]}
         };
     }
-    
 
-    void Scene::initScene(const glm::vec2& viewSize) {
-       
-        model.init(viewSize.x, viewSize.y);
-        model.triangulate();
 
-        updateView();
-    }
-    void Scene::updateView() {
-        view.pointsMesh.reserve(model.points.size());
-        view.pointsMesh.clear();
-        for(auto& point : model.points) {
-            const auto& pos = point.getPosition();
-            const auto& mesh = createPointMesh(pos);
-            view.pointsMesh.push_back(mesh);
+
+    void SceneView::init(const SceneModel& model) {
+        pointsMesh.clear();
+        pointsMesh.reserve(model.points.size());
+        for (auto& point : model.points) {
+            addPoint(point);
         }
-    
-        view.trianglesMesh.reserve(3 * model.triangles.size());
-        view.trianglesMesh.clear();
-    
+
+        trianglesMesh.clear();
+        trianglesMesh.reserve(3 * model.triangles.size());
+        for (auto& triangle : model.triangles) {
+            const auto& p0 = triangle.point[0].getPosition();
+            const auto& p1 = triangle.point[1].getPosition();
+            const auto& p2 = triangle.point[2].getPosition();
+
+            trianglesMesh.push_back(LineMesh(p0, p1));
+            trianglesMesh.push_back(LineMesh(p1, p2));
+            trianglesMesh.push_back(LineMesh(p2, p0));
+        }
+    }
+    void SceneView::addPoint(const Point& point) {
+        pointsMesh.push_back(CircleMesh::createPoint(
+            point.getPosition(),
+            point.getSelected()
+        ));
+    }
+    void SceneView::updateTriangles(const SceneModel& model) {
+        trianglesMesh.resize(3 * model.triangles.size());
+        size_t index = 0;
         for (auto& triangle : model.triangles) {
 
-            auto p0 = triangle.point[0].getPosition();
-            auto p1 = triangle.point[1].getPosition();
-            auto p2 = triangle.point[2].getPosition();
+            const auto& p0 = triangle.point[0].getPosition();
+            const auto& p1 = triangle.point[1].getPosition();
+            const auto& p2 = triangle.point[2].getPosition();
 
-            view.trianglesMesh.push_back(createLineMesh(p0, p1));
-            view.trianglesMesh.push_back(createLineMesh(p1, p2));
-            view.trianglesMesh.push_back(createLineMesh(p2, p0));
+            trianglesMesh[index + 0].move(p0, p1);
+            trianglesMesh[index + 1].move(p1, p2);
+            trianglesMesh[index + 2].move(p2, p0);
+
+            index += 3;
         }
     }
-    void Scene::addPoint(const glm::vec2& cursor) {
-        int lastIndex = static_cast<int>(model.points.size());
-        model.points.emplace_back(lastIndex, cursor.x, cursor.y);
 
-        std::cout << "Point " << lastIndex << " " << cursor.x << ", " << cursor.y << std::endl;
 
-        auto pos = model.points.back().getPosition();
-        auto mesh = createPointMesh(pos);
-        view.pointsMesh.emplace_back(mesh);
-
+    void Scene::init(const glm::vec2& viewSize) {
+        model.init(viewSize.x, viewSize.y);
         model.triangulate();
-        updateView();
+        view.init(model);
     }
+    void Scene::addPoint(const glm::vec2& cursor) {
+
+        model.addPoint(cursor.x, cursor.y);
+        model.triangulate();
+
+        auto& point = model.points.back();
+        view.addPoint(point);
+        view.updateTriangles(model);
+
+        auto& position = point.getPosition();
+        std::cout << "Point "
+            << point.index << " "
+            << position.x << " "
+            << position.y << std::endl;
+    } 
     void Scene::movePoint(const glm::vec2& cursor) {
        /* if (selectedPoint == -1) {
             return;
@@ -375,42 +397,56 @@ namespace scene_version_1 {
     void Scene::deletePoint(const glm::vec2 &cursor) {
 
     }
-    void Scene::selectPoint(const glm::vec2& cursor) {
-
-      /*  if (points.empty()) {
-            return;
+    Scene::Nearest Scene::nearestPoint(const glm::vec2& cursor) {
+        auto& points = model.points;
+        if (points.empty()) {
+            return Nearest{ -1, 0.f };
         }
 
-        auto pos = points[0].getPosition();
-        auto minDistance = glm::distance(pos, cursor);
-        dragDrop = cursor - pos;
         auto index = 0;
-
-        for(int i = 1; i < points.size(); i++) {
-            auto& point = points[i];
-            auto pointPos = point.getPosition();
-            float distance = glm::distance(pointPos, cursor);
+        auto minDistance = glm::distance(points[0].getPosition(), cursor);
+        for (int i = 1; i < points.size(); i++) {
+            auto& position = points[i].getPosition();
+            float distance = glm::distance(position, cursor);
             if (distance < minDistance) {
                 minDistance = distance;
                 index = i;
-                dragDrop = cursor - pointPos;
             }
         }
+        return Nearest{ index, minDistance};
+    }
+    void Scene::selectPoint(const glm::vec2& cursor) {
+        //TODO this
+        //if (model.selectedPoint != -1) {
+        //    //view.pointsMesh[model.selectedPoint].color
+        //}
 
-        if (selectedPoint != -1) {
-            pointsMesh[selectedPoint].color = Color::teal;
-        }
+        //auto nearest = nearestPoint(cursor);
+        //model.selectedPoint = nearest.pointIndex;
+        //if (model.selectedPoint == -1) {
+        //    return;
+        //}
+        //    
+        //
 
-        if (minDistance >= 20.f) {
-            selectedPoint = -1;
-        }
-        else {
-            selectedPoint = index;
-            pointsMesh[selectedPoint].color = Color::yellow;
-        }
+        //
+        //auto& point = model.points[model.selectedPoint];
+        //dragDrop = cursor - point.getPosition();
+        //
+        //if (selectedPoint != -1) {
+        //    pointsMesh[selectedPoint].color = Color::teal;
+        //}
 
-        std::string msg = "Selected point = " + std::to_string(selectedPoint);
-        Log::out(msg);*/
+        //if (minDistance >= 20.f) {
+        //    selectedPoint = -1;
+        //}
+        //else {
+        //    selectedPoint = index;
+        //    pointsMesh[selectedPoint].color = Color::yellow;
+        //}
+
+        //std::string msg = "Selected point = " + std::to_string(selectedPoint);
+        //Log::out(msg);
     }
     void Scene::clearSelection() {
       /*  if (selectedPoint != -1) {
@@ -418,25 +454,6 @@ namespace scene_version_1 {
         }
         selectedPoint = -1;
         dragDrop.x = dragDrop.y = 0;*/
-    }
-
-    const CircleMesh* Scene::getSelectedCircle() {
-        if (model.selectedTriangle == -1) {
-            return nullptr;
-        }
-
-        return nullptr;//&selectedCircleMesh;
-        //todo this
-    }
-
-    CircleMesh Scene::createPointMesh(const glm::vec2& point) {
-        return CircleMesh(point, 7.f, true, Color::teal);
-    }
-    CircleMesh Scene::createCircleMesh(const Circle& circle) {
-        return CircleMesh {circle.center, circle.radius, false, Color::teal };
-    }
-    LineMesh Scene::createLineMesh(const glm::vec2& start, const glm::vec2& end) {
-        return LineMesh::create(start, end, Color::orange, 3.5f);
     }
 };
 
