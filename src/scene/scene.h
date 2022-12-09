@@ -327,7 +327,7 @@ namespace delaunay {
         void removeSuperTriangle(const TriangleIndex& superTriangle);
         void addInnerPoints(const TriangleIndex& superTriangle);
         int findTriangle(const glm::vec2& point);
-        std::stack<int> split(Triangle& triangleForSplit, Point& point);
+        std::stack<int> split(Triangle triangleForSplit, Point point);
         void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
     };
@@ -351,7 +351,6 @@ namespace delaunay {
             float distance;
         };
         Nearest nearestPoint(const glm::vec2& cursor);
-    
     public:
         void addPoint(const glm::vec2& cursor);
         void movePoint(const glm::vec2& cursor);

@@ -37,11 +37,11 @@ namespace delaunay {
         //visible points
         points.clear();
         points.reserve(5 + 3); //5 - below, 3 - for supertriangle
-        points.emplace_back(0, left, bottom);
-        points.emplace_back(1, right, bottom);
-        points.emplace_back(2, right, top);
-        points.emplace_back(3, left, top);
-        points.emplace_back(4, 375, 25);
+        points.emplace_back(Point(0, left, bottom));
+        points.emplace_back(Point(1, right, bottom));
+        points.emplace_back(Point(2, right, top));
+        points.emplace_back(Point(3, left, top));
+        points.emplace_back(Point(4, 375, 25));
     }
     void SceneModel::addPoint(float x, float y) {
         int lastIndex = static_cast<int>(points.size());
@@ -60,10 +60,10 @@ namespace delaunay {
             return normalization;
         }
 
-        auto min = points[0].getPosition();
-        auto max = points[0].getPosition();
+        glm::vec2 min = points[0].getPosition();
+        glm::vec2 max = points[0].getPosition();
         for (auto& p : points) {
-            auto pos = p.getPosition();
+            auto& pos = p.getPosition();
             min.x = std::min(min.x, pos.x);
             min.y = std::min(min.y, pos.y);
             max.x = std::max(max.x, pos.x);
@@ -109,9 +109,9 @@ namespace delaunay {
         auto index0 = points.size();
         auto index1 = index0 + 1; 
         auto index2 = index0 + 2;
-        points.emplace_back(index0, -100, -100);
-        points.emplace_back(index1, 100, -100);
-        points.emplace_back(index2, 0, 100);
+        points.emplace_back(Point(index0, -100, -100));
+        points.emplace_back(Point(index1, 100, -100));
+        points.emplace_back(Point(index2, 0, 100));
 
         //super triangle
         triangles.clear();
@@ -166,21 +166,21 @@ namespace delaunay {
                 continue;
             }
 
-            auto triangleForSplit = triangles[triangleIndexForSplit];
+            Triangle triangleForSplit = triangles[triangleIndexForSplit];
             auto trianglesForCheck = split(triangleForSplit, point);
             swapEdges(trianglesForCheck, point);
         }
     }
     int SceneModel::findTriangle(const glm::vec2& point) {
         for (size_t i = 0; i < triangles.size(); i++) {
-            auto& triangle = triangles[i];
-            if (triangle.contains(point)) {
+            auto& triangle = triangles[i]; 
+            if (triangle.contains(point)) { 
                 return static_cast<int>(i);
             }
         }
         return -1;
     }
-    std::stack<int> SceneModel::split(Triangle& triangleForSplit, Point& point) {
+    std::stack<int> SceneModel::split(Triangle triangleForSplit, Point point) {
 
         const auto& p0 = triangleForSplit.point[0];
         const auto& p1 = triangleForSplit.point[1];
@@ -319,7 +319,6 @@ namespace delaunay {
     }
 
 
-
     void SceneView::init(const SceneModel& model) {
         pointsMesh.clear();
         pointsMesh.reserve(model.points.size());
@@ -332,7 +331,7 @@ namespace delaunay {
         for (auto& triangle : model.triangles) {
             const auto& p0 = triangle.point[0].getPosition();
             const auto& p1 = triangle.point[1].getPosition();
-            const auto& p2 = triangle.point[2].getPosition();
+            const auto& p2 = triangle.point[2].getPosition(); 
 
             trianglesMesh.push_back(LineMesh(p0, p1));
             trianglesMesh.push_back(LineMesh(p1, p2));
