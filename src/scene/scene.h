@@ -251,7 +251,6 @@ namespace delaunay {
                 Util::shift(adjacent);
             }
         }
-
         Edge getCommonEdge(const Triangle& other) {
             if (other.index == adjacent[0]) return Edge{point[0].index, point[1].index};
             if (other.index == adjacent[1]) return Edge{point[1].index, point[2].index};
@@ -277,6 +276,17 @@ namespace delaunay {
             auto msg = "[Triangle::getOppositePoint] Bad edge result";
             Log::warn(msg);
             throw std::runtime_error(msg);
+        }
+        void updatePosition(const Point& p) {
+            if (p.index == point[0].index) {
+                point[0].setPosition(p.getPosition());
+            }
+            else if (p.index == point[1].index) {
+                point[1].setPosition(p.getPosition());
+            }
+            else if (p.index == point[2].index) {
+                point[2].setPosition(p.getPosition());
+            }
         }
     };
 
@@ -312,18 +322,17 @@ namespace delaunay {
         void init(float widthPx, float heightPx);
         void addPoint(float x, float y);
         void triangulate();
-
-    private:
         
+    private:
         Normalization normalizePoints();
         void restorePoints(const Normalization& value);
         TriangleIndex addSuperTriangle();
-        void removeSuperTriangle(const TriangleIndex& superTriangle);
-        void addInnerPoints(const TriangleIndex& superTriangle);
+        void removeSuperTriangle(const TriangleIndex& tr);
+        void addInnerPoints();
         int findTriangle(const glm::vec2& point);
         std::stack<int> split(Triangle triangleForSplit, Point point);
-        void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
+        void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
     };
 
     struct SelectedPoint {

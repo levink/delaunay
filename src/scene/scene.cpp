@@ -36,12 +36,11 @@ namespace delaunay {
 
         //visible points
         points.clear();
-        points.reserve(5 + 3); //5 - below, 3 - for supertriangle
+        points.reserve(4 + 3); //4 - below, 3 - for supertriangle
         points.emplace_back(Point(0, left, bottom));
         points.emplace_back(Point(1, right, bottom));
         points.emplace_back(Point(2, right, top));
         points.emplace_back(Point(3, left, top));
-        points.emplace_back(Point(4, 375, 25));
     }
     void SceneModel::addPoint(float x, float y) {
         int lastIndex = static_cast<int>(points.size());
@@ -50,7 +49,7 @@ namespace delaunay {
     void SceneModel::triangulate() {
         auto koefs = normalizePoints();
         auto tr = addSuperTriangle();
-        addInnerPoints(tr);
+        addInnerPoints();
         removeSuperTriangle(tr);
         restorePoints(koefs);
     }
@@ -105,6 +104,7 @@ namespace delaunay {
         }
     }
     TriangleIndex SceneModel::addSuperTriangle() {
+        
         //super triangle points
         auto index0 = points.size();
         auto index1 = index0 + 1; 
@@ -129,7 +129,7 @@ namespace delaunay {
     }
     void SceneModel::removeSuperTriangle(const TriangleIndex& tr) {
 
-        std::vector<int> forDelete;
+        std::vector<int> trianglesForDelete;
         for (int i = triangles.size() - 1; i >= 0; i--) {
             auto& t = triangles[i];
             auto canDelete =
@@ -138,11 +138,11 @@ namespace delaunay {
                 t.has(tr.pointIndex2);
 
             if (canDelete) {
-                forDelete.push_back(i);
+                trianglesForDelete.push_back(i);
             }
         }
 
-        for (auto index : forDelete) {
+        for (auto index : trianglesForDelete) {
             triangles.erase(triangles.begin() + index);
             for (auto& t : triangles) {
                 t.replaceAdjacent(index, -1);
@@ -150,15 +150,12 @@ namespace delaunay {
             }
         }
 
-        points.erase(points.begin() + tr.pointIndex2);
-        points.erase(points.begin() + tr.pointIndex1);
-        points.erase(points.begin() + tr.pointIndex0);
+        points.resize(points.size() - 3);
     }
-    void SceneModel::addInnerPoints(const TriangleIndex& superTriangle) {
-        for (auto& point : points) {
-            if (superTriangle.has(point.index)) {
-                continue;
-            }
+    void SceneModel::addInnerPoints() {
+        auto innerPointsCount = points.size() - 3;
+        for (size_t i = 0; i < innerPointsCount; i++) {
+            auto& point = points[i];
 
             auto triangleIndexForSplit = findTriangle(point.getPosition());
             if (triangleIndexForSplit == -1) {
@@ -318,7 +315,6 @@ namespace delaunay {
         };
     }
 
-
     void SceneView::init(const SceneModel& model) {
         pointsMesh.clear();
         pointsMesh.reserve(model.points.size());
@@ -439,17 +435,21 @@ namespace delaunay {
         }
 
         auto index = model.selectedPointIndex;
-        auto position = cursor - model.dragOffset;
-        model.points[index].setPosition(position);
-        view.pointsMesh[index].setPosition(position);
-        view.selectedPoint.mesh.setPosition(position);
+        auto newPosition = cursor - model.dragOffset;
+        model.points[index].setPosition(newPosition);
+        view.pointsMesh[index].setPosition(newPosition);
+        view.selectedPoint.mesh.setPosition(newPosition);
 
-        //find triangles which contains moved point and add them to the stack for swapping
-        //call swap
-        //what to do with border triangles?
-        //maybe not to delete big parent triangle?
-        /*triangulate();
-        updateView();*/
+        auto& movedPoint = model.points[index];
+        for (size_t i = 0; i < model.triangles.size(); i++) {
+            auto& tr = model.triangles[i];
+            if (tr.has(movedPoint)) {
+                tr.updatePosition(movedPoint);
+            }
+        }
+
+        model.triangulate();
+        view.updateTriangles(model);
     }
     void Scene::clearSelection() {
         model.selectedPointIndex = -1;
