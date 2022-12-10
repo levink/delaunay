@@ -34,148 +34,77 @@ namespace delaunay {
         auto bottom = padding;
         auto left = padding;
 
-        //visible points
-        points.clear();
-        points.reserve(4 + 3); //4 - below, 3 - for supertriangle
-        points.emplace_back(Point(0, left, bottom));
-        points.emplace_back(Point(1, right, bottom));
-        points.emplace_back(Point(2, right, top));
-        points.emplace_back(Point(3, left, top));
+        points.reserve(3 + 4); 
+        
+        //3 points for supertriangle
+        points.emplace_back(Point(0, -w, 0));
+        points.emplace_back(Point(1, 2 * w, 0));
+        points.emplace_back(Point(2, w / 2, 4 * h));
+
+        //4 points for view
+        points.emplace_back(Point(3, left, bottom));
+        points.emplace_back(Point(4, right, bottom));
+        points.emplace_back(Point(5, right, top));
+        points.emplace_back(Point(6, left, top));
     }
     void SceneModel::addPoint(float x, float y) {
         int lastIndex = static_cast<int>(points.size());
         points.emplace_back(lastIndex, x, y);
     }
-    void SceneModel::triangulate() {
-        auto koefs = normalizePoints();
-        auto tr = addSuperTriangle();
-        addInnerPoints();
-        removeSuperTriangle(tr);
-        restorePoints(koefs);
-    }
-    Normalization SceneModel::normalizePoints() {
-        Normalization normalization;
-        if (points.empty()) {
-            return normalization;
-        }
-
-        glm::vec2 min = points[0].getPosition();
-        glm::vec2 max = points[0].getPosition();
-        for (auto& p : points) {
-            auto& pos = p.getPosition();
-            min.x = std::min(min.x, pos.x);
-            min.y = std::min(min.y, pos.y);
-            max.x = std::max(max.x, pos.x);
-            max.y = std::max(max.y, pos.y);
-        }
-
-        normalization.scale = std::max(max.x - min.x, max.y - min.y);
-        if (normalization.scale == 0) {
-            normalization.scale = std::max(max.x, max.y);
-        }
-        normalization.offset = min;
-
-
-        for (auto& p : points) {
-            auto value = (p.getPosition() - normalization.offset) / normalization.scale;
-            p.setPosition(value);
-        }
-
-        return normalization;
-    }
-    void SceneModel::restorePoints(const Normalization& normalization) {
-        if (points.empty()) {
-            return;
-        }
-
-        for (auto& p : points) {
-            auto value = p.getPosition() * normalization.scale + normalization.offset;
-            p.setPosition(value);
-        }
-
-        for (auto& t : triangles) {
-            auto& p0 = t.point[0];
-            auto& p1 = t.point[1];
-            auto& p2 = t.point[2];
-
-            p0 = points[p0.index];
-            p1 = points[p1.index];
-            p2 = points[p2.index];
-        }
-    }
-    TriangleIndex SceneModel::addSuperTriangle() {
+    void SceneModel::movePoint(size_t index, const glm::vec2& position) {
         
-        //super triangle points
-        auto index0 = points.size();
-        auto index1 = index0 + 1; 
-        auto index2 = index0 + 2;
-        points.emplace_back(Point(index0, -100, -100));
-        points.emplace_back(Point(index1, 100, -100));
-        points.emplace_back(Point(index2, 0, 100));
+        auto& point = points[index];
+        point.setPosition(position);
 
-        //super triangle
+        for (size_t i = 0; i < triangles.size(); i++) {
+            auto& tr = triangles[i];
+            if (tr.has(point)) {
+                tr.update(point);
+            }
+        }
+    }
+    void SceneModel::triangulate() {
         triangles.clear();
-        triangles.emplace_back(
-            static_cast<int>(0),
-            points[index0],
-            points[index1],
-            points[index2]
-        );
-        return TriangleIndex{
-            static_cast<unsigned>(index0),
-            static_cast<unsigned>(index1),
-            static_cast<unsigned>(index2)
-        };
-    }
-    void SceneModel::removeSuperTriangle(const TriangleIndex& tr) {
+        
+        // add super triangle
+        triangles.emplace_back(Triangle { 0,
+            points[0],
+            points[1],
+            points[2]
+        });
 
-        std::vector<int> trianglesForDelete;
-        for (int i = triangles.size() - 1; i >= 0; i--) {
-            auto& t = triangles[i];
-            auto canDelete =
-                t.has(tr.pointIndex0) ||
-                t.has(tr.pointIndex1) ||
-                t.has(tr.pointIndex2);
-
-            if (canDelete) {
-                trianglesForDelete.push_back(i);
+        // add inner points
+        for (auto& point : points) {
+            if (super(point)) {
+                continue;
             }
-        }
 
-        for (auto index : trianglesForDelete) {
-            triangles.erase(triangles.begin() + index);
-            for (auto& t : triangles) {
-                t.replaceAdjacent(index, -1);
-                t.decrementIndices(index);
-            }
-        }
-
-        points.resize(points.size() - 3);
-    }
-    void SceneModel::addInnerPoints() {
-        auto innerPointsCount = points.size() - 3;
-        for (size_t i = 0; i < innerPointsCount; i++) {
-            auto& point = points[i];
-
-            auto triangleIndexForSplit = findTriangle(point.getPosition());
-            if (triangleIndexForSplit == -1) {
+            auto triangleForSplit = findTriangle(point.getPosition());
+            if (triangleForSplit == nullptr) {
                 Log::warn("Triangle not found!");
                 continue;
             }
 
-            Triangle triangleForSplit = triangles[triangleIndexForSplit];
-            auto trianglesForCheck = split(triangleForSplit, point);
+            auto trianglesForCheck = split(*triangleForSplit, point);
             swapEdges(trianglesForCheck, point);
         }
     }
-    int SceneModel::findTriangle(const glm::vec2& point) {
-        for (size_t i = 0; i < triangles.size(); i++) {
-            auto& triangle = triangles[i]; 
+    bool SceneModel::super(const Point& point) const {
+        return point.index < 3;
+    }
+    bool SceneModel::super(const Triangle& tr) const {
+        return
+            super(tr.point[0]) ||
+            super(tr.point[1]) ||
+            super(tr.point[2]);
+    }
+    Triangle* SceneModel::findTriangle(const glm::vec2& point) {
+        for (auto& triangle : triangles) {
             if (triangle.contains(point)) { 
-                return static_cast<int>(i);
+                return &triangle;
             }
         }
-        return -1;
+        return nullptr;
     }
     std::stack<int> SceneModel::split(Triangle triangleForSplit, Point point) {
 
@@ -315,16 +244,24 @@ namespace delaunay {
         };
     }
 
+
     void SceneView::init(const SceneModel& model) {
         pointsMesh.clear();
-        pointsMesh.reserve(model.points.size());
+        pointsMesh.reserve(model.points.size() - 3);
         for (auto& point : model.points) {
+            if (model.super(point)) {
+                continue;
+            }
             addPoint(point);
         }
 
         trianglesMesh.clear();
         trianglesMesh.reserve(3 * model.triangles.size());
         for (auto& triangle : model.triangles) {
+            if (model.super(triangle)) {
+                continue;
+            }
+
             const auto& p0 = triangle.point[0].getPosition();
             const auto& p1 = triangle.point[1].getPosition();
             const auto& p2 = triangle.point[2].getPosition(); 
@@ -342,15 +279,21 @@ namespace delaunay {
             point.getPosition()
         ));
     }
+    void SceneView::updateSelected(size_t index, const glm::vec2& position) {
+        pointsMesh[index].setPosition(position);
+        selectedPoint.mesh.setPosition(position);
+    }
     void SceneView::updateTriangles(const SceneModel& model) {
-        
+
         auto meshSize = 3 * model.triangles.size();
-        if (trianglesMesh.size() != meshSize) {
-            trianglesMesh.resize(meshSize);
-        }
-        
+        trianglesMesh.resize(meshSize);
+
         size_t index = 0;
         for (auto& triangle : model.triangles) {
+
+            if (model.super(triangle)) {
+                continue;
+            }
 
             const auto& p0 = triangle.point[0].getPosition();
             const auto& p1 = triangle.point[1].getPosition();
@@ -362,6 +305,7 @@ namespace delaunay {
 
             index += 3;
         }
+        trianglesMesh.resize(index);
     }
 
 
@@ -436,19 +380,11 @@ namespace delaunay {
 
         auto index = model.selectedPointIndex;
         auto newPosition = cursor - model.dragOffset;
-        model.points[index].setPosition(newPosition);
-        view.pointsMesh[index].setPosition(newPosition);
-        view.selectedPoint.mesh.setPosition(newPosition);
-
-        auto& movedPoint = model.points[index];
-        for (size_t i = 0; i < model.triangles.size(); i++) {
-            auto& tr = model.triangles[i];
-            if (tr.has(movedPoint)) {
-                tr.updatePosition(movedPoint);
-            }
-        }
-
+        model.movePoint(index, newPosition);
         model.triangulate();
+
+        auto viewIndex = static_cast<size_t>(index) - 3;
+        view.updateSelected(viewIndex, newPosition);
         view.updateTriangles(model);
     }
     void Scene::clearSelection() {

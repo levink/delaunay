@@ -148,32 +148,6 @@ namespace delaunay {
 
             return true;
         }
-        void replaceAdjacent(int old_value, int new_value) {
-            if (old_value == new_value){
-                return;
-            }
-
-            for(auto& adj : adjacent) {
-                if (adj == old_value) {
-                    adj = new_value;
-                    return;
-                }
-            }
-        }
-        void decrementIndices(int minIndex) {
-            if (adjacent[0] > minIndex) {
-                adjacent[0]--;
-            }
-            if (adjacent[1] > minIndex) {
-                adjacent[1]--;
-            }
-            if (adjacent[2] > minIndex) {
-                adjacent[2]--;
-            }
-            if (index > minIndex) {
-                index--;
-            }
-        }
         int getOpposite(int pointIndex) {
             if (pointIndex == point[0].index) return adjacent[1];
             if (pointIndex == point[1].index) return adjacent[2];
@@ -277,7 +251,7 @@ namespace delaunay {
             Log::warn(msg);
             throw std::runtime_error(msg);
         }
-        void updatePosition(const Point& p) {
+        void update(const Point& p) {
             if (p.index == point[0].index) {
                 point[0].setPosition(p.getPosition());
             }
@@ -288,22 +262,6 @@ namespace delaunay {
                 point[2].setPosition(p.getPosition());
             }
         }
-    };
-
-    struct TriangleIndex {
-        unsigned pointIndex0;
-        unsigned pointIndex1;
-        unsigned pointIndex2;
-        bool has(unsigned index) const {
-            return index == pointIndex0 ||
-                index == pointIndex1 ||
-                index == pointIndex2;
-        }
-    };
-
-    struct Normalization {
-        float scale = 1.0;
-        glm::vec2 offset = glm::vec2(0);
     };
 
     struct SwapResult {
@@ -321,15 +279,13 @@ namespace delaunay {
 
         void init(float widthPx, float heightPx);
         void addPoint(float x, float y);
+        void movePoint(size_t index, const glm::vec2& position);
         void triangulate();
-        
+        bool super(const Point& point) const;
+        bool super(const Triangle& tr) const;
+
     private:
-        Normalization normalizePoints();
-        void restorePoints(const Normalization& value);
-        TriangleIndex addSuperTriangle();
-        void removeSuperTriangle(const TriangleIndex& tr);
-        void addInnerPoints();
-        int findTriangle(const glm::vec2& point);
+        Triangle* findTriangle(const glm::vec2& point);
         std::stack<int> split(Triangle triangleForSplit, Point point);
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
         void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
@@ -343,11 +299,13 @@ namespace delaunay {
     struct SceneView {
         std::vector<CircleMesh> pointsMesh;
         std::vector<LineMesh> trianglesMesh;
-
         SelectedPoint selectedPoint;
+
         void init(const SceneModel& model);
         void addPoint(const Point& point);
+        void updateSelected(size_t index, const glm::vec2& position);
         void updateTriangles(const SceneModel& model);
+
     };
 
     struct Scene {
