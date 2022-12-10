@@ -229,7 +229,7 @@ namespace delaunay {
             t0.index,
             t1.index,
             t2.index
-            });
+        });
     }
     void SceneModel::swapEdges(std::stack<int>& trianglesForCheck, const Point& point) {
         while (!trianglesForCheck.empty()) {
@@ -337,15 +337,22 @@ namespace delaunay {
             trianglesMesh.push_back(LineMesh(p1, p2));
             trianglesMesh.push_back(LineMesh(p2, p0));
         }
+
+        selectedPoint.active = false;
+        selectedPoint.mesh = CircleMesh::createPointSelected({ glm::vec2(0,0) });
     }
     void SceneView::addPoint(const Point& point) {
         pointsMesh.push_back(CircleMesh::createPoint(
-            point.getPosition(),
-            point.getSelected()
+            point.getPosition()
         ));
     }
     void SceneView::updateTriangles(const SceneModel& model) {
-        trianglesMesh.resize(3 * model.triangles.size());
+        
+        auto meshSize = 3 * model.triangles.size();
+        if (trianglesMesh.size() != meshSize) {
+            trianglesMesh.resize(meshSize);
+        }
+        
         size_t index = 0;
         for (auto& triangle : model.triangles) {
 
@@ -377,29 +384,18 @@ namespace delaunay {
         view.updateTriangles(model);
 
         auto& position = point.getPosition();
-        std::cout << "Point "
+        std::wcout << "Point "
             << point.index << " "
             << position.x << " "
             << position.y << std::endl;
     } 
-    void Scene::movePoint(const glm::vec2& cursor) {
-       /* if (selectedPoint == -1) {
-            return;
-        }
-
-        auto position = cursor - dragDrop;
-        points[selectedPoint].setPosition(position);
-
-        triangulate();
-        updateView();*/
-    }
     void Scene::deletePoint(const glm::vec2 &cursor) {
 
     }
-    Scene::Nearest Scene::nearestPoint(const glm::vec2& cursor) {
+    int Scene::nearestPoint(const glm::vec2& cursor, float& resultDistance) {
         auto& points = model.points;
         if (points.empty()) {
-            return Nearest{ -1, 0.f };
+            return -1;
         }
 
         auto index = 0;
@@ -412,48 +408,57 @@ namespace delaunay {
                 index = i;
             }
         }
-        return Nearest{ index, minDistance};
+
+        resultDistance = minDistance;
+        return index;
     }
     void Scene::selectPoint(const glm::vec2& cursor) {
-        //TODO this
-        //if (model.selectedPoint != -1) {
-        //    //view.pointsMesh[model.selectedPoint].color
-        //}
+        
+        float distance = 0.f;
+        model.selectedPointIndex = nearestPoint(cursor, distance);
+        if (model.selectedPointIndex == -1 || distance >= 20.f) {
+            view.selectedPoint.active = false;
+            return;
+        }
+        
+        auto& point = model.points[model.selectedPointIndex];
+        model.dragOffset = cursor - point.getPosition();
+        view.selectedPoint.active = true;
+        view.selectedPoint.mesh.setPosition(point.getPosition());
+        
+        auto& offset = model.dragOffset;
+        std::wcout << "Selected: " 
+            << "index = " << model.selectedPointIndex  << ", " 
+            << "offset = [" << offset.x << ", " << offset.y << "] "
+            << std::endl;
+    }
+    void Scene::movePoint(const glm::vec2& cursor) {
 
-        //auto nearest = nearestPoint(cursor);
-        //model.selectedPoint = nearest.pointIndex;
-        //if (model.selectedPoint == -1) {
-        //    return;
-        //}
-        //    
-        //
+        if (model.selectedPointIndex == -1) {
+            return;
+        }
 
-        //
-        //auto& point = model.points[model.selectedPoint];
-        //dragDrop = cursor - point.getPosition();
-        //
-        //if (selectedPoint != -1) {
-        //    pointsMesh[selectedPoint].color = Color::teal;
-        //}
+        auto index = model.selectedPointIndex;
+        auto position = cursor - model.dragOffset;
+        model.points[index].setPosition(position);
+        view.pointsMesh[index].setPosition(position);
+        view.selectedPoint.mesh.setPosition(position);
 
-        //if (minDistance >= 20.f) {
-        //    selectedPoint = -1;
-        //}
-        //else {
-        //    selectedPoint = index;
-        //    pointsMesh[selectedPoint].color = Color::yellow;
-        //}
-
-        //std::string msg = "Selected point = " + std::to_string(selectedPoint);
-        //Log::out(msg);
+        //find triangles which contains moved point and add them to the stack for swapping
+        //call swap
+        //what to do with border triangles?
+        //maybe not to delete big parent triangle?
+        /*triangulate();
+        updateView();*/
     }
     void Scene::clearSelection() {
-      /*  if (selectedPoint != -1) {
-            pointsMesh[selectedPoint].color = Color::teal;
-        }
-        selectedPoint = -1;
-        dragDrop.x = dragDrop.y = 0;*/
+        model.selectedPointIndex = -1;
+        view.selectedPoint.active = false;
+
+        model.triangulate();
+        view.updateTriangles(model);
     }
+
 };
 
 

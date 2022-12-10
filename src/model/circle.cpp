@@ -35,9 +35,12 @@ void CircleMesh::setPosition(const glm::vec2& position) {
     vertex[3].center = position;
 }
 
-CircleMesh CircleMesh::createPoint(const glm::vec2& point, bool selected) {
+CircleMesh CircleMesh::createPoint(const glm::vec2& point) {
     bool filled = true;
-    auto color = selected ? Color::orange : Color::teal;
-    return CircleMesh(point, 7.f, filled, color);
+    return CircleMesh(point, 7.f, filled, Color::teal);
 }
-    
+
+CircleMesh CircleMesh::createPointSelected(const glm::vec2& point) {
+    bool filled = true;
+    return CircleMesh(point, 7.f, filled, Color::orange);
+}

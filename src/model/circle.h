@@ -22,5 +22,6 @@ struct CircleMesh {
     CircleMesh(glm::vec2 center, float radius, bool filled, glm::vec3 color);
     void setPosition(const glm::vec2& position);
 
-    static CircleMesh createPoint(const glm::vec2& point, bool selected);
+    static CircleMesh createPoint(const glm::vec2& point);
+    static CircleMesh createPointSelected(const glm::vec2& point);
 };

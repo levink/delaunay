@@ -37,26 +37,19 @@ namespace delaunay {
     };
 
     struct Point {
-        int index;
+        int index = -1;
         glm::vec2 position;
-        bool selected;
         Point() = default;
-        Point(int index, float x, float y) : index(index) {
-            position.x = x;
-            position.y = y;
-            selected = false;
+        Point(int index, float x, float y) {
+            this->index = index;
+            this->position.x = x;
+            this->position.y = y;
         }
         const glm::vec2& getPosition() const {
             return position;
         }
         void setPosition(const glm::vec2& value) {
             position = value;
-        }
-        bool getSelected() const {
-            return selected;
-        }
-        void setSelected(bool value) {
-            selected = value;
         }
     };
 
@@ -312,8 +305,9 @@ namespace delaunay {
     struct SceneModel {
         std::vector<Point> points;
         std::vector<Triangle> triangles;
-        int selectedPoint = -1;
-        int selectedTriangle = -1;
+        glm::vec2 dragOffset;
+        int selectedPointIndex = -1;
+        int selectedTriangleIndex = -1;
 
         void init(float widthPx, float heightPx);
         void addPoint(float x, float y);
@@ -332,9 +326,16 @@ namespace delaunay {
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
     };
 
+    struct SelectedPoint {
+        bool active;
+        CircleMesh mesh;
+    };
+
     struct SceneView {
         std::vector<CircleMesh> pointsMesh;
         std::vector<LineMesh> trianglesMesh;
+
+        SelectedPoint selectedPoint;
         void init(const SceneModel& model);
         void addPoint(const Point& point);
         void updateTriangles(const SceneModel& model);
@@ -343,19 +344,13 @@ namespace delaunay {
     struct Scene {
         SceneModel model;
         SceneView view;
-        glm::vec2 dragDrop;
         void init(const glm::vec2& viewSize);
-    private:
-        struct Nearest {
-            int pointIndex;
-            float distance;
-        };
-        Nearest nearestPoint(const glm::vec2& cursor);
-    public:
         void addPoint(const glm::vec2& cursor);
         void movePoint(const glm::vec2& cursor);
         void deletePoint(const glm::vec2& cursor);
         void selectPoint(const glm::vec2& cursor);
         void clearSelection();
+    private:
+        int nearestPoint(const glm::vec2& cursor, float& distance);
     };
 };

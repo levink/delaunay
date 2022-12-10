@@ -113,6 +113,9 @@ void Render::draw() {
 
     shaders.circle.enable();
     shaders.circle.draw(scene.view.pointsMesh);
+    if (scene.view.selectedPoint.active) {
+        shaders.circle.draw(scene.view.selectedPoint.mesh);
+    }
     shaders.circle.disable();
 }
 void Render::reshape(int w, int h) {

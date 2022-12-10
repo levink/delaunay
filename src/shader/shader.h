@@ -10,12 +10,13 @@ class CircleShader : public Shader {
     struct {
         const Camera* camera = nullptr;
     } context;
+    void drawMesh(const CircleMesh& mesh);
 public:
     explicit CircleShader();
     void link(const Camera* camera);
     void enable() const override;
     void disable() const override;
-    void draw(const CircleMesh* mesh);
+    void draw(const CircleMesh& mesh);
     void draw(const std::vector<CircleMesh>& items);
     void draw(const DrawBatch& batch, const glm::vec3& color);
 };
