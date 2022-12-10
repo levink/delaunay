@@ -17,7 +17,7 @@ public:
     void enable() const override;
     void disable() const override;
     void draw(const CircleMesh& mesh);
-    void draw(const std::vector<CircleMesh>& items);
+    void draw(const std::vector<CircleMesh>& meshes);
     void draw(const DrawBatch& batch, const glm::vec3& color);
 };
 

@@ -123,9 +123,9 @@ namespace delaunay {
         auto& t1 = triangles[tIndex1];
         auto& t2 = triangles[tIndex2];
 
-        t0.checkError();
-        t1.checkError();
-        t2.checkError();
+        checkError(t0);
+        checkError(t1);
+        checkError(t2);
 
         t0.adjacent[0] = triangleForSplit.adjacent[0];
         t0.adjacent[1] = t1.index;
@@ -192,9 +192,14 @@ namespace delaunay {
             }
         }
     }
+    void SceneModel::checkError(const Triangle& triangle) {
+        if (triangle.hasError()) {
+            Log::warn("[Triangle::checkError] Triangle is bad");
+        }
+    };
     SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
-        old1.checkError();
-        old2.checkError();
+        checkError(old1);
+        checkError(old2);
 
         if (!old1.linkedWith(old2) || !old2.linkedWith(old1)) {
             Log::warn("[swapEdge] Triangles are not linked!");
@@ -212,8 +217,8 @@ namespace delaunay {
 
         auto new1 = Triangle{ old1.index, p1, p4, p3 };
         auto new2 = Triangle{ old2.index, p2, p3, p4 };
-        new1.checkError();
-        new2.checkError();
+        checkError(new1);
+        checkError(new2);
 
         new1.adjacent[0] = old2.adjacent[1];
         new1.adjacent[1] = old2.index;
@@ -234,8 +239,8 @@ namespace delaunay {
         triangles[old1.index] = new1;
         triangles[old2.index] = new2;
 
-        new1.checkError();
-        new2.checkError();
+        checkError(new1);
+        checkError(new2);
 
         return SwapResult{
                 true,

@@ -42,10 +42,10 @@ void CircleShader::draw(const CircleMesh& mesh) {
     set4(u[0], context.camera->Ortho);
     drawMesh(mesh);
 }
-void CircleShader::draw(const std::vector<CircleMesh>& items) {
+void CircleShader::draw(const std::vector<CircleMesh>& meshes) {
     set4(u[0], context.camera->Ortho);
-    for(auto& item : items) {
-        drawMesh(item);
+    for(auto& mesh : meshes) {
+        drawMesh(mesh);
     }
 }
 void CircleShader::draw(const DrawBatch& batch, const glm::vec3& color) {

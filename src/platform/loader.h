@@ -1,7 +1,6 @@
 #pragma once
 #include "shader/shaderSource.h"
 
-/* Классы для загрузки ресурсов */
 namespace files {
     static const char* circle   = "../../data/shaders/circle.glsl";
     static const char* line     = "../../data/shaders/line.glsl";

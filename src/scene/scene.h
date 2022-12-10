@@ -105,11 +105,6 @@ namespace delaunay {
             if (point[2].index == point[0].index) return true;
             return false;
         }
-        void checkError() const {
-            if (hasError()) {
-                Log::warn("[Triangle::checkError] Triangle is bad");
-            }
-        };
         bool has(int pointIndex) const {
             return
                 point[0].index == pointIndex ||
@@ -274,8 +269,7 @@ namespace delaunay {
         std::vector<Point> points;
         std::vector<Triangle> triangles;
         glm::vec2 dragOffset;
-        int selectedPointIndex = -1;
-        int selectedTriangleIndex = -1;
+        int selectedPointIndex = -1;        
 
         void init(float widthPx, float heightPx);
         void addPoint(float x, float y);
@@ -289,6 +283,7 @@ namespace delaunay {
         std::stack<int> split(Triangle triangleForSplit, Point point);
         SwapResult swapEdge(const Point& splitPoint, Triangle& t1, Triangle& t2);
         void swapEdges(std::stack<int>& trianglesForCheck, const Point& point);
+        void checkError(const Triangle& triangle);
     };
 
     struct SelectedPoint {
