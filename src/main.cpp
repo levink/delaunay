@@ -52,7 +52,7 @@ int main() {
 
     const auto WIDTH = 800;
     const auto HEIGHT = 600;
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Delone", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Delaunay", nullptr, nullptr);
     if (!window) {
         glfwTerminate();
         return -1;
