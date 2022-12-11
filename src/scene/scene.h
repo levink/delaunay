@@ -84,6 +84,17 @@ namespace delaunay {
         }
     };
 
+    struct Box {
+        glm::vec2 min;
+        glm::vec2 max;
+
+        bool contains(const glm::vec2& point) const {
+            return
+                min.x <= point.x && point.x <= max.x &&
+                min.y <= point.y && point.y <= max.y;
+        }
+    };
+
     struct Triangle {
         int index = -1;
         Point point[3];
@@ -92,13 +103,32 @@ namespace delaunay {
                 -1, //triangle index for edge with point1 - point2
                 -1  //triangle index for edge with point2 - point0
         };
+        Box box;
         Triangle() = default;
         Triangle(int index, Point p0, Point p1, Point p2) : index(index) {
             point[0] = p0;
             point[1] = p1;
             point[2] = p2;
+            updateBox();
         }
+        void updateBox() {
 
+            const glm::vec2& p0 = point[0].getPosition();
+            const glm::vec2& p1 = point[1].getPosition();
+            const glm::vec2& p2 = point[2].getPosition();
+
+            box.min = p0;
+            box.min.x = std::min(box.min.x, p1.x);
+            box.min.x = std::min(box.min.x, p2.x);
+            box.min.y = std::min(box.min.y, p1.y);
+            box.min.y = std::min(box.min.y, p2.y);
+
+            box.max = p0;
+            box.max.x = std::max(box.max.x, p1.x);
+            box.max.x = std::max(box.max.x, p2.x);
+            box.max.y = std::max(box.max.y, p1.y);
+            box.max.y = std::max(box.max.y, p2.y);
+        }
         bool hasError() const {
             if (point[0].index == point[1].index) return true;
             if (point[1].index == point[2].index) return true;
@@ -130,6 +160,12 @@ namespace delaunay {
             return false;
         }
         bool contains(const glm::vec2& p) const {
+
+            if (!box.contains(p)) {
+                Log::out("!box.contains(p)");
+                return false;
+            }
+
             const float eps = 0.00000001f;
             auto pt = glm::vec3(p, 0);
             auto dir = glm::vec3(0, 0, 1);
@@ -219,6 +255,7 @@ namespace delaunay {
                 Util::shift(point);
                 Util::shift(adjacent);
             }
+            updateBox();
         }
         Edge getCommonEdge(const Triangle& other) {
             if (other.index == adjacent[0]) return Edge{point[0].index, point[1].index};
@@ -256,6 +293,7 @@ namespace delaunay {
             else if (p.index == point[2].index) {
                 point[2].setPosition(p.getPosition());
             }
+            updateBox();
         }
     };
 
