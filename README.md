@@ -16,7 +16,7 @@ Hi! Here we are creating non-constrained Delaynay triangulation and drawing scen
 
 
 ### History
-Mathematics theory was described by Russian scientist Boris Delaunay in 1934. The generation algorithm was invented in 1992 in Newcastle University, Australia by S. W. Sloan. And in 2021 we implemented algorihtms in C++ for this approach in Russia again. Knowledge will always be relevant.
+Mathematics theory was described by Russian scientist Boris Delaunay in 1934. The generation algorithm was invented in 1992 in Newcastle University, Australia by S. W. Sloan. And in 2022 we implemented algorihtms in C++ for this approach in Russia again. Knowledge will always be relevant.
 
 
 
