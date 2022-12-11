@@ -34,14 +34,23 @@ namespace delaunay {
         auto bottom = padding;
         auto left = padding;
 
-        points.reserve(3 + 4); 
+        constexpr int size = 4;
+        points.reserve(3 + size);
         
         //3 points for supertriangle
         points.emplace_back(Point(0, -w, 0));
         points.emplace_back(Point(1, 2 * w, 0));
         points.emplace_back(Point(2, w / 2, 4 * h));
 
-        //4 points for view
+        /*int mod_x = static_cast<int>(right - left);
+        int mod_y = static_cast<int>(top - bottom);
+        for (int i = 0; i < size; i++) {
+            int x = padding + rand() % mod_x;
+            int y = padding + rand() % mod_y;
+            points.emplace_back(Point(i + 3, x, y));
+        }*/
+
+        //4 points for view quad
         points.emplace_back(Point(3, left, bottom));
         points.emplace_back(Point(4, right, bottom));
         points.emplace_back(Point(5, right, top));

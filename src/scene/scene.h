@@ -162,7 +162,6 @@ namespace delaunay {
         bool contains(const glm::vec2& p) const {
 
             if (!box.contains(p)) {
-                Log::out("!box.contains(p)");
                 return false;
             }
 
