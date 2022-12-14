@@ -23,8 +23,8 @@ add_executable(delone
         src/shader/shaderBase.cpp
         src/shader/shaderSource.cpp
         src/ui/ui.cpp
-        src/main.cpp
-        src/render.cpp)
-target_precompile_headers(delone PUBLIC src/pch.h)
+        src/render.cpp
+        src/main.cpp)
+target_precompile_headers(delone PRIVATE src/pch.h)
 target_link_libraries(delone glad glfw)
 

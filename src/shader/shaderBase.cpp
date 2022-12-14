@@ -163,7 +163,7 @@ void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, 
     }
 }
 void Shader::attr(const Attribute &attribute, GLsizei stride, GLuint offset) {
-    if (attribute.id != -1) {
+    if (attribute.id != -1) { //todo: move 'if' outside
         glVertexAttribPointer(
             attribute.id, 
             attribute.size, 

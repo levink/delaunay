@@ -26,7 +26,6 @@ namespace delaunay {
         radius = sqrt((B * B + C * C - 4 * A * D) / (4 * A * A));
     }
 
-
     void SceneModel::init(float w, float h) {
         auto padding = 100.f;
         auto top = static_cast<float>(h) - padding;
@@ -41,14 +40,6 @@ namespace delaunay {
         points.emplace_back(Point(0, -w, 0));
         points.emplace_back(Point(1, 2 * w, 0));
         points.emplace_back(Point(2, w / 2, 4 * h));
-
-        /*int mod_x = static_cast<int>(right - left);
-        int mod_y = static_cast<int>(top - bottom);
-        for (int i = 0; i < size; i++) {
-            int x = padding + rand() % mod_x;
-            int y = padding + rand() % mod_y;
-            points.emplace_back(Point(i + 3, x, y));
-        }*/
 
         //4 points for view quad
         points.emplace_back(Point(3, left, bottom));

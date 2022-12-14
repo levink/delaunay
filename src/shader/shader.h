@@ -19,6 +19,7 @@ public:
     void draw(const CircleMesh& mesh);
     void draw(const std::vector<CircleMesh>& meshes);
     void draw(const DrawBatch& batch, const glm::vec3& color);
+    void drawVBO(const CircleMesh& mesh);
 };
 
 
