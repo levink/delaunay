@@ -3,6 +3,7 @@
 #include "model/line.h"
 #include "model/circle.h"
 #include "platform/log.h"
+#include "scene/drawBatch.h"
 
 namespace delaunay {
 
@@ -337,13 +338,14 @@ namespace delaunay {
         void addPoint(const Point& point);
         void updateSelected(size_t index, const glm::vec2& position);
         void updateTriangles(const SceneModel& model);
-
     };
 
     struct Scene {
+        DrawBatch background;
         SceneModel model;
         SceneView view;
         void init(const glm::vec2& viewSize);
+        void destroy();
         void addPoint(const glm::vec2& cursor);
         void movePoint(const glm::vec2& cursor);
         void deletePoint(const glm::vec2& cursor);

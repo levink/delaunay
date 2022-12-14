@@ -31,21 +31,11 @@ void Render::initResources() {
     shaders.link(*this);
 }
 void Render::destroy() {
+    scene.destroy();
     shaders.destroy();
 }
 void Render::initScene() {
-    //layer
-    {
-
-        scene.init(camera.viewSize);
-
-    }
-
-#if 0 //circles batch
-    {
- 
-    }
-#endif
+    scene.init(camera.viewSize);
 }
 void Render::draw() {
 
@@ -55,6 +45,10 @@ void Render::draw() {
                  background.b,
                  background.a);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    shaders.circle.enable();
+    shaders.circle.draw(scene.background, Color::black);
+    shaders.circle.disable();
 
     shaders.line.enable();
     shaders.line.draw(scene.view.trianglesMesh);

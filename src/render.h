@@ -32,9 +32,9 @@ public:
 
     void loadResources(Platform& platform);
     void initResources();
-    void destroy();
     void initScene();
     void draw();
+    void destroy();
     void reshape(int width, int height);
     void reloadShaders(Platform& platform);
 };

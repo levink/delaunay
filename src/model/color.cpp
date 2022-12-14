@@ -1,5 +1,6 @@
 #include "color.h"
 
+glm::vec3 Color::black = Color::parse("3B3B47");
 glm::vec3 Color::asphalt = Color::parse("424250");
 glm::vec3 Color::teal = Color::parse("009989");
 glm::vec3 Color::orange = Color::parse("DB5700");

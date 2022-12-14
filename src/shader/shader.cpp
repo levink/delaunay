@@ -49,29 +49,19 @@ void CircleShader::draw(const std::vector<CircleMesh>& meshes) {
     }
 }
 void CircleShader::draw(const DrawBatch& batch, const glm::vec3& color) {
-//    glBindBuffer(GL_ARRAY_BUFFER, batch.vbo);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.ibo);
-//
-//    set4(u[0], context.camera->Ortho);
-//    set3(u[1], color);
-//    attr(a[0], sizeof(CircleVertex), offsetof(CircleVertex, position));
-//    attr(a[1], sizeof(CircleVertex), offsetof(CircleVertex, center));
-//    attr(a[2], sizeof(CircleVertex), offsetof(CircleVertex, radius));
-//    attr(a[3], sizeof(CircleVertex), offsetof(CircleVertex, fill));
-//
-//    glDrawElements(GL_TRIANGLES, (int)batch.count, GL_UNSIGNED_SHORT, nullptr);
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-void CircleShader::drawVBO(const CircleMesh& mesh) {
+    glBindBuffer(GL_ARRAY_BUFFER, batch.vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.ibo);
+
     set4(u[0], context.camera->Ortho);
-    set3(u[1], mesh.color);
+    set3(u[1], color);
     attr(a[0], sizeof(CircleVertex), offsetof(CircleVertex, center));
     attr(a[1], sizeof(CircleVertex), offsetof(CircleVertex, offset));
     attr(a[2], sizeof(CircleVertex), offsetof(CircleVertex, radius));
     attr(a[3], sizeof(CircleVertex), offsetof(CircleVertex, fill));
 
-    glDrawElements(GL_TRIANGLES, 6 * 3, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, batch.count, GL_UNSIGNED_SHORT, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 

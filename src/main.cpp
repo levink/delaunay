@@ -82,76 +82,11 @@ int main() {
     render.reshape(WIDTH, HEIGHT);
     render.initScene();
 
-    float x1 = 50;
-    float x2 = 500;
-    float y1 = 50; 
-    float y2 = 500;
-    float radius = 6.0;
-
-    std::vector<CircleVertex> vertex {
-        CircleVertex{ x1, y1, -1, -1, radius, 1.f },
-        CircleVertex{ x1, y1, +1, -1, radius, 1.f },
-        CircleVertex{ x1, y1, +1, +1, radius, 1.f },
-        CircleVertex{ x1, y1, -1, +1, radius, 1.f },
-
-        CircleVertex{ x1, y2, -1, -1, radius, 1.f },
-        CircleVertex{ x1, y2, +1, -1, radius, 1.f },
-        CircleVertex{ x1, y2, +1, +1, radius, 1.f },
-        CircleVertex{ x1, y2, -1, +1, radius, 1.f },
-    
-        CircleVertex{ x2, y2, -1, -1, radius, 1.f },
-        CircleVertex{ x2, y2, +1, -1, radius, 1.f },
-        CircleVertex{ x2, y2, +1, +1, radius, 1.f },
-        CircleVertex{ x2, y2, -1, +1, radius, 1.f },
-    };
-    std::vector<Face> face {
-        Face(0, 1, 2),
-        Face(2, 3, 0),
-        Face(4, 5, 6),
-        Face(6, 7, 4),
-        Face(8, 9, 10),
-        Face(10, 11, 8)
-    };
-
-    CircleMesh batch;
-    batch.color = Color::orange;
-    batch.vertex = vertex;
-    batch.face = face;
-
-    GLuint vbo = 0;
-    GLuint ibo = 0;
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ARRAY_BUFFER, batch.vertex.size() * sizeof(CircleVertex), batch.vertex.data(), GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch.face.size() * sizeof(Face), batch.face.data(), GL_STATIC_DRAW); 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-   
     while (!glfwWindowShouldClose(window)) {
-        render.draw();
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
-        render.shaders.circle.enable();
-        render.shaders.circle.drawVBO(batch);
-        render.shaders.circle.disable();
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
- 
+        render.draw(); 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glDeleteBuffers(1, &ibo);
-    glDeleteBuffers(1, &vbo);
-    vbo = 0;
-    ibo = 0;
-
 
     render.destroy();
     glfwTerminate();

@@ -315,9 +315,13 @@ namespace delaunay {
 
 
     void Scene::init(const glm::vec2& viewSize) {
+        background.init(viewSize.x, viewSize.y);
         model.init(viewSize.x, viewSize.y);
         model.triangulate();
         view.init(model);
+    }
+    void Scene::destroy() {
+        background.destroy();
     }
     void Scene::addPoint(const glm::vec2& cursor) {
 

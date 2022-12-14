@@ -2,6 +2,7 @@
 #include "pch.h"
 
 struct Color {
+    static glm::vec3 black;
     static glm::vec3 asphalt;
     static glm::vec3 teal;
     static glm::vec3 orange;
