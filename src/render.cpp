@@ -19,11 +19,11 @@ void Shaders::destroy() {
     circle.destroy();
     line.destroy();
 }
-void Render::loadResources(Platform &platform) {
+void Render::loadResources() {
     if (shaderCache.loaded) {
         return;
     }
-    ShaderLoader loader(platform);
+    ShaderLoader loader;
     shaderCache.load(loader);
 }
 void Render::initResources() {
@@ -64,8 +64,8 @@ void Render::draw() {
 void Render::reshape(int w, int h) {
     camera.reshape(w, h);
 }
-void Render::reloadShaders(Platform &platform) {
-    ShaderLoader loader(platform);
+void Render::reloadShaders() {
+    ShaderLoader loader;
     shaderCache.load(loader);
     shaders.destroy();
     shaders.create(shaderCache);

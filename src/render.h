@@ -30,11 +30,11 @@ public:
     Camera camera;
     Scene scene;
 
-    void loadResources(Platform& platform);
+    void loadResources();
     void initResources();
     void initScene();
     void draw();
     void destroy();
     void reshape(int width, int height);
-    void reloadShaders(Platform& platform);
+    void reloadShaders();
 };

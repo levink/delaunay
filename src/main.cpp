@@ -17,8 +17,7 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
     }
     else if (keyEvent.is(R)) {
         std::cout << "Reload shaders" << std::endl;
-        Platform platform;
-        render.reloadShaders(platform);
+        render.reloadShaders();
     }
 }
 void mouseCallback(ui::mouse::MouseEvent event) {
@@ -76,8 +75,7 @@ int main() {
     glfwSwapInterval(1);
     glfwSetTime(0.0);
 
-    Platform platform;
-    render.loadResources(platform);
+    render.loadResources();
     render.initResources();
     render.reshape(WIDTH, HEIGHT);
     render.initScene();
