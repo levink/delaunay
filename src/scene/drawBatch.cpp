@@ -29,8 +29,16 @@ void DrawBatch::init(float w, float h) {
         vertex.emplace_back(CircleVertex{ x, y, -1, +1, r, fill });
 
         const uint16_t offset = i * 4;
-        face.emplace_back(Face{ offset + 0u, offset + 1u, offset + 2u });
-        face.emplace_back(Face{ offset + 2u, offset + 3u, offset + 0u });
+        face.emplace_back(Face { 
+            static_cast<uint16_t>(offset + 0u), 
+            static_cast<uint16_t>(offset + 1u), 
+            static_cast<uint16_t>(offset + 2u) 
+        });
+        face.emplace_back(Face{ 
+            static_cast<uint16_t>(offset + 2u), 
+            static_cast<uint16_t>(offset + 3u), 
+            static_cast<uint16_t>(offset + 0u) 
+        });
     }
 
     GLuint vbo;
