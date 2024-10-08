@@ -54,13 +54,11 @@ namespace delaunay {
     void SceneModel::movePoint(size_t index, const glm::vec2& position) {
         
         auto& point = points[index];
-        point.setPosition(position);
+        point.position = position;
 
         for (size_t i = 0; i < triangles.size(); i++) {
             auto& tr = triangles[i];
-            if (tr.has(point)) {
-                tr.update(point);
-            }
+            tr.updateIfHas(point);
         }
     }
     void SceneModel::triangulate() {
@@ -79,7 +77,7 @@ namespace delaunay {
                 continue;
             }
 
-            auto triangleForSplit = findTriangle(point.getPosition());
+            auto triangleForSplit = findTriangle(point.position);
             if (triangleForSplit == nullptr) {
                 Log::warn("Triangle not found!");
                 continue;
@@ -180,7 +178,7 @@ namespace delaunay {
             }
 
             auto circle = opposite.getCircle();
-            auto delaunay = !circle.contains(point.getPosition());
+            auto delaunay = !circle.contains(point.position);
             if (delaunay) {
                 continue;
             }
@@ -192,11 +190,6 @@ namespace delaunay {
             }
         }
     }
-    void SceneModel::checkError(const Triangle& triangle) {
-        if (triangle.hasError()) {
-            Log::warn("[Triangle::checkError] Triangle is bad");
-        }
-    };
     SwapResult SceneModel::swapEdge(const Point& splitPoint, Triangle& old1, Triangle& old2) {
         checkError(old1);
         checkError(old2);
@@ -248,7 +241,11 @@ namespace delaunay {
                 new2.index //, new2.adjacent[0]}
         };
     }
-
+    void SceneModel::checkError(const Triangle& triangle) {
+        if (triangle.hasError()) {
+            Log::warn("[Triangle::checkError] Triangle is bad");
+        }
+    };
 
     void SceneView::init(const SceneModel& model) {
         pointsMesh.clear();
@@ -267,9 +264,9 @@ namespace delaunay {
                 continue;
             }
 
-            const auto& p0 = triangle.point[0].getPosition();
-            const auto& p1 = triangle.point[1].getPosition();
-            const auto& p2 = triangle.point[2].getPosition(); 
+            const auto& p0 = triangle.point[0].position;
+            const auto& p1 = triangle.point[1].position;
+            const auto& p2 = triangle.point[2].position; 
 
             trianglesMesh.push_back(LineMesh(p0, p1));
             trianglesMesh.push_back(LineMesh(p1, p2));
@@ -281,7 +278,7 @@ namespace delaunay {
     }
     void SceneView::addPoint(const Point& point) {
         pointsMesh.push_back(CircleMesh::createPoint(
-            point.getPosition()
+            point.position
         ));
     }
     void SceneView::updateSelected(size_t index, const glm::vec2& position) {
@@ -300,9 +297,9 @@ namespace delaunay {
                 continue;
             }
 
-            const auto& p0 = triangle.point[0].getPosition();
-            const auto& p1 = triangle.point[1].getPosition();
-            const auto& p2 = triangle.point[2].getPosition();
+            const auto& p0 = triangle.point[0].position;
+            const auto& p1 = triangle.point[1].position;
+            const auto& p2 = triangle.point[2].position;
 
             trianglesMesh[index + 0].move(p0, p1);
             trianglesMesh[index + 1].move(p1, p2);
@@ -332,7 +329,7 @@ namespace delaunay {
         view.addPoint(point);
         view.updateTriangles(model);
 
-        auto& position = point.getPosition();
+        auto& position = point.position;
         std::wcout << "Point "
             << point.index << " "
             << position.x << " "
@@ -348,9 +345,9 @@ namespace delaunay {
         }
 
         auto index = 0;
-        auto minDistance = glm::distance(points[0].getPosition(), cursor);
+        auto minDistance = glm::distance(points[0].position, cursor);
         for (int i = 1; i < points.size(); i++) {
-            auto& position = points[i].getPosition();
+            auto& position = points[i].position;
             float distance = glm::distance(position, cursor);
             if (distance < minDistance) {
                 minDistance = distance;
@@ -371,9 +368,9 @@ namespace delaunay {
         }
         
         auto& point = model.points[model.selectedPointIndex];
-        model.dragOffset = cursor - point.getPosition();
+        model.dragOffset = cursor - point.position;
         view.selectedPoint.active = true;
-        view.selectedPoint.mesh.setPosition(point.getPosition());
+        view.selectedPoint.mesh.setPosition(point.position);
         
         auto& offset = model.dragOffset;
         std::wcout << "Selected: " 

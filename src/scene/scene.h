@@ -46,22 +46,16 @@ namespace delaunay {
             this->position.x = x;
             this->position.y = y;
         }
-        const glm::vec2& getPosition() const {
-            return position;
-        }
-        void setPosition(const glm::vec2& value) {
-            position = value;
-        }
     };
 
     struct Hull {
         Point a,b,c,d;
         bool isConvex() const {
             const glm::vec2 edge[4] = {
-                b.getPosition() - a.getPosition(),
-                c.getPosition() - b.getPosition(),
-                d.getPosition() - c.getPosition(),
-                a.getPosition() - d.getPosition()
+                b.position - a.position,
+                c.position - b.position,
+                d.position - c.position,
+                a.position - d.position
             };
 
             float first = 0;
@@ -114,9 +108,9 @@ namespace delaunay {
         }
         void updateBox() {
 
-            const glm::vec2& p0 = point[0].getPosition();
-            const glm::vec2& p1 = point[1].getPosition();
-            const glm::vec2& p2 = point[2].getPosition();
+            const glm::vec2& p0 = point[0].position;
+            const glm::vec2& p1 = point[1].position;
+            const glm::vec2& p2 = point[2].position;
 
             box.min = p0;
             box.min.x = std::min(box.min.x, p1.x);
@@ -136,21 +130,21 @@ namespace delaunay {
             if (point[2].index == point[0].index) return true;
             return false;
         }
-        bool has(int pointIndex) const {
+        bool hasPoint(int pointIndex) const {
             return
                 point[0].index == pointIndex ||
                 point[1].index == pointIndex ||
                 point[2].index == pointIndex;
         }
-        bool has(const Point& p) const {
+        /*bool has(const Point& p) const {
             auto pointIndex = p.index;
             return
                 point[0].index == pointIndex ||
                 point[1].index == pointIndex ||
                 point[2].index == pointIndex;
-        }
+        }*/
         bool has(const Point& p1, const Point& p2) const {
-            return has(p1.index) && has(p2.index);
+            return hasPoint(p1.index) && hasPoint(p2.index);
         }
         bool linkedWith(const Triangle& t) const {
             for(auto i : adjacent){
@@ -169,9 +163,9 @@ namespace delaunay {
             const float eps = 0.00000001f;
             auto pt = glm::vec3(p, 0);
             auto dir = glm::vec3(0, 0, 1);
-            auto t0 = glm::vec3(point[0].getPosition(), 0);
-            auto t1 = glm::vec3(point[1].getPosition(), 0);
-            auto t2 = glm::vec3(point[2].getPosition(), 0);
+            auto t0 = glm::vec3(point[0].position, 0);
+            auto t1 = glm::vec3(point[1].position, 0);
+            auto t2 = glm::vec3(point[2].position, 0);
 
             if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
             if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
@@ -179,7 +173,7 @@ namespace delaunay {
 
             return true;
         }
-        int getOpposite(int pointIndex) {
+        int getOpposite(int pointIndex) const {
             if (pointIndex == point[0].index) return adjacent[1];
             if (pointIndex == point[1].index) return adjacent[2];
             if (pointIndex == point[2].index) return adjacent[0];
@@ -240,14 +234,14 @@ namespace delaunay {
             return false;
         }
         Circle getCircle() const {
-            return {
-                point[0].getPosition(),
-                point[1].getPosition(),
-                point[2].getPosition()
+            return Circle {
+                point[0].position,
+                point[1].position,
+                point[2].position
             };
         }
         void setFirst(int pointIndex) {
-            if (!has(pointIndex)) {
+            if (!hasPoint(pointIndex)) {
                 return;
             }
 
@@ -257,13 +251,13 @@ namespace delaunay {
             }
             updateBox();
         }
-        Edge getCommonEdge(const Triangle& other) {
+        Edge getCommonEdge(const Triangle& other) const {
             if (other.index == adjacent[0]) return Edge{point[0].index, point[1].index};
             if (other.index == adjacent[1]) return Edge{point[1].index, point[2].index};
             if (other.index == adjacent[2]) return Edge{point[2].index, point[0].index};
             throw std::runtime_error("something goes wrong");
         }
-        int getOppositePoint(const Edge& edge) {
+        int getOppositePoint(const Edge& const edge) const {
             int matches = 0;
             if (edge.containsPoint(point[0].index)) matches++;
             if (edge.containsPoint(point[1].index)) matches++;
@@ -283,17 +277,22 @@ namespace delaunay {
             Log::warn(msg);
             throw std::runtime_error(msg);
         }
-        void update(const Point& p) {
-            if (p.index == point[0].index) {
-                point[0].setPosition(p.getPosition());
+        void updateIfHas(const Point& p) {
+            if (point[0].index == p.index) {
+                point[0].position = p.position;
+                updateBox();
+                return;
             }
-            else if (p.index == point[1].index) {
-                point[1].setPosition(p.getPosition());
+            if (point[1].index == p.index) {
+                point[1].position = p.position;
+                updateBox();
+                return;
             }
-            else if (p.index == point[2].index) {
-                point[2].setPosition(p.getPosition());
+            
+            if (point[2].index == p.index) {
+                point[2].position = p.position;
+                updateBox();
             }
-            updateBox();
         }
     };
 
