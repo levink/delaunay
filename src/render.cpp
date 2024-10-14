@@ -51,13 +51,13 @@ void Render::draw() {
     shaders.circle.disable();
 
     shaders.line.enable();
-    shaders.line.draw(scene.view.trianglesMesh);
+    shaders.line.draw(scene.view.triangleMeshes);
     shaders.line.disable();
 
     shaders.circle.enable();
-    shaders.circle.draw(scene.view.pointsMesh);
-    if (scene.view.selectedPoint.active) {
-        shaders.circle.draw(scene.view.selectedPoint.mesh);
+    shaders.circle.draw(scene.view.pointMeshes);
+    if (scene.selectedPoint.index > -1) {
+        shaders.circle.draw(scene.selectedPoint.mesh);
     }
     shaders.circle.disable();
 }

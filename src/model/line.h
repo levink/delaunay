@@ -22,7 +22,7 @@ struct LineMesh {
     std::vector<Face> face;
     LineMesh();
     LineMesh(const glm::vec2& start, const glm::vec2& end);
-    int count() const { return (int)(face.size() * 3u); }
-    const Face* faceData() const { return face.data(); }
-    void move(const glm::vec2& start, const glm::vec2& end);
+    int facesCount() const { return (int)(face.size() * 3u); }
+    const Face* facesData() const { return face.data(); }
+    void movePosition(const glm::vec2& start, const glm::vec2& end);
 };

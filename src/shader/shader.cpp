@@ -103,7 +103,7 @@ void LineShader::draw(const std::vector<LineMesh>& items) {
         attr(a[2], data, sizeof(LineVertex), offsetof(LineVertex, e2));
         attr(a[3], data, sizeof(LineVertex), offsetof(LineVertex, offset));
 
-        glDrawElements(GL_TRIANGLES, item.count(), GL_UNSIGNED_SHORT, item.faceData());
+        glDrawElements(GL_TRIANGLES, item.facesCount(), GL_UNSIGNED_SHORT, item.facesData());
     }
 
 }

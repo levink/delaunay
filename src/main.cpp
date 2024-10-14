@@ -19,6 +19,7 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
         std::cout << "Reload shaders" << std::endl;
         render.reloadShaders();
     }
+    //else if (keyEvent.is(B)) {}
 }
 void mouseCallback(ui::mouse::MouseEvent event) {
     using namespace ui;
@@ -32,7 +33,6 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     else if (event.is(Action::MOVE, Button::LEFT))  scene.movePoint(cursor);
     else if (event.is(Action::RELEASE, Button::LEFT)) scene.clearSelection();
     else if (event.is(Action::PRESS, Button::RIGHT)) scene.addPoint(cursor);
-    else if (event.is(Action::PRESS, Button::RIGHT, KeyMod::ALT)) scene.deletePoint(cursor);
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
     auto event = ui::mouse::click(button, action, mods);

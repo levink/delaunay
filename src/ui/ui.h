@@ -37,6 +37,7 @@ namespace ui {
             M = GLFW_KEY_M,
             N = GLFW_KEY_N,
             H = GLFW_KEY_H,
+            B = GLFW_KEY_B,
 
             KEY_1 = GLFW_KEY_1,
             KEY_2 = GLFW_KEY_2,

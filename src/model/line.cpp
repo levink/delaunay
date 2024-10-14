@@ -38,7 +38,7 @@ LineMesh::LineMesh(const glm::vec2& start, const glm::vec2& end) {
     face.emplace_back(Face(0, 1, 2));
     face.emplace_back(Face(2, 3, 0));
 }
-void LineMesh::move(const glm::vec2 &start, const glm::vec2 &end) {
+void LineMesh::movePosition(const glm::vec2 &start, const glm::vec2 &end) {
     vertex[0].set(start, start, end);
     vertex[1].set(end, start, end);
     vertex[2].set(end, start, end);
