@@ -20,6 +20,7 @@ struct LineVertex {
 struct LineMesh {
     std::vector<LineVertex> vertex;
     std::vector<Face> face;
+    bool visible = false;
     LineMesh();
     LineMesh(const glm::vec2& start, const glm::vec2& end);
     int facesCount() const { return (int)(face.size() * 3u); }

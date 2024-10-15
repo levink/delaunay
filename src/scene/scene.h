@@ -303,32 +303,28 @@ namespace delaunay {
         int t2 = -1;
     };
 
-    
     struct SceneModel {
+        struct Observer {
+            virtual void onUpdate(const SceneModel& model) = 0;
+        };
         
         std::vector<Point*> points;         //todo: clear memory (points & triangles)
         std::vector<Triangle*> triangles;   //todo: clear memory (points & triangles)
         uint32_t errors = 0;
-
-    //private:
-        std::stack<int> trsForCheck;
         std::vector<uint32_t> changedPoints;
-        std::set<int> changedTriangles;
+        std::set<int> changedTriangles;   
+    private:
+        std::stack<int> trsForCheck;
         
     public: 
-
+        SceneModel() = default;
+        ~SceneModel();
         void addPoint(float x, float y);
         void movePoint(size_t id, const glm::vec2& position);
-
-        bool isSuperTriangle(const Point* point) const {
-            return point->id < 3;
-        }
-        bool isSuperTriangle(const Triangle* tr) const {
-            return
-                isSuperTriangle(tr->point[0]) ||
-                isSuperTriangle(tr->point[1]) ||
-                isSuperTriangle(tr->point[2]);
-        }
+        void updateView(Observer& observer);
+        int nearestPointIndex(const glm::vec2& cursor, float& distance);
+        void printResult();
+    private:
         void increaseError();
         Triangle* findTriangle(float x, float y);
         SplitResult splitTriangle(Triangle* triangleForSplit, const Point* point);
@@ -336,14 +332,13 @@ namespace delaunay {
         void checkDelaunayConstraint(std::stack<int>& trianglesForCheck, const Point& point);
         bool hasDelaunayConstraint(const Triangle* t1, const Triangle* t2);
         void linkTriangleByIndex(int adjacentIndex, const Triangle& target);
-        int nearestPointIndex(const glm::vec2& cursor, float& distance);
-        void clearChanged();
+        void orderTriangles();
     };
 
-    struct SceneView {
+    struct SceneView : public SceneModel::Observer {
         std::vector<CircleMesh> pointMeshes;
         std::vector<LineMesh> triangleMeshes;
-        void updateView(const SceneModel& model);
+        void onUpdate(const SceneModel& model) override;
     };
 
     struct SelectedPoint {

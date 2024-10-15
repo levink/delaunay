@@ -36,11 +36,11 @@ void CircleMesh::setPosition(const glm::vec2& position) {
 }
 
 CircleMesh CircleMesh::createPoint(const glm::vec2& point) {
-    bool filled = true;
+    constexpr bool filled = true;
     return CircleMesh(point, 7.f, filled, Color::teal);
 }
 
 CircleMesh CircleMesh::createPointSelected(const glm::vec2& point) {
-    bool filled = true;
+    constexpr bool filled = true;
     return CircleMesh(point, 7.f, filled, Color::orange);
 }

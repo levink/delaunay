@@ -94,6 +94,10 @@ void LineShader::draw(const std::vector<LineMesh>& items) {
     set4(u[0], context.camera->Ortho);
     for(auto& item : items) {
 
+        if (!item.visible) {
+            continue;
+        }
+
         set3(u[1], Color::orange);
         set1(u[2], 3.5f);
 

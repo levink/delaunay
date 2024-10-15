@@ -61,6 +61,15 @@ namespace delaunay {
 
             return false;
         }
+        static bool isSuper(const Point* point) {
+            return point->id < 3;
+        }
+        static bool isSuper(const Triangle* tr) {
+            return
+                isSuper(tr->point[0]) ||
+                isSuper(tr->point[1]) ||
+                isSuper(tr->point[2]);
+        }
     }
     
 
@@ -86,6 +95,14 @@ namespace delaunay {
     }
     
 
+    SceneModel::~SceneModel() {
+        for (auto p : points) {
+            delete p;
+        }
+        for (auto t : triangles) {
+            delete t;
+        }
+    }
     void SceneModel::addPoint(float x, float y) {
         auto id = static_cast<uint32_t>(points.size());
         auto point = points.emplace_back(new Point{ id, x, y });
@@ -103,7 +120,7 @@ namespace delaunay {
                 points[0],
                 points[1],
                 points[2]
-                });
+            });
             changedTriangles.insert(0);
             return;
         }
@@ -129,7 +146,6 @@ namespace delaunay {
         trsForCheck.push(split.b);
         trsForCheck.push(split.c);
         checkDelaunayConstraint(trsForCheck, *point);
-
         if (errors) {
             Log::warn("SceneModel::addPoint(Point* point) - Got errors after checkDelaunayConstraint()");
         }
@@ -214,9 +230,14 @@ namespace delaunay {
                     increaseError();
                     break;
                 }
-
             }
         }
+    }
+    void SceneModel::updateView(Observer& observer) {
+        observer.onUpdate(*this);
+        changedPoints.clear();
+        changedTriangles.clear();
+        orderTriangles();
     }
     void SceneModel::increaseError() {
         errors++;
@@ -333,7 +354,6 @@ namespace delaunay {
             return;
         }
 
-
         bool linked = triangles[adjacentIndex]->link(target);
         if (!linked) {
             increaseError();
@@ -429,13 +449,68 @@ namespace delaunay {
         resultDistance = minDistance;
         return index;
     }
-    void SceneModel::clearChanged() {
-        changedPoints.clear();
-        changedTriangles.clear();
+    void SceneModel::printResult() {
+        
+        std::cout << "Points: " << points.size() - 3 << std::endl;
+        for (auto point : points) {
+            if (util::isSuper(point)) {
+                continue;
+            }
+            std::cout
+                << point->id - 3 << ": "
+                << point->position.x << " "
+                << point->position.y << "\n";
+        }
+
+        
+        int tCount = 0;
+        for (auto triangle : triangles) {
+            if (!util::isSuper(triangle)) {
+                tCount++;
+            }
+        }
+        std::cout << "Triangles: " << tCount << std::endl;
+        int tIndex = 0;
+        for (auto triangle : triangles) {
+            if (util::isSuper(triangle)) {
+                continue;
+            }
+            std::cout //<< tIndex << ": "
+                << triangle->point[0]->id - 3 << " "
+                << triangle->point[1]->id - 3 << " "
+                << triangle->point[2]->id - 3 << "\n";
+            tIndex++;
+        }
+        std::cout << std::endl;
+    }
+    void SceneModel::orderTriangles() {
+        //shift super triangles to the left
+        
+      /*  int swapIndex = 0;
+        for (int i = 0; i < triangles.size(); i++) {
+            bool isSuper = util::isSuper(triangles[i]);
+            if (isSuper) {
+                if (i != swapIndex) {
+                    std::swap(triangles[i], triangles[swapIndex]);
+                }
+                swapIndex++;
+            }
+        }*/
+
+        std::cout << "orderTriangles() : ";
+        int index = 0;
+        for (auto t : triangles) {
+            t->id = index;
+            index++;
+
+            int value = util::isSuper(t) ? 1 : 0;
+            std::cout << value;
+            
+        }
+        std::cout << std::endl;
     }
 
-
-    void SceneView::updateView(const SceneModel& model) {
+    void SceneView::onUpdate(const SceneModel& model) {
         
         //update points 
         pointMeshes.resize(model.points.size());
@@ -451,14 +526,18 @@ namespace delaunay {
             const auto& p0 = triangle->point[0]->position;
             const auto& p1 = triangle->point[1]->position;
             const auto& p2 = triangle->point[2]->position;
-
+            
             size_t idx = static_cast<size_t>(index * 3);
             triangleMeshes[idx + 0].movePosition(p0, p1);
             triangleMeshes[idx + 1].movePosition(p1, p2);
             triangleMeshes[idx + 2].movePosition(p2, p0);
+
+            bool super = util::isSuper(triangle);
+            triangleMeshes[idx + 0].visible = !super;
+            triangleMeshes[idx + 1].visible = !super;
+            triangleMeshes[idx + 2].visible = !super;
         }
     }
-
 
     void Scene::init(const glm::vec2& viewSize) {
 
@@ -470,15 +549,20 @@ namespace delaunay {
         auto bottom = p;
         auto left = p;
 
-        model.triangles.reserve(5);
-        model.points.reserve(5);
-        model.addPoint(100, 100);
-        model.addPoint(700, 100);
-        model.addPoint(400, 500);
-        model.addPoint(left + 2 * p, 2 * p);
-        model.addPoint(right - 2 * p, 2 * p);
-        view.updateView(model);
-        model.clearChanged();
+        model.triangles.reserve(9);
+        model.points.reserve(7);
+        
+        //3 points for super triangle
+        model.addPoint(-w, -h);
+        model.addPoint(2 * w, -h);
+        model.addPoint(0.5f * w, 2.f * h);
+
+        //4 rect points
+        model.addPoint(left, bottom);
+        model.addPoint(right, bottom);
+        model.addPoint(right, top);
+        model.addPoint(left, top);
+        model.updateView(view);
 
         background.init(viewSize.x, viewSize.y);
         selectedPoint.mesh = CircleMesh::createPointSelected({ glm::vec2(0,0) });
@@ -488,8 +572,7 @@ namespace delaunay {
     }
     void Scene::addPoint(const glm::vec2& cursor) {
         model.addPoint(cursor.x, cursor.y);
-        view.updateView(model);
-        model.clearChanged();
+        model.updateView(view);
     }
     void Scene::movePoint(const glm::vec2& cursor) {
 
@@ -505,8 +588,7 @@ namespace delaunay {
 
         auto newPosition = cursor - dragOffset;
         model.movePoint(selectedPoint.index, newPosition);
-        view.updateView(model);
-        model.clearChanged();
+        model.updateView(view);
 
         auto position = model.points[selectedPoint.index]->position;
         selectedPoint.mesh.setPosition(position);
