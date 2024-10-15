@@ -90,32 +90,42 @@ namespace delaunay {
     };
 
     struct Triangle {
-        int id = -1;
-        const Point* point[3];
-        int adjacent[3] = {
-                -1,         //triangle index for edge with point0 - point1
-                -1,         //triangle index for edge with point1 - point2
-                -1          //triangle index for edge with point2 - point0
+        uint32_t id = -1;
+        Point* point[3];
+        Triangle* adjacent[3] = {
+                nullptr,  //triangle for edge with point0 - point1
+                nullptr,  //triangle for edge with point1 - point2
+                nullptr   //triangle for edge with point2 - point0
         };
         Box box;
         Triangle() = default;
-        Triangle(int id, const Point* p0, const Point* p1, const Point* p2) :
+        Triangle(uint32_t id, Point* p0, Point* p1, Point* p2) :
             id(id) {
             point[0] = p0;
             point[1] = p1;
             point[2] = p2;
             updateBox();
         }
-        void setPoints(const Point* p0, const Point* p1, const Point* p2) {
+        void setPoints(Point* p0, Point* p1, Point* p2) {
             point[0] = p0;
             point[1] = p1;
             point[2] = p2;
             updateBox();
         }
-        void setAdjacent(int a0, int a1, int a2) {
+        void setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2) {
             adjacent[0] = a0;
             adjacent[1] = a1;
             adjacent[2] = a2;
+
+            if (a0) {
+                a0->link(this);
+            }
+            if (a1) {
+                a1->link(this);
+            }
+            if (a2) {
+                a2->link(this);
+            }
         }
         void shiftPointFirst(int firstPointId) {
             if (!hasPoint(firstPointId)) {
@@ -157,34 +167,33 @@ namespace delaunay {
                 hasPoint(p1.id) && 
                 hasPoint(p2.id);
         }
-        bool link(const Triangle& triangle) {
+        bool link(Triangle* triangle) {
             auto& p0 = *point[0];
             auto& p1 = *point[1];
             auto& p2 = *point[2];
 
-            if (triangle.hasPoints(p0, p1)) {
-                adjacent[0] = triangle.id;
+            if (triangle->hasPoints(p0, p1)) {
+                adjacent[0] = triangle;
                 return true;
             }
-            else if (triangle.hasPoints(p1, p2)) {
-                adjacent[1] = triangle.id;
+            else if (triangle->hasPoints(p1, p2)) {
+                adjacent[1] = triangle;
                 return true;
             }
-            else if (triangle.hasPoints(p2, p0)) {
-                adjacent[2] = triangle.id;
+            else if (triangle->hasPoints(p2, p0)) {
+                adjacent[2] = triangle;
                 return true;
             }
 
             Log::warn("Can not link");
             return false;
         }
-        bool linkedWith(const Triangle& triangle) const {
-            for(auto triangleId : adjacent){
-                if (triangleId == triangle.id) {
-                    return true;
-                }
-            }
-            return false;
+        bool linkedWith(const Triangle* triangle) const {
+            const bool linked = 
+                adjacent[0] == triangle ||
+                adjacent[1] == triangle ||
+                adjacent[2] == triangle;
+            return linked;
         }
         bool contains(float x, float y) const {
 
@@ -225,59 +234,60 @@ namespace delaunay {
             Log::warn(msg);
             throw std::runtime_error(msg);
         }
-        int getOppositeTriangle(int pointId) const {
+        Triangle* getOppositeTriangle(int pointId) const {
             if (pointId == point[0]->id) return adjacent[1];
             if (pointId == point[1]->id) return adjacent[2];
             if (pointId == point[2]->id) return adjacent[0];
 
-            std::string msg = "Triangle does not have point with index=" + std::to_string(pointId);
+            std::string msg = "Triangle does not have pointId=" + std::to_string(pointId);
             Log::warn(msg);
-            return -1;
+            return nullptr;
         }
-        Hull getHull(const Triangle* adjacentTriangle) const {
-            Hull result;
+        Hull getHull(const Triangle* other) const {
+            
+            glm::vec2 a, b, c, d;
             int e1 = -1;
             int e2 = -1;
-            if (adjacentTriangle->id == adjacent[0]) {
-                result.a = point[2]->position;
-                result.b = point[0]->position;
-                result.d = point[1]->position;
+            if (other == adjacent[0]) {
+                a = point[2]->position;
+                b = point[0]->position;
+                d = point[1]->position;
                 e1 = point[0]->id;
                 e2 = point[1]->id;
             }
-            else if (adjacentTriangle->id == adjacent[1]) {
-                result.a = point[0]->position;
-                result.b = point[1]->position;
-                result.d = point[2]->position;
+            else if (other == adjacent[1]) {
+                a = point[0]->position;
+                b = point[1]->position;
+                d = point[2]->position;
                 e1 = point[1]->id;
                 e2 = point[2]->id;
             }
-            else if (adjacentTriangle->id == adjacent[2]) {
-                result.a = point[1]->position;
-                result.b = point[2]->position;
-                result.d = point[0]->position;
+            else if (other == adjacent[2]) {
+                a = point[1]->position;
+                b = point[2]->position;
+                d = point[0]->position;
                 e1 = point[2]->id;
                 e2 = point[0]->id;
             } else {
                 Log::warn("Something goes wrong!");
             }
 
-            for(auto& adjacentPoint : adjacentTriangle->point) {
+            for(auto& adjacentPoint : other->point) {
                 bool isCommonEdgePoint =
                     (adjacentPoint->id == e1) ||
                     (adjacentPoint->id == e2);
                 if (isCommonEdgePoint) {
                     continue;
                 }
-                result.c = adjacentPoint->position;
+                c = adjacentPoint->position;
             }
 
-            return result;
+            return Hull{ a, b, c, d };
         }
-        Edge getCommonEdge(const Triangle& adjacentTriangle) const {
-            if (adjacentTriangle.id == adjacent[0]) return Edge{point[0]->id, point[1]->id};
-            if (adjacentTriangle.id == adjacent[1]) return Edge{point[1]->id, point[2]->id};
-            if (adjacentTriangle.id == adjacent[2]) return Edge{point[2]->id, point[0]->id};
+        Edge getCommonEdge(const Triangle* other) const {
+            if (other == adjacent[0]) return Edge{point[0]->id, point[1]->id};
+            if (other == adjacent[1]) return Edge{point[1]->id, point[2]->id};
+            if (other == adjacent[2]) return Edge{point[2]->id, point[0]->id};
             throw std::runtime_error("something goes wrong");
         }
         Circle getCircle() const {
@@ -292,15 +302,9 @@ namespace delaunay {
    
     struct SplitResult {
         bool success = false;
-        int a = -1;
-        int b = -1;
-        int c = -1;
-    };
-
-    struct SwapResult {
-        bool success = false;
-        int t1 = -1;
-        int t2 = -1;
+        const Triangle* a = nullptr;
+        const Triangle* b = nullptr;
+        const Triangle* c = nullptr;
     };
 
     struct SceneModel {
@@ -311,10 +315,10 @@ namespace delaunay {
         std::vector<Point*> points;         //todo: clear memory (points & triangles)
         std::vector<Triangle*> triangles;   //todo: clear memory (points & triangles)
         uint32_t errors = 0;
-        std::vector<uint32_t> changedPoints;
-        std::set<int> changedTriangles;   
+        std::vector<const Point*> changedPoints;
+        std::set<const Triangle*> changedTriangles;   
     private:
-        std::stack<int> trsForCheck;
+        std::stack<int> trianglesForCheck;
         
     public: 
         SceneModel() = default;
@@ -327,11 +331,11 @@ namespace delaunay {
     private:
         void increaseError();
         Triangle* findTriangle(float x, float y);
-        SplitResult splitTriangle(Triangle* triangleForSplit, const Point* point);
-        SwapResult swapEdge(Triangle& t1, Triangle& t2);
+        SplitResult splitTriangle(Triangle* triangleForSplit, Point* point);
+        bool swapEdge(Triangle* t1, Triangle* t2);
         void checkDelaunayConstraint(std::stack<int>& trianglesForCheck, const Point& point);
         bool hasDelaunayConstraint(const Triangle* t1, const Triangle* t2);
-        void linkTriangleByIndex(int adjacentIndex, const Triangle& target);
+        //void linkTriangleByIndex(int adjacentIndex, const Triangle& target); //todo: no need?
         void orderTriangles();
     };
 

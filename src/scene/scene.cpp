@@ -40,8 +40,8 @@ namespace delaunay {
             }
 
         }
-        static bool hasErrors(const Triangle& item) {
-            const auto& p = item.point;
+        static bool hasErrors(const Triangle* item) {
+            const auto& p = item->point;
             bool samePoints =
                 (p[0]->id == p[1]->id) ||
                 (p[1]->id == p[2]->id) ||
@@ -50,7 +50,7 @@ namespace delaunay {
                 return true;
             }
 
-            const auto& a = item.adjacent;
+            const auto& a = item->adjacent;
             bool sameAdjacents =
                 a[0] == a[1] ||
                 a[0] == a[2] ||
@@ -107,7 +107,7 @@ namespace delaunay {
         auto id = static_cast<uint32_t>(points.size());
         auto point = points.emplace_back(new Point{ id, x, y });
 
-        changedPoints.emplace_back(point->id);
+        changedPoints.emplace_back(point);
 
         auto pointsSize = points.size();
         if (pointsSize < 3) {
@@ -115,13 +115,13 @@ namespace delaunay {
         }
 
         if (pointsSize == 3) {
-            //add super triangle
-            triangles.emplace_back(new Triangle{ 0,
+            auto superTriangle = new Triangle{ 0,
                 points[0],
                 points[1],
                 points[2]
-            });
-            changedTriangles.insert(0);
+            };
+            triangles.emplace_back(superTriangle);
+            changedTriangles.insert(superTriangle);
             return;
         }
 
@@ -142,10 +142,10 @@ namespace delaunay {
         changedTriangles.insert(split.a);
         changedTriangles.insert(split.b);
         changedTriangles.insert(split.c);
-        trsForCheck.push(split.a);
-        trsForCheck.push(split.b);
-        trsForCheck.push(split.c);
-        checkDelaunayConstraint(trsForCheck, *point);
+        trianglesForCheck.push(split.a->id);
+        trianglesForCheck.push(split.b->id);
+        trianglesForCheck.push(split.c->id);
+        checkDelaunayConstraint(trianglesForCheck, *point);
         if (errors) {
             Log::warn("SceneModel::addPoint(Point* point) - Got errors after checkDelaunayConstraint()");
         }
@@ -154,7 +154,7 @@ namespace delaunay {
         auto point = points[index];
         point->position = position;
         
-        changedPoints.emplace_back((uint32_t)index);
+        changedPoints.emplace_back(point);
 
         {
             auto adjacens = std::stack<int>();
@@ -162,7 +162,7 @@ namespace delaunay {
                 if (tr->hasPoint(point->id)) {
                     tr->updateBox();
                     adjacens.push(tr->id);
-                    changedTriangles.insert(tr->id);
+                    changedTriangles.insert(tr);
                 }
             }
             checkDelaunayConstraint(adjacens, *point);
@@ -189,7 +189,7 @@ namespace delaunay {
             while (!checkSet.empty()) {
                 auto back = checkList.back();
                 for (auto item : checkSet) {
-                    if (item->linkedWith(*back)) {
+                    if (item->linkedWith(back)) {
                         checkList.emplace_back(item);
                         break;
                     }
@@ -205,10 +205,10 @@ namespace delaunay {
                     continue;
                 }
                 
-                auto swap = swapEdge(*t1, *t2);
-                if (swap.success) {
-                    changedTriangles.insert(swap.t1);
-                    changedTriangles.insert(swap.t2);
+                auto success = swapEdge(t1, t2);
+                if (success) {
+                    changedTriangles.insert(t1);
+                    changedTriangles.insert(t2);
 
                     bool has1 = t1->hasPoint(pointId);
                     bool has2 = t2->hasPoint(pointId);
@@ -237,7 +237,6 @@ namespace delaunay {
         observer.onUpdate(*this);
         changedPoints.clear();
         changedTriangles.clear();
-        orderTriangles();
     }
     void SceneModel::increaseError() {
         errors++;
@@ -250,49 +249,46 @@ namespace delaunay {
         }
         return nullptr;
     }
-    SplitResult SceneModel::splitTriangle(Triangle* triangleForSplit, const Point* point) {
+    SplitResult SceneModel::splitTriangle(Triangle* triangleForSplit, Point* point) {
 
         auto p0 = triangleForSplit->point[0];
         auto p1 = triangleForSplit->point[1];
         auto p2 = triangleForSplit->point[2];
 
-        const int tIndex0 = triangleForSplit->id;
-        const int tIndex1 = static_cast<int>(triangles.size());
-        const int tIndex2 = static_cast<int>(triangles.size() + 1);
+        uint32_t tIndex0 = triangleForSplit->id;
+        uint32_t tIndex1 = static_cast<int>(triangles.size());
+        uint32_t tIndex2 = static_cast<int>(triangles.size() + 1);
         triangles[tIndex0]->setPoints(p0, p1, point);
         triangles.emplace_back(new Triangle{ tIndex1, p1, p2, point });
         triangles.emplace_back(new Triangle{ tIndex2, p2, p0, point });
 
-        auto& t0 = *triangles[tIndex0];
-        auto& t1 = *triangles[tIndex1];
-        auto& t2 = *triangles[tIndex2];
+        auto* t0 = triangles[tIndex0];
+        auto* t1 = triangles[tIndex1];
+        auto* t2 = triangles[tIndex2];
 
-        int a0 = t0.adjacent[0];
-        int a1 = t0.adjacent[1];
-        int a2 = t0.adjacent[2];
-        t0.setAdjacent(a0, t1.id, t2.id);
-        t1.setAdjacent(a1, t2.id, t0.id);
-        t2.setAdjacent(a2, t0.id, t1.id);
-        linkTriangleByIndex(a0, t0);
-        linkTriangleByIndex(a1, t1);
-        linkTriangleByIndex(a2, t2);
+        auto* a0 = t0->adjacent[0];
+        auto* a1 = t0->adjacent[1];
+        auto* a2 = t0->adjacent[2];
+        t0->setAdjacent(a0, t1, t2); //linkTriangleByIndex(a0, t0);
+        t1->setAdjacent(a1, t2, t0); //linkTriangleByIndex(a1, t1);
+        t2->setAdjacent(a2, t0, t1); //linkTriangleByIndex(a2, t2);
 
         {
             bool someMad =
                 util::hasErrors(t0) ||
                 util::hasErrors(t1) ||
                 util::hasErrors(t2) ||
-                !t0.hasPoint(point->id) ||
-                !t1.hasPoint(point->id) ||
-                !t2.hasPoint(point->id);
+                !t0->hasPoint(point->id) ||
+                !t1->hasPoint(point->id) ||
+                !t2->hasPoint(point->id);
             if (someMad) {
                 increaseError();
             }
         }
 
-        return SplitResult{ true, t0.id, t1.id, t2.id };
+        return SplitResult{ true, t0, t1, t2 };
     }
-    SwapResult SceneModel::swapEdge(Triangle& t1, Triangle& t2) {
+    bool SceneModel::swapEdge(Triangle* t1, Triangle* t2) {
 
         {
             bool someMad =
@@ -300,38 +296,38 @@ namespace delaunay {
                 util::hasErrors(t2);
             if (someMad) {
                 Log::warn("SceneModel::swapEdge() - Bad triangles before swap");
-                return SwapResult{ false };
+                return false;
             }
 
             bool notLinked =
-                !t1.linkedWith(t2) ||
-                !t2.linkedWith(t1);
+                !t1->linkedWith(t2) ||
+                !t2->linkedWith(t1);
             if (notLinked) {
                 Log::warn("SceneModel::swapEdge() - Triangles are not linked");
-                return SwapResult{ false };
+                return false;
             }
         }
 
-        auto commonEdge = t1.getCommonEdge(t2);
-        t1.shiftPointFirst(commonEdge.v0);
-        t2.shiftPointFirst(commonEdge.v1);
+        auto commonEdge = t1->getCommonEdge(t2);
+        t1->shiftPointFirst(commonEdge.v0);
+        t2->shiftPointFirst(commonEdge.v1);
 
         auto v0 = points[commonEdge.v0];
         auto v1 = points[commonEdge.v1];
-        auto v2 = points[t1.getOppositePoint(commonEdge)];
-        auto v3 = points[t2.getOppositePoint(commonEdge)];
-        t1.setPoints(v2, v0, v3);
-        t2.setPoints(v3, v1, v2);
+        auto v2 = points[t1->getOppositePoint(commonEdge)];
+        auto v3 = points[t2->getOppositePoint(commonEdge)];
+        t1->setPoints(v2, v0, v3);
+        t2->setPoints(v3, v1, v2);
 
         // Adjacent triangle indices
-        int a11 = t1.adjacent[2]; // adjacent for edge {v2 - v0}
-        int a12 = t1.adjacent[1]; // adjacent for edge {v1 - v2}
-        int a21 = t2.adjacent[1]; // adjacent for edge {v0 - v3}
-        int a22 = t2.adjacent[2]; // adjacent for edge {v3 - v1}
-        t1.setAdjacent(a11, a21, t2.id);
-        t2.setAdjacent(a22, a12, t1.id);
-        linkTriangleByIndex(a12, t2);
-        linkTriangleByIndex(a21, t1);
+        auto* a11 = t1->adjacent[2]; // adjacent for edge {v2 - v0}
+        auto* a12 = t1->adjacent[1]; // adjacent for edge {v1 - v2}
+        auto* a21 = t2->adjacent[1]; // adjacent for edge {v0 - v3}
+        auto* a22 = t2->adjacent[2]; // adjacent for edge {v3 - v1}
+        t1->setAdjacent(a11, a21, t2);
+        t2->setAdjacent(a22, a12, t1);
+        //linkTriangleByIndex(a12, t2);
+        //linkTriangleByIndex(a21, t1);
 
         {
             bool someMad =
@@ -339,25 +335,11 @@ namespace delaunay {
                 util::hasErrors(t2);
             if (someMad) {
                 Log::warn("SceneModel::swapEdge() - Bad triangles after swap");
-                return SwapResult{ false };
+                return false;
             }
         }
 
-        return SwapResult{
-            true,
-            t1.id,
-            t2.id
-        };
-    }
-    void SceneModel::linkTriangleByIndex(int adjacentIndex, const Triangle& target) {
-        if (adjacentIndex == -1) {
-            return;
-        }
-
-        bool linked = triangles[adjacentIndex]->link(target);
-        if (!linked) {
-            increaseError();
-        }
+        return true;
     }
     void SceneModel::checkDelaunayConstraint(std::stack<int>& trianglesForCheck, const Point& point) {
 
@@ -370,12 +352,11 @@ namespace delaunay {
             }
 
             auto splitted = triangles[splitIndex];
-            auto oppositeIndex = splitted->getOppositeTriangle(point.id);
-            if (oppositeIndex == -1) {
+            auto opposite = splitted->getOppositeTriangle(point.id);
+            if (opposite == nullptr) {
                 continue;
             }
 
-            auto opposite = triangles[oppositeIndex];
             auto hull = splitted->getHull(opposite);
             auto concave = !hull.isConvex();
             if (concave) {
@@ -388,12 +369,12 @@ namespace delaunay {
                 continue;
             }
 
-            auto swap = swapEdge(*splitted, *opposite);
-            if (swap.success) {
-                changedTriangles.insert(swap.t1);
-                changedTriangles.insert(swap.t2);
-                trianglesForCheck.push(swap.t1);
-                trianglesForCheck.push(swap.t2);
+            auto success = swapEdge(splitted, opposite);
+            if (success) {
+                changedTriangles.insert(splitted);
+                changedTriangles.insert(opposite);
+                trianglesForCheck.push(splitted->id);
+                trianglesForCheck.push(opposite->id);
             }
             else {
                 increaseError();
@@ -411,7 +392,7 @@ namespace delaunay {
             return true;
         }
 
-        Edge edge = t1->getCommonEdge(*t2);
+        Edge edge = t1->getCommonEdge(t2);
         const auto& p1 = points[t1->getOppositePoint(edge)]->position;
         const auto& p2 = points[t2->getOppositePoint(edge)]->position;
 
@@ -485,49 +466,45 @@ namespace delaunay {
     }
     void SceneModel::orderTriangles() {
         //shift super triangles to the left
-        
-      /*  int swapIndex = 0;
-        for (int i = 0; i < triangles.size(); i++) {
-            bool isSuper = util::isSuper(triangles[i]);
-            if (isSuper) {
-                if (i != swapIndex) {
-                    std::swap(triangles[i], triangles[swapIndex]);
-                }
-                swapIndex++;
-            }
-        }*/
+        //int swapIndex = 0; //1 1 0 0 1 0
+        //for (int i = 0; i < triangles.size(); i++) {
+        //    bool isSuper = util::isSuper(triangles[i]);
+        //    if (isSuper) {
+        //        if (i != swapIndex) {
+        //            std::swap(triangles[i], triangles[swapIndex]);
+        //        }
+        //        swapIndex++;
+        //    }
+        //}
 
-        std::cout << "orderTriangles() : ";
-        int index = 0;
-        for (auto t : triangles) {
-            t->id = index;
-            index++;
-
-            int value = util::isSuper(t) ? 1 : 0;
-            std::cout << value;
-            
-        }
-        std::cout << std::endl;
+        //std::cout << "orderTriangles() : ";
+        //int index = 0;
+        //for (auto t : triangles) {
+        //    t->id = index;
+        //    index++;
+        //    int value = util::isSuper(t) ? 1 : 0;
+        //    std::cout << value;
+        //    
+        //}
+        //std::cout << std::endl;
     }
 
     void SceneView::onUpdate(const SceneModel& model) {
         
         //update points 
         pointMeshes.resize(model.points.size());
-        for (auto index : model.changedPoints) {
-            auto point = model.points[index];
-            pointMeshes[index] = CircleMesh::createPoint(point->position);
+        for (auto point : model.changedPoints) {
+            pointMeshes[point->id] = CircleMesh::createPoint(point->position);
         }
 
         //update triangles
         triangleMeshes.resize(3 * model.triangles.size());
-        for (auto index : model.changedTriangles) {
-            auto triangle = model.triangles[index];
+        for (auto triangle : model.changedTriangles) {
             const auto& p0 = triangle->point[0]->position;
             const auto& p1 = triangle->point[1]->position;
             const auto& p2 = triangle->point[2]->position;
             
-            size_t idx = static_cast<size_t>(index * 3);
+            size_t idx = static_cast<size_t>(triangle->id * 3);
             triangleMeshes[idx + 0].movePosition(p0, p1);
             triangleMeshes[idx + 1].movePosition(p1, p2);
             triangleMeshes[idx + 2].movePosition(p2, p0);
