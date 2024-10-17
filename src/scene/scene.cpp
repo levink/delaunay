@@ -6,11 +6,19 @@
 
 //todo: link point with triangles maybe?
 
-
-
 namespace delaunay {
 
     namespace util {
+
+        template <typename T>
+        static void shiftLeft(T* values[3]) {
+            auto first = values[0];
+            for (auto i = 0; i < 2; i++) {
+                values[i] = values[i + 1];
+            }
+            values[2] = first;
+        }
+
         static void printTriangle(const Triangle* triangle) {
             if (triangle) {
                 std::cout << "triangle id="
@@ -70,11 +78,27 @@ namespace delaunay {
                 isSuper(tr->point[1]) ||
                 isSuper(tr->point[2]);
         }
-    }
-    
+        static int nearestIndex(const std::vector<Point*>& points, const glm::vec2& cursor, float& resultDistance) {
+            if (points.empty()) {
+                return -1;
+            }
 
-    Circle::Circle() : radius(0) { }
-    Circle::Circle(float x, float y, float radius) : center(x, y), radius(radius) { }
+            auto index = 0;
+            auto minDistance = glm::distance(points[0]->position, cursor);
+            for (int i = 1; i < points.size(); i++) {
+                auto& position = points[i]->position;
+                float distance = glm::distance(position, cursor);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    index = i;
+                }
+            }
+
+            resultDistance = minDistance;
+            return index;
+        }
+    }
+
     Circle::Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
         float x1 = a.x; float y1 = a.y;
         float x2 = b.x; float y2 = b.y;
@@ -93,7 +117,251 @@ namespace delaunay {
         center.y = -C / (2 * A);
         radius = sqrt((B * B + C * C - 4 * A * D) / (4 * A * A));
     }
-    
+    bool Circle::contains(const glm::vec2& point) const {
+        auto delta = point - center;
+        return delta.x * delta.x + delta.y * delta.y <= radius * radius;
+    }
+    bool Box::contains(float x, float y) const {
+        return
+            min.x <= x && x <= max.x &&
+            min.y <= y && y <= max.y;
+    }
+    bool Edge::hasPoint(int pointId) const {
+        return p0 == pointId || p1 == pointId;
+    }
+    bool Hull::isConvex() const {
+        const glm::vec2 edge[4] = {
+            b - a,
+            c - b,
+            d - c,
+            a - d
+        };
+
+        float first = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            auto& e1 = edge[i];
+            auto& e2 = edge[(i + 1) % 4];
+
+            if (i == 0) {
+                first = e1.x * e2.y - e1.y * e2.x;
+                continue;
+            }
+
+            auto last = e1.x * e2.y - e1.y * e2.x;
+            if (first < 0 && last > 0 || first > 0 && last < 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    Point::Point(uint32_t id, float x, float y) :
+        id(id),
+        position(x, y) { }
+
+
+    Triangle::Triangle(uint32_t id, Point* p0, Point* p1, Point* p2) :
+        id(id) {
+        point[0] = p0;
+        point[1] = p1;
+        point[2] = p2;
+        updateBox();
+    }
+    void Triangle::setPoints(Point* p0, Point* p1, Point* p2) {
+        point[0] = p0;
+        point[1] = p1;
+        point[2] = p2;
+        updateBox();
+    }
+    void Triangle::setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2) {
+        adjacent[0] = a0;
+        adjacent[1] = a1;
+        adjacent[2] = a2;
+
+        if (a0) {
+            a0->link(this);
+        }
+        if (a1) {
+            a1->link(this);
+        }
+        if (a2) {
+            a2->link(this);
+        }
+    }
+    void Triangle::shiftPointFirst(int firstPointId) {
+        if (!hasPoint(firstPointId)) {
+            return;
+        }
+
+        while (point[0]->id != firstPointId) {
+            util::shiftLeft(point);
+            util::shiftLeft(adjacent);
+        }
+    }
+    void Triangle::updateBox() {
+
+        const glm::vec2& p0 = point[0]->position;
+        const glm::vec2& p1 = point[1]->position;
+        const glm::vec2& p2 = point[2]->position;
+
+        box.min = p0;
+        box.min.x = std::min(box.min.x, p1.x);
+        box.min.x = std::min(box.min.x, p2.x);
+        box.min.y = std::min(box.min.y, p1.y);
+        box.min.y = std::min(box.min.y, p2.y);
+
+        box.max = p0;
+        box.max.x = std::max(box.max.x, p1.x);
+        box.max.x = std::max(box.max.x, p2.x);
+        box.max.y = std::max(box.max.y, p1.y);
+        box.max.y = std::max(box.max.y, p2.y);
+    }
+    bool Triangle::hasPoint(int pointId) const {
+        return
+            point[0]->id == pointId ||
+            point[1]->id == pointId ||
+            point[2]->id == pointId;
+    }
+    bool Triangle::hasPoints(const Point& p1, const Point& p2) const {
+        return
+            hasPoint(p1.id) &&
+            hasPoint(p2.id);
+    }
+    bool Triangle::link(Triangle* triangle) {
+        auto& p0 = *point[0];
+        auto& p1 = *point[1];
+        auto& p2 = *point[2];
+
+        if (triangle->hasPoints(p0, p1)) {
+            adjacent[0] = triangle;
+            return true;
+        }
+        else if (triangle->hasPoints(p1, p2)) {
+            adjacent[1] = triangle;
+            return true;
+        }
+        else if (triangle->hasPoints(p2, p0)) {
+            adjacent[2] = triangle;
+            return true;
+        }
+
+        Log::warn("Can not link");
+        return false;
+    }
+    bool Triangle::linkedWith(const Triangle* triangle) const {
+        const bool linked =
+            adjacent[0] == triangle ||
+            adjacent[1] == triangle ||
+            adjacent[2] == triangle;
+        return linked;
+    }
+    bool Triangle::contains(float x, float y) const {
+
+        if (!box.contains(x, y)) {
+            return false;
+        }
+
+        const float eps = 0.000001f;
+        auto pt = glm::vec3(x, y, 0);
+        auto dir = glm::vec3(0, 0, 1);
+        auto t0 = glm::vec3(point[0]->position, 0);
+        auto t1 = glm::vec3(point[1]->position, 0);
+        auto t2 = glm::vec3(point[2]->position, 0);
+
+        if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
+        if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
+        if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
+
+        return true;
+    }
+    Point* Triangle::getOppositePoint(const Edge& edge) const {
+        int matches = 0;
+        if (edge.hasPoint(point[0]->id)) matches++;
+        if (edge.hasPoint(point[1]->id)) matches++;
+        if (edge.hasPoint(point[2]->id)) matches++;
+
+        if (matches != 2) {
+            auto msg = "[Triangle::getOppositePoint] Bad edge check";
+            Log::warn(msg);
+            throw std::runtime_error(msg);
+        }
+
+        if (!edge.hasPoint(point[0]->id))  return point[0];
+        if (!edge.hasPoint(point[1]->id))  return point[1];
+        if (!edge.hasPoint(point[2]->id))  return point[2];
+
+        auto msg = "[Triangle::getOppositePoint] Bad edge result";
+        Log::warn(msg);
+        throw std::runtime_error(msg);
+    }
+    Triangle* Triangle::getOppositeTriangle(int pointId) const {
+        if (pointId == point[0]->id) return adjacent[1];
+        if (pointId == point[1]->id) return adjacent[2];
+        if (pointId == point[2]->id) return adjacent[0];
+
+        std::string msg = "Triangle does not have pointId=" + std::to_string(pointId);
+        Log::warn(msg);
+        return nullptr;
+    }
+    Hull Triangle::getHull(const Triangle* other) const {
+
+        glm::vec2 a, b, c, d;
+        int e1 = -1;
+        int e2 = -1;
+        if (other == adjacent[0]) {
+            a = point[2]->position;
+            b = point[0]->position;
+            d = point[1]->position;
+            e1 = point[0]->id;
+            e2 = point[1]->id;
+        }
+        else if (other == adjacent[1]) {
+            a = point[0]->position;
+            b = point[1]->position;
+            d = point[2]->position;
+            e1 = point[1]->id;
+            e2 = point[2]->id;
+        }
+        else if (other == adjacent[2]) {
+            a = point[1]->position;
+            b = point[2]->position;
+            d = point[0]->position;
+            e1 = point[2]->id;
+            e2 = point[0]->id;
+        }
+        else {
+            Log::warn("Something goes wrong!");
+        }
+
+        for (auto& adjacentPoint : other->point) {
+            bool isCommonEdgePoint =
+                (adjacentPoint->id == e1) ||
+                (adjacentPoint->id == e2);
+            if (isCommonEdgePoint) {
+                continue;
+            }
+            c = adjacentPoint->position;
+        }
+
+        return Hull{ a, b, c, d };
+    }
+    Edge Triangle::getCommonEdge(const Triangle* other) const {
+        if (other == adjacent[0]) return Edge{ point[0]->id, point[1]->id };
+        if (other == adjacent[1]) return Edge{ point[1]->id, point[2]->id };
+        if (other == adjacent[2]) return Edge{ point[2]->id, point[0]->id };
+        throw std::runtime_error("something goes wrong");
+    }
+    Circle Triangle::getCircle() const {
+        return Circle{
+            point[0]->position,
+            point[1]->position,
+            point[2]->position
+        };
+    }
+
 
     SceneModel::~SceneModel() {
         for (auto p : points) {
@@ -102,6 +370,9 @@ namespace delaunay {
         for (auto t : triangles) {
             delete t;
         }
+    }
+    bool SceneModel::hasErrors() const {
+        return errors > 0;
     }
     void SceneModel::addPoint(float x, float y) {
         auto id = static_cast<uint32_t>(points.size());
@@ -233,11 +504,6 @@ namespace delaunay {
             }
         }
     }
-    void SceneModel::updateView(Observer& observer) {
-        observer.onUpdate(*this);
-        changedPoints.clear();
-        changedTriangles.clear();
-    }
     void SceneModel::increaseError() {
         errors++;
     }
@@ -269,9 +535,9 @@ namespace delaunay {
         auto* a0 = t0->adjacent[0];
         auto* a1 = t0->adjacent[1];
         auto* a2 = t0->adjacent[2];
-        t0->setAdjacent(a0, t1, t2); //linkTriangleByIndex(a0, t0);
-        t1->setAdjacent(a1, t2, t0); //linkTriangleByIndex(a1, t1);
-        t2->setAdjacent(a2, t0, t1); //linkTriangleByIndex(a2, t2);
+        t0->setAdjacent(a0, t1, t2);
+        t1->setAdjacent(a1, t2, t0);
+        t2->setAdjacent(a2, t0, t1);
 
         {
             bool someMad =
@@ -309,13 +575,13 @@ namespace delaunay {
         }
 
         auto commonEdge = t1->getCommonEdge(t2);
-        t1->shiftPointFirst(commonEdge.v0);
-        t2->shiftPointFirst(commonEdge.v1);
+        t1->shiftPointFirst(commonEdge.p0);
+        t2->shiftPointFirst(commonEdge.p1);
 
-        auto v0 = points[commonEdge.v0];
-        auto v1 = points[commonEdge.v1];
-        auto v2 = points[t1->getOppositePoint(commonEdge)];
-        auto v3 = points[t2->getOppositePoint(commonEdge)];
+        auto v0 = points[commonEdge.p0];
+        auto v1 = points[commonEdge.p1];
+        auto v2 = t1->getOppositePoint(commonEdge);
+        auto v3 = t2->getOppositePoint(commonEdge);
         t1->setPoints(v2, v0, v3);
         t2->setPoints(v3, v1, v2);
 
@@ -393,8 +659,8 @@ namespace delaunay {
         }
 
         Edge edge = t1->getCommonEdge(t2);
-        const auto& p1 = points[t1->getOppositePoint(edge)]->position;
-        const auto& p2 = points[t2->getOppositePoint(edge)]->position;
+        const auto& p1 = t1->getOppositePoint(edge)->position;
+        const auto& p2 = t2->getOppositePoint(edge)->position;
 
         Circle circle1 = t1->getCircle();
         if (circle1.contains(p2)) {
@@ -411,84 +677,11 @@ namespace delaunay {
         //no need swap
         return true;
     }
-    int SceneModel::nearestPointIndex(const glm::vec2& cursor, float& resultDistance) {
-        if (points.empty()) {
-            return -1;
-        }
-
-        auto index = 0;
-        auto minDistance = glm::distance(points[0]->position, cursor);
-        for (int i = 1; i < points.size(); i++) {
-            auto& position = points[i]->position;
-            float distance = glm::distance(position, cursor);
-            if (distance < minDistance) {
-                minDistance = distance;
-                index = i;
-            }
-        }
-
-        resultDistance = minDistance;
-        return index;
+    void SceneModel::updateView(Observer& observer) {
+        observer.onUpdate(*this);
+        changedPoints.clear();
+        changedTriangles.clear();
     }
-    void SceneModel::printResult() {
-        
-        std::cout << "Points: " << points.size() - 3 << std::endl;
-        for (auto point : points) {
-            if (util::isSuper(point)) {
-                continue;
-            }
-            std::cout
-                << point->id - 3 << ": "
-                << point->position.x << " "
-                << point->position.y << "\n";
-        }
-
-        
-        int tCount = 0;
-        for (auto triangle : triangles) {
-            if (!util::isSuper(triangle)) {
-                tCount++;
-            }
-        }
-        std::cout << "Triangles: " << tCount << std::endl;
-        int tIndex = 0;
-        for (auto triangle : triangles) {
-            if (util::isSuper(triangle)) {
-                continue;
-            }
-            std::cout //<< tIndex << ": "
-                << triangle->point[0]->id - 3 << " "
-                << triangle->point[1]->id - 3 << " "
-                << triangle->point[2]->id - 3 << "\n";
-            tIndex++;
-        }
-        std::cout << std::endl;
-    }
-    void SceneModel::orderTriangles() {
-        //shift super triangles to the left
-        //int swapIndex = 0; //1 1 0 0 1 0
-        //for (int i = 0; i < triangles.size(); i++) {
-        //    bool isSuper = util::isSuper(triangles[i]);
-        //    if (isSuper) {
-        //        if (i != swapIndex) {
-        //            std::swap(triangles[i], triangles[swapIndex]);
-        //        }
-        //        swapIndex++;
-        //    }
-        //}
-
-        //std::cout << "orderTriangles() : ";
-        //int index = 0;
-        //for (auto t : triangles) {
-        //    t->id = index;
-        //    index++;
-        //    int value = util::isSuper(t) ? 1 : 0;
-        //    std::cout << value;
-        //    
-        //}
-        //std::cout << std::endl;
-    }
-
     void SceneView::onUpdate(const SceneModel& model) {
         
         //update points 
@@ -573,7 +766,7 @@ namespace delaunay {
     void Scene::selectPoint(const glm::vec2& cursor) {
 
         float distance = 0.f;
-        auto index = model.nearestPointIndex(cursor, distance);
+        auto index = util::nearestIndex(model.points, cursor, distance);
         if (distance >= 20.f) {
             selectedPoint.index = -1;
             return;
@@ -587,26 +780,4 @@ namespace delaunay {
     void Scene::clearSelection() {
         selectedPoint.index = -1;
     }
-   
-
-    /*void SceneModel::saveToFile() {
-        std::ofstream file("../../findTriangle.txt");
-
-        for (auto p : points) {
-            file << p->position.x << " "
-                << p->position.y << "\n";
-        }
-
-        for (auto t : triangles) {
-            file << t->id << ": p=["
-                << t->point[0]->id << " "
-                << t->point[1]->id << " "
-                << t->point[2]->id << "] a=["
-                << t->adjacent[0] << " "
-                << t->adjacent[1] << " "
-                << t->adjacent[2] << "]\n";
-        }
-
-        file.close();
-    }*/
 };
