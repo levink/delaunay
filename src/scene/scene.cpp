@@ -124,7 +124,6 @@ namespace delaunay {
         id(id),
         position(x, y) { }
 
-
     Triangle::Triangle(uint32_t id, Point* p0, Point* p1, Point* p2) :
         id(id) {
         point[0] = p0;
@@ -282,7 +281,6 @@ namespace delaunay {
         if (other == adjacent[2]) return Edge{ point[2]->id, point[0]->id };
         throw std::runtime_error("something goes wrong");
     }
-
 
     Triangulation::~Triangulation() {
         for (auto p : points) {
@@ -499,7 +497,7 @@ namespace delaunay {
         return true;
     }
     void Triangulation::updateView(Observer& observer) {
-        observer.onUpdate(*this);
+        observer.getUpdates(*this);
         changedPoints.clear();
         changedTriangles.clear();
     }
@@ -512,9 +510,8 @@ namespace delaunay {
             isSuper(tr->point[1]) ||
             isSuper(tr->point[2]);
     }
-
     
-    void SceneView::onUpdate(const Triangulation& model) {
+    void SceneView::getUpdates(const Triangulation& model) {
         
         //update points 
         pointMeshes.resize(model.points.size());

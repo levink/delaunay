@@ -70,7 +70,7 @@ namespace delaunay {
 
     struct Triangulation {
         struct Observer {
-            virtual void onUpdate(const Triangulation& model) = 0;
+            virtual void getUpdates(const Triangulation& model) = 0;
         };
         std::vector<Point*> points;  
         std::vector<Triangle*> triangles;
@@ -102,7 +102,7 @@ namespace delaunay {
     struct SceneView : public Triangulation::Observer {
         std::vector<CircleMesh> pointMeshes;
         std::vector<LineMesh> triangleMeshes;
-        void onUpdate(const Triangulation& model) override;
+        void getUpdates(const Triangulation& model) override;
     };
 
     struct SelectedPoint {
