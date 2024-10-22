@@ -240,11 +240,19 @@ namespace delaunay {
         auto t1 = glm::vec3(point[1]->position, 0);
         auto t2 = glm::vec3(point[2]->position, 0);
 
-        if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
+        //this works for CCW order only
+        /*if (glm::dot(glm::cross(t1 - t0, pt - t0), dir) < -eps) return false;
         if (glm::dot(glm::cross(pt - t0, t2 - t0), dir) < -eps) return false;
         if (glm::dot(glm::cross(t1 - pt, t2 - pt), dir) < -eps) return false;
+        return true;*/
 
-        return true;
+        auto dot1 = glm::dot(glm::cross(t1 - t0, pt - t0), dir);
+        auto dot2 = glm::dot(glm::cross(t2 - t1, pt - t1), dir);
+        auto dot3 = glm::dot(glm::cross(t0 - t2, pt - t2), dir);
+
+        bool insideCW = dot1 > eps && dot2 > eps && dot3 > eps;
+        bool insideCCW = dot1 < -eps && dot2 < -eps && dot3 < -eps;
+        return insideCW || insideCCW;
     }
     Point* Triangle::getOppositePoint(const Edge& edge) const {
         int matches = 0;
@@ -406,25 +414,24 @@ namespace delaunay {
 
         return SplitResult{ true, t0, t1, t2 };
     }
-    void Triangulation::checkDelaunay(std::stack<uint32_t>& trianglesForCheck) {
-        while (!trianglesForCheck.empty()) {
-            auto splitIndex = trianglesForCheck.top();
-            trianglesForCheck.pop();
+    void Triangulation::checkDelaunay(std::stack<uint32_t>& checkNext) {
+        while (!checkNext.empty()) {
+            auto index = checkNext.top();
+            auto target = triangles[index];
+            checkNext.pop();
 
-            auto target = triangles[splitIndex];
             for (auto i = 0; i < 3; i++) {
                 auto adjacent = target->adjacent[i];
-                
                 if (!adjacent || hasDelaunay(target, adjacent)) {
                     continue;
                 }
                 
                 bool ok = swapEdge(target, adjacent);
                 if (ok) {
+                    checkNext.push(target->id);
+                    checkNext.push(adjacent->id);
                     changedTriangles.insert(target);
                     changedTriangles.insert(adjacent);
-                    trianglesForCheck.push(target->id);
-                    trianglesForCheck.push(adjacent->id);
                     continue;
                 }
                 else {
