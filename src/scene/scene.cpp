@@ -1,5 +1,4 @@
 #include <iostream>
-#include <set>
 #include "platform/log.h"
 #include "model/color.h"
 #include "scene.h"
@@ -69,15 +68,6 @@ namespace delaunay {
 
             return false;
         }
-        static bool isSuper(const Point* point) {
-            return point->id < 3;
-        }
-        static bool isSuper(const Triangle* tr) {
-            return
-                isSuper(tr->point[0]) ||
-                isSuper(tr->point[1]) ||
-                isSuper(tr->point[2]);
-        }
         static int nearestIndex(const std::vector<Point*>& points, const glm::vec2& cursor, float& resultDistance) {
             if (points.empty()) {
                 return -1;
@@ -129,34 +119,6 @@ namespace delaunay {
     bool Edge::hasPoint(int pointId) const {
         return p0 == pointId || p1 == pointId;
     }
-    bool Hull::isConvex() const {
-        const glm::vec2 edge[4] = {
-            b - a,
-            c - b,
-            d - c,
-            a - d
-        };
-
-        float first = 0;
-        for (int i = 0; i < 4; i++)
-        {
-            auto& e1 = edge[i];
-            auto& e2 = edge[(i + 1) % 4];
-
-            if (i == 0) {
-                first = e1.x * e2.y - e1.y * e2.x;
-                continue;
-            }
-
-            auto last = e1.x * e2.y - e1.y * e2.x;
-            if (first < 0 && last > 0 || first > 0 && last < 0) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
 
     Point::Point(uint32_t id, float x, float y) :
         id(id),
@@ -169,12 +131,14 @@ namespace delaunay {
         point[1] = p1;
         point[2] = p2;
         updateBox();
+        updateCircle();
     }
     void Triangle::setPoints(Point* p0, Point* p1, Point* p2) {
         point[0] = p0;
         point[1] = p1;
         point[2] = p2;
         updateBox();
+        updateCircle();
     }
     void Triangle::setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2) {
         adjacent[0] = a0;
@@ -202,7 +166,6 @@ namespace delaunay {
         }
     }
     void Triangle::updateBox() {
-
         const glm::vec2& p0 = point[0]->position;
         const glm::vec2& p1 = point[1]->position;
         const glm::vec2& p2 = point[2]->position;
@@ -218,6 +181,13 @@ namespace delaunay {
         box.max.x = std::max(box.max.x, p2.x);
         box.max.y = std::max(box.max.y, p1.y);
         box.max.y = std::max(box.max.y, p2.y);
+    }
+    void Triangle::updateCircle() {
+        circle = Circle{
+            point[0]->position,
+            point[1]->position,
+            point[2]->position
+        };
     }
     bool Triangle::hasPoint(int pointId) const {
         return
@@ -306,64 +276,15 @@ namespace delaunay {
         Log::warn(msg);
         return nullptr;
     }
-    Hull Triangle::getHull(const Triangle* other) const {
-
-        glm::vec2 a, b, c, d;
-        int e1 = -1;
-        int e2 = -1;
-        if (other == adjacent[0]) {
-            a = point[2]->position;
-            b = point[0]->position;
-            d = point[1]->position;
-            e1 = point[0]->id;
-            e2 = point[1]->id;
-        }
-        else if (other == adjacent[1]) {
-            a = point[0]->position;
-            b = point[1]->position;
-            d = point[2]->position;
-            e1 = point[1]->id;
-            e2 = point[2]->id;
-        }
-        else if (other == adjacent[2]) {
-            a = point[1]->position;
-            b = point[2]->position;
-            d = point[0]->position;
-            e1 = point[2]->id;
-            e2 = point[0]->id;
-        }
-        else {
-            Log::warn("Something goes wrong!");
-        }
-
-        for (auto& adjacentPoint : other->point) {
-            bool isCommonEdgePoint =
-                (adjacentPoint->id == e1) ||
-                (adjacentPoint->id == e2);
-            if (isCommonEdgePoint) {
-                continue;
-            }
-            c = adjacentPoint->position;
-        }
-
-        return Hull{ a, b, c, d };
-    }
     Edge Triangle::getCommonEdge(const Triangle* other) const {
         if (other == adjacent[0]) return Edge{ point[0]->id, point[1]->id };
         if (other == adjacent[1]) return Edge{ point[1]->id, point[2]->id };
         if (other == adjacent[2]) return Edge{ point[2]->id, point[0]->id };
         throw std::runtime_error("something goes wrong");
     }
-    Circle Triangle::getCircle() const {
-        return Circle{
-            point[0]->position,
-            point[1]->position,
-            point[2]->position
-        };
-    }
 
 
-    SceneModel::~SceneModel() {
+    Triangulation::~Triangulation() {
         for (auto p : points) {
             delete p;
         }
@@ -371,10 +292,10 @@ namespace delaunay {
             delete t;
         }
     }
-    bool SceneModel::hasErrors() const {
+    bool Triangulation::hasErrors() const {
         return errors > 0;
     }
-    void SceneModel::addPoint(float x, float y) {
+    void Triangulation::addPoint(float x, float y) {
         auto id = static_cast<uint32_t>(points.size());
         auto point = points.emplace_back(new Point{ id, x, y });
 
@@ -416,98 +337,31 @@ namespace delaunay {
         trianglesForCheck.push(split.a->id);
         trianglesForCheck.push(split.b->id);
         trianglesForCheck.push(split.c->id);
-        checkDelaunayConstraint(trianglesForCheck, *point);
+        checkDelaunay(trianglesForCheck);
         if (errors) {
-            Log::warn("SceneModel::addPoint(Point* point) - Got errors after checkDelaunayConstraint()");
+            Log::warn("SceneModel::addPoint(Point* point) - Got errors after checkDelaunay()");
         }
     }
-    void SceneModel::movePoint(size_t index, const glm::vec2& position) {
+    void Triangulation::movePoint(size_t index, const glm::vec2& position) {
         auto point = points[index];
         point->position = position;
         
         changedPoints.emplace_back(point);
 
-        {
-            auto adjacens = std::stack<int>();
-            for (auto tr : triangles) {
-                if (tr->hasPoint(point->id)) {
-                    tr->updateBox();
-                    adjacens.push(tr->id);
-                    changedTriangles.insert(tr);
-                }
-            }
-            checkDelaunayConstraint(adjacens, *point);
-        }
-
-        {
-            auto pointId = point->id;
-            auto checkSet = std::set<Triangle*>();
-            auto checkList = std::vector<Triangle*>();
-            for (auto tr : triangles) {
-                if (tr->hasPoint(pointId)) {
-                    checkSet.insert(tr);
-                }
-            }
-            if (checkSet.empty()) {
-                return;
-            }
-
-            auto front = *checkSet.begin();
-            checkList.reserve(checkSet.size());
-            checkList.emplace_back(front);
-            checkSet.erase(front);
-
-            while (!checkSet.empty()) {
-                auto back = checkList.back();
-                for (auto item : checkSet) {
-                    if (item->linkedWith(back)) {
-                        checkList.emplace_back(item);
-                        break;
-                    }
-                }
-                checkSet.erase(checkList.back());
-            }
-
-            for (int i = 0; i < checkList.size(); i++) {
-                int j = (i + 1) % checkList.size();
-                auto t1 = checkList[i];
-                auto t2 = checkList[j];
-                if (hasDelaunayConstraint(t1, t2)) {
-                    continue;
-                }
-                
-                auto success = swapEdge(t1, t2);
-                if (success) {
-                    changedTriangles.insert(t1);
-                    changedTriangles.insert(t2);
-
-                    bool has1 = t1->hasPoint(pointId);
-                    bool has2 = t2->hasPoint(pointId);
-                    if (!has1) {
-                        checkList.erase(checkList.begin() + i);
-                    } 
-                    else if (!has2) {
-                        checkList.erase(checkList.begin() + j);
-                    }
-                    else {
-                        Log::warn("SceneModel::movePoint(...) - Triangle swap error 1!");
-                        increaseError();
-                        break;
-                    }
-                    i--;
-                }
-                else {
-                    Log::warn("SceneModel::movePoint(...) - Triangle swap error 2!");
-                    increaseError();
-                    break;
-                }
+        for (auto tr : triangles) {
+            if (tr->hasPoint(point->id)) {
+                tr->updateBox();
+                tr->updateCircle();
+                trianglesForCheck.push(tr->id);
+                changedTriangles.insert(tr);
             }
         }
+        checkDelaunay(trianglesForCheck);
     }
-    void SceneModel::increaseError() {
+    void Triangulation::increaseError() {
         errors++;
     }
-    Triangle* SceneModel::findTriangle(float x, float y) {
+    Triangle* Triangulation::findTriangle(float x, float y) {
         for (auto triangle : triangles) {
             if (triangle->contains(x, y)) {
                 return triangle;
@@ -515,7 +369,7 @@ namespace delaunay {
         }
         return nullptr;
     }
-    SplitResult SceneModel::splitTriangle(Triangle* triangleForSplit, Point* point) {
+    SplitResult Triangulation::splitTriangle(Triangle* triangleForSplit, Point* point) {
 
         auto p0 = triangleForSplit->point[0];
         auto p1 = triangleForSplit->point[1];
@@ -554,7 +408,47 @@ namespace delaunay {
 
         return SplitResult{ true, t0, t1, t2 };
     }
-    bool SceneModel::swapEdge(Triangle* t1, Triangle* t2) {
+    void Triangulation::checkDelaunay(std::stack<uint32_t>& trianglesForCheck) {
+        while (!trianglesForCheck.empty()) {
+            auto splitIndex = trianglesForCheck.top();
+            trianglesForCheck.pop();
+
+            auto target = triangles[splitIndex];
+            for (auto i = 0; i < 3; i++) {
+                auto adjacent = target->adjacent[i];
+                
+                if (!adjacent || hasDelaunay(target, adjacent)) {
+                    continue;
+                }
+                
+                bool ok = swapEdge(target, adjacent);
+                if (ok) {
+                    changedTriangles.insert(target);
+                    changedTriangles.insert(adjacent);
+                    trianglesForCheck.push(target->id);
+                    trianglesForCheck.push(adjacent->id);
+                    continue;
+                }
+                else {
+                    increaseError();
+                    return; //  return from function!
+                }
+            }
+        }
+    }
+    bool Triangulation::hasDelaunay(const Triangle* target, const Triangle* adjacent) {
+
+        auto edge = target->getCommonEdge(adjacent);
+        auto point = adjacent->getOppositePoint(edge);
+        if (target->circle.contains(point->position)) {
+            //need swap
+            return false;
+        }
+
+        //no need swap
+        return true;
+    }
+    bool Triangulation::swapEdge(Triangle* t1, Triangle* t2) {
 
         {
             bool someMad =
@@ -592,8 +486,6 @@ namespace delaunay {
         auto* a22 = t2->adjacent[2]; // adjacent for edge {v3 - v1}
         t1->setAdjacent(a11, a21, t2);
         t2->setAdjacent(a22, a12, t1);
-        //linkTriangleByIndex(a12, t2);
-        //linkTriangleByIndex(a21, t1);
 
         {
             bool someMad =
@@ -604,85 +496,25 @@ namespace delaunay {
                 return false;
             }
         }
-
         return true;
     }
-    void SceneModel::checkDelaunayConstraint(std::stack<int>& trianglesForCheck, const Point& point) {
-
-        while (!trianglesForCheck.empty()) {
-            auto splitIndex = trianglesForCheck.top();
-            trianglesForCheck.pop();
-
-            if (splitIndex == -1) {
-                continue;
-            }
-
-            auto splitted = triangles[splitIndex];
-            auto opposite = splitted->getOppositeTriangle(point.id);
-            if (opposite == nullptr) {
-                continue;
-            }
-
-            auto hull = splitted->getHull(opposite);
-            auto concave = !hull.isConvex();
-            if (concave) {
-                continue;
-            }
-
-            auto circle = opposite->getCircle();
-            bool hasDelaunayConstraint = !circle.contains(point.position);
-            if (hasDelaunayConstraint) {
-                continue;
-            }
-
-            auto success = swapEdge(splitted, opposite);
-            if (success) {
-                changedTriangles.insert(splitted);
-                changedTriangles.insert(opposite);
-                trianglesForCheck.push(splitted->id);
-                trianglesForCheck.push(opposite->id);
-            }
-            else {
-                increaseError();
-                break;
-            }
-        }
-    }
-    bool SceneModel::hasDelaunayConstraint(const Triangle* t1, const Triangle* t2) {
-
-        Hull hull = t1->getHull(t2);
-        bool concave = !hull.isConvex();
-        if (concave) {
-            //skip concave hulls
-            //no need swap
-            return true;
-        }
-
-        Edge edge = t1->getCommonEdge(t2);
-        const auto& p1 = t1->getOppositePoint(edge)->position;
-        const auto& p2 = t2->getOppositePoint(edge)->position;
-
-        Circle circle1 = t1->getCircle();
-        if (circle1.contains(p2)) {
-            //need swap
-            return false;
-        }
-
-        Circle circle2 = t2->getCircle();
-        if (circle2.contains(p1)) {
-            //need swap
-            return false;
-        }
-
-        //no need swap
-        return true;
-    }
-    void SceneModel::updateView(Observer& observer) {
+    void Triangulation::updateView(Observer& observer) {
         observer.onUpdate(*this);
         changedPoints.clear();
         changedTriangles.clear();
     }
-    void SceneView::onUpdate(const SceneModel& model) {
+    bool Triangulation::isSuper(const Point* point) {
+        return point->id < 3;
+    }
+    bool Triangulation::isSuper(const Triangle* tr) {
+        return
+            isSuper(tr->point[0]) ||
+            isSuper(tr->point[1]) ||
+            isSuper(tr->point[2]);
+    }
+
+    
+    void SceneView::onUpdate(const Triangulation& model) {
         
         //update points 
         pointMeshes.resize(model.points.size());
@@ -702,7 +534,7 @@ namespace delaunay {
             triangleMeshes[idx + 1].movePosition(p1, p2);
             triangleMeshes[idx + 2].movePosition(p2, p0);
 
-            bool super = util::isSuper(triangle);
+            bool super = Triangulation::isSuper(triangle);
             triangleMeshes[idx + 0].visible = !super;
             triangleMeshes[idx + 1].visible = !super;
             triangleMeshes[idx + 2].visible = !super;
