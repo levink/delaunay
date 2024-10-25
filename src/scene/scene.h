@@ -5,7 +5,7 @@
 #include "model/circle.h"
 #include "platform/log.h"
 #include "scene/drawBatch.h"
-#include <set>
+#include <unordered_set>
 
 namespace delaunay {
 
@@ -24,9 +24,10 @@ namespace delaunay {
     };
 
     struct Edge {
-        uint32_t p0, p1;
+        uint32_t p0, p1; //Guaranteed that p0 <= p1 
         Edge(uint32_t p0, uint32_t p1);
-        bool hasPoint(int pointId) const;
+        bool hasPoint(uint32_t pointId) const;
+        uint64_t key() const;
     };
 
     struct Point {
@@ -49,18 +50,18 @@ namespace delaunay {
         Triangle(uint32_t id, Point* p0, Point* p1, Point* p2);
         void setPoints(Point* p0, Point* p1, Point* p2);
         void setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2);
-        void shiftPointFirst(int firstPointId);
-        void updateBox();
-        void updateCircle();
-        bool hasPoint(int pointId) const;
-        bool hasPoints(const Point& p1, const Point& p2) const;
-        bool link(Triangle* triangle);
+        void update();
+        bool hasPointId(uint32_t pointId) const;
+        bool hasPoint(const Point* point) const;
+        bool hasPoints(const Point* p1, const Point* p2) const;
+        void link(Triangle* triangle);
         bool linkedWith(const Triangle* triangle) const;
         bool contains(float x, float y) const;
         Point* getOppositePoint(const Edge& edge) const;
         Point* getOppositePoint(const Triangle* other) const;
-        Triangle* getOppositeTriangle(int pointId) const;
+        Triangle* getAdjacentTriangle(const Point* point) const;
         Edge getCommonEdge(const Triangle* other) const;
+        Edge getOppositeEdge(const Point* point) const;
     };
 
     struct SplitResult {
@@ -77,10 +78,11 @@ namespace delaunay {
         std::vector<Point*> points;  
         std::vector<Triangle*> triangles;
         std::vector<const Point*> changedPoints;
-        std::set<const Triangle*> changedTriangles;
+        std::unordered_set<const Triangle*> changedTriangles;
     private:
         uint32_t errors = 0;
         std::stack<uint32_t> trianglesForCheck;
+        std::unordered_set<uint64_t> markedEdges;
 
     public: 
         Triangulation() = default;
@@ -90,18 +92,17 @@ namespace delaunay {
         void movePoint(size_t id, const glm::vec2& position);
         void updateView(Observer& observer);
         void rebuild();
+        Triangle* findTriangle(float x, float y);
         static bool isSuper(const Point* point);
         static bool isSuper(const Triangle* tr);
+
     private:
         void increaseError();
         void addPoint(Point* point);
-        Triangle* findTriangle(float x, float y);
         SplitResult splitTriangle(Triangle* triangleForSplit, Point* point);
-        //void checkDelaunay(std::stack<uint32_t>& trianglesForCheck);
-        void checkDelaunay(std::stack<uint32_t>& trianglesForCheck, const Point* point);
-        bool hasDelaunay(const Triangle* target, const Point* point);
-        bool hasDelaunay(const Triangle* target, const Triangle* adjacent);
+        void checkDelaunayLocally(Triangle* target, Triangle* adjacent);
         bool swapEdge(Triangle* t1, Triangle* t2);
+        void markEdge(Triangle* target, uint8_t edgeNumber);
     };
 
     struct SceneView : public Triangulation::Observer {
