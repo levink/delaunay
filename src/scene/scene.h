@@ -25,6 +25,7 @@ namespace delaunay {
 
     struct Edge {
         uint32_t p0, p1;
+        Edge(uint32_t p0, uint32_t p1);
         bool hasPoint(int pointId) const;
     };
 
@@ -57,6 +58,7 @@ namespace delaunay {
         bool linkedWith(const Triangle* triangle) const;
         bool contains(float x, float y) const;
         Point* getOppositePoint(const Edge& edge) const;
+        Point* getOppositePoint(const Triangle* other) const;
         Triangle* getOppositeTriangle(int pointId) const;
         Edge getCommonEdge(const Triangle* other) const;
     };
@@ -87,14 +89,17 @@ namespace delaunay {
         void addPoint(float x, float y);
         void movePoint(size_t id, const glm::vec2& position);
         void updateView(Observer& observer);
+        void rebuild();
         static bool isSuper(const Point* point);
         static bool isSuper(const Triangle* tr);
-        
     private:
         void increaseError();
+        void addPoint(Point* point);
         Triangle* findTriangle(float x, float y);
         SplitResult splitTriangle(Triangle* triangleForSplit, Point* point);
-        void checkDelaunay(std::stack<uint32_t>& trianglesForCheck);
+        //void checkDelaunay(std::stack<uint32_t>& trianglesForCheck);
+        void checkDelaunay(std::stack<uint32_t>& trianglesForCheck, const Point* point);
+        bool hasDelaunay(const Triangle* target, const Point* point);
         bool hasDelaunay(const Triangle* target, const Triangle* adjacent);
         bool swapEdge(Triangle* t1, Triangle* t2);
     };
@@ -123,5 +128,6 @@ namespace delaunay {
         void movePoint(const glm::vec2& cursor);
         void selectPoint(const glm::vec2& cursor);
         void clearSelection();
+        void rebuild();
     };
 };

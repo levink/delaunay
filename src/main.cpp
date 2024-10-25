@@ -19,6 +19,11 @@ void keyCallback(GLFWwindow* window, int key, int scanCode, int action, int mods
         std::cout << "Reload shaders" << std::endl;
         render.reloadShaders();
     }
+    else if (keyEvent.is(B)) {
+        std::cout << "Scene rebuild" << std::endl;
+        render.scene.rebuild();
+    }
+
 }
 void mouseCallback(ui::mouse::MouseEvent event) {
     using namespace ui;
