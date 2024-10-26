@@ -9,76 +9,81 @@
 
 namespace delaunay {
 
-    struct Circle {
+    struct DCircle {
         glm::vec2 center;
         float radius = 0.f;
-        Circle() = default;
-        Circle(glm::vec2 a, glm::vec2 b, glm::vec2 c);
+        DCircle() = default;
+        DCircle(glm::vec2 a, glm::vec2 b, glm::vec2 c);
         bool contains(const glm::vec2& point) const;
     };
 
-    struct Box {
+    struct DBox {
         glm::vec2 min;
         glm::vec2 max;
         bool contains(float x, float y) const;
     };
 
-    struct Edge {
+    struct DEdge {
         uint32_t p0, p1; //Guaranteed that p0 <= p1 
-        Edge(uint32_t p0, uint32_t p1);
+        DEdge(uint32_t p0, uint32_t p1);
         bool hasPoint(uint32_t pointId) const;
         uint64_t key() const;
     };
 
-    struct Point {
+    struct DPoint {
         uint32_t id = 0;
         glm::vec2 position;
-        Point(uint32_t id, float x, float y);
+        DPoint(uint32_t id, float x, float y);
     };
 
-    struct Triangle {
+    struct DTriangle {
         uint32_t id = -1;
-        Point* points[3];
-        Triangle* adjacent[3] = {
+        DPoint* points[3];
+        DTriangle* adjacent[3] = {
                 nullptr,  //triangle for edge with point0 - point1
                 nullptr,  //triangle for edge with point1 - point2
                 nullptr   //triangle for edge with point2 - point0
         };
-        Box box;
-        Circle circle;
+        DBox box;
+        DCircle circle;
 
-        Triangle(uint32_t id, Point* p0, Point* p1, Point* p2);
-        void setPoints(Point* p0, Point* p1, Point* p2);
-        void setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2);
+        DTriangle(uint32_t id, DPoint* p0, DPoint* p1, DPoint* p2);
+        void setPoints(DPoint* p0, DPoint* p1, DPoint* p2);
+        bool setAdjacent(DTriangle* a0, DTriangle* a1, DTriangle* a2);
         void update();
-        void link(Triangle* triangle);
-        bool linkedWith(const Triangle* triangle) const;
+        bool link(DTriangle* triangle);
+        bool linkedWith(const DTriangle* triangle) const;
         bool hasPointId(uint32_t pointId) const;
-        bool hasPoint(const Point* point) const;
-        bool hasPoints(const Point* p1, const Point* p2) const;
-        bool contains(float x, float y) const;
-        Point* getOppositePoint(const Edge& edge) const;
-        Point* getOppositePoint(const Triangle* other) const;
-        Triangle* getAdjacentTriangle(const Point* point) const;
-        Edge getCommonEdge(const Triangle* other) const;
-        Edge getOppositeEdge(const Point* point) const;
+        bool hasPoint(const DPoint* point) const;
+        bool hasPoints(const DPoint* p1, const DPoint* p2) const;
+        bool contains(float x, float y, uint8_t& hitCode) const;
+        DPoint* getOppositePoint(const DEdge& edge) const;
+        DTriangle* getAdjacentTriangle(const DPoint* point) const;
+        DEdge getCommonEdge(const DTriangle* other) const;
+        DEdge getOppositeEdge(const DPoint* point) const;
+        DEdge getEdge(int edgeIndex) const;
     };
 
     struct SplitResult {
-        bool success = false;
-        const Triangle* a = nullptr;
-        const Triangle* b = nullptr;
-        const Triangle* c = nullptr;
+        bool ok = false;
+        const DTriangle* tr[4] = {
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr
+        };
     };
 
     struct Triangulation {
+
         struct Observer {
             virtual void getUpdates(const Triangulation& model) = 0;
         };
-        std::vector<Point*> points;  
-        std::vector<Triangle*> triangles;
-        std::vector<const Point*> changedPoints;
-        std::unordered_set<const Triangle*> changedTriangles;
+
+        std::vector<DPoint*> points;  
+        std::vector<DTriangle*> triangles;
+        std::unordered_set<const DPoint*> changedPoints;
+        std::unordered_set<const DTriangle*> changedTriangles;
     private:
         uint32_t errors = 0;
         std::stack<uint32_t> trianglesForCheck;
@@ -91,18 +96,21 @@ namespace delaunay {
         void addPoint(float x, float y);
         void movePoint(size_t id, const glm::vec2& position);
         void updateView(Observer& observer);
+        bool isSuper(const DPoint* point) const;
+        bool isSuper(const DTriangle* tr) const;
+        bool isDelaynayConstrained(size_t tIndex) const;
         void rebuild();
-        static bool isSuper(const Point* point);
-        static bool isSuper(const Triangle* tr);
-
     private:
         void increaseError();
-        void addPoint(Point* point);
-        Triangle* findTriangle(float x, float y);
-        SplitResult splitTriangle(Triangle* triangleForSplit, Point* point);
-        void checkDelaunayLocally(Triangle* target, Triangle* adjacent);
-        bool swapEdge(Triangle* t1, Triangle* t2);
-        void markEdge(Triangle* target, uint8_t edgeNumber);
+        void addPoint(DPoint* point);
+        DTriangle* findTriangle(float x, float y, uint8_t& hitCode);
+        SplitResult splitTriangle(DTriangle* triangle, uint8_t hitCode, DPoint* point);
+        SplitResult splitOneByInternalPoint(DTriangle* triangle, DPoint* point);
+        SplitResult splitOneByEdge(DTriangle* triangle, int edgeNum, DPoint* point);
+        SplitResult splitTwoByEdge(DTriangle* triangle, DTriangle* adjacent, DPoint* point);
+        void checkDelaunayLocally(DTriangle* target, DTriangle* adjacent);
+        bool swapEdge(DTriangle* t1, DTriangle* t2);
+        void markEdge(DTriangle* target, uint8_t edgeNumber);
     };
 
     struct SceneView : public Triangulation::Observer {
