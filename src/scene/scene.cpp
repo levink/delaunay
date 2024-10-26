@@ -3,8 +3,6 @@
 #include "model/color.h"
 #include "scene.h"
 
-//todo: link point with triangles maybe?
-
 namespace delaunay {
 
     namespace util {
@@ -301,6 +299,9 @@ namespace delaunay {
     bool Triangulation::hasErrors() const {
         return errors > 0;
     }
+    void Triangulation::increaseError() {
+        errors++;
+    }
     void Triangulation::addPoint(float x, float y) {
         std::cout << "addPoint x=" << x << " y=" << y << std::endl;
         auto id = static_cast<uint32_t>(points.size());
@@ -341,7 +342,6 @@ namespace delaunay {
             return;
         }
        
-
         markedEdges.insert(split.a->getOppositeEdge(point).key());
         markedEdges.insert(split.b->getOppositeEdge(point).key());
         markedEdges.insert(split.c->getOppositeEdge(point).key());
@@ -399,48 +399,6 @@ namespace delaunay {
             }
         }
     }
-    void Triangulation::checkDelaunayLocally(Triangle* target, Triangle* adjacent) {
-        if (adjacent == nullptr) {
-            return;
-        }
-
-        auto edge = target->getCommonEdge(adjacent);
-        auto edgeKey = edge.key();
-        bool marked = markedEdges.count(edgeKey) > 0;
-        if (!marked) {
-            return;
-        }
-        markedEdges.erase(edgeKey);
-
-        auto checkPoint = adjacent->getOppositePoint(target);
-        if (checkPoint == nullptr) {
-            increaseError();
-            return;
-        }
-
-        bool hasDelaunay = !target->circle.contains(checkPoint->position);
-        if (hasDelaunay) {
-            return;
-        }
-
-        bool ok = swapEdge(target, adjacent);
-        if (ok) {
-            auto edge1 = target->getOppositeEdge(checkPoint);
-            auto edge2 = adjacent->getOppositeEdge(checkPoint);
-            markedEdges.insert(edge1.key());
-            markedEdges.insert(edge2.key());
-            trianglesForCheck.push(target->id);
-            trianglesForCheck.push(adjacent->id);
-            changedTriangles.insert(target);
-            changedTriangles.insert(adjacent);
-        }
-        else {
-            increaseError();
-        }
-    }
-    void Triangulation::increaseError() {
-        errors++;
-    }
     Triangle* Triangulation::findTriangle(float x, float y) {
         for (auto triangle : triangles) {
             if (triangle->contains(x, y)) {
@@ -487,6 +445,45 @@ namespace delaunay {
         }
 
         return SplitResult{ true, t0, t1, t2 };
+    }
+    void Triangulation::checkDelaunayLocally(Triangle* target, Triangle* adjacent) {
+        if (adjacent == nullptr) {
+            return;
+        }
+
+        auto edge = target->getCommonEdge(adjacent);
+        auto edgeKey = edge.key();
+        bool marked = markedEdges.count(edgeKey) > 0;
+        if (!marked) {
+            return;
+        }
+        markedEdges.erase(edgeKey);
+
+        auto checkPoint = adjacent->getOppositePoint(target);
+        if (checkPoint == nullptr) {
+            increaseError();
+            return;
+        }
+
+        bool hasDelaunay = !target->circle.contains(checkPoint->position);
+        if (hasDelaunay) {
+            return;
+        }
+
+        bool ok = swapEdge(target, adjacent);
+        if (ok) {
+            auto edge1 = target->getOppositeEdge(checkPoint);
+            auto edge2 = adjacent->getOppositeEdge(checkPoint);
+            markedEdges.insert(edge1.key());
+            markedEdges.insert(edge2.key());
+            trianglesForCheck.push(target->id);
+            trianglesForCheck.push(adjacent->id);
+            changedTriangles.insert(target);
+            changedTriangles.insert(adjacent);
+        }
+        else {
+            increaseError();
+        }
     }
     bool Triangulation::swapEdge(Triangle* t1, Triangle* t2) {
         
@@ -584,6 +581,7 @@ namespace delaunay {
             isSuper(tr->point[2]);
     }
     
+
     void SceneView::getUpdates(const Triangulation& model) {
         
         //update points 
@@ -610,7 +608,6 @@ namespace delaunay {
             triangleMeshes[idx + 2].visible = !super;
         }
     }
-
     void Scene::init(const glm::vec2& viewSize) {
 
         const float w = viewSize.x;

@@ -92,13 +92,13 @@ namespace delaunay {
         void movePoint(size_t id, const glm::vec2& position);
         void updateView(Observer& observer);
         void rebuild();
-        Triangle* findTriangle(float x, float y);
         static bool isSuper(const Point* point);
         static bool isSuper(const Triangle* tr);
 
     private:
         void increaseError();
         void addPoint(Point* point);
+        Triangle* findTriangle(float x, float y);
         SplitResult splitTriangle(Triangle* triangleForSplit, Point* point);
         void checkDelaunayLocally(Triangle* target, Triangle* adjacent);
         bool swapEdge(Triangle* t1, Triangle* t2);
