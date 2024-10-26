@@ -38,7 +38,7 @@ namespace delaunay {
 
     struct Triangle {
         uint32_t id = -1;
-        Point* point[3];
+        Point* points[3];
         Triangle* adjacent[3] = {
                 nullptr,  //triangle for edge with point0 - point1
                 nullptr,  //triangle for edge with point1 - point2
@@ -51,11 +51,11 @@ namespace delaunay {
         void setPoints(Point* p0, Point* p1, Point* p2);
         void setAdjacent(Triangle* a0, Triangle* a1, Triangle* a2);
         void update();
+        void link(Triangle* triangle);
+        bool linkedWith(const Triangle* triangle) const;
         bool hasPointId(uint32_t pointId) const;
         bool hasPoint(const Point* point) const;
         bool hasPoints(const Point* p1, const Point* p2) const;
-        void link(Triangle* triangle);
-        bool linkedWith(const Triangle* triangle) const;
         bool contains(float x, float y) const;
         Point* getOppositePoint(const Edge& edge) const;
         Point* getOppositePoint(const Triangle* other) const;
