@@ -17,6 +17,7 @@ namespace math {
 namespace delaunay {
 
     namespace util {
+        
         static void printTriangle(const DTriangle* triangle) {
             if (triangle) {
                 std::cout << "triangle id="
@@ -58,9 +59,9 @@ namespace delaunay {
 
             const auto& a = item->adjacent;
             bool sameAdjacents =
-                a[0] == a[1] ||
-                a[0] == a[2] ||
-                a[1] == a[2];
+                (a[0] && a[0] == a[1]) ||
+                (a[0] && a[0] == a[2]) ||
+                (a[1] && a[1] == a[2]);
             if (sameAdjacents) {
                 return true;
             }
@@ -318,43 +319,52 @@ namespace delaunay {
             delete t;
         }
     }
-    bool Triangulation::hasErrors() const {
-        return errors > 0;
-    }
-    void Triangulation::increaseError() {
-        errors++;
+    void Triangulation::setWorkBox(float startX, float startY, float endX, float endY) {
+        // Work box
+        workBox.min = { startX, startY };
+        workBox.max = { endX, endY };
+        superOffset = 4;
+
+        // Super points
+        points.emplace_back(new DPoint{ 0, startX, startY });
+        points.emplace_back(new DPoint{ 1, startX, endY });
+        points.emplace_back(new DPoint{ 2, endX, endY });
+        points.emplace_back(new DPoint{ 3, endX, startY });
+        
+        // Super triangles
+        triangles.emplace_back(new DTriangle(0, points[0], points[1], points[2]));
+        triangles.emplace_back(new DTriangle(1, points[2], points[3], points[0]));
+        triangles[0]->link(triangles[1]);
+        triangles[1]->link(triangles[0]);
+
+        // Remember changes
+        changedPoints.insert(points[0]);
+        changedPoints.insert(points[1]);
+        changedPoints.insert(points[2]);
+        changedPoints.insert(points[3]);
+        changedTriangles.insert(triangles[0]);
+        changedTriangles.insert(triangles[1]);
     }
     void Triangulation::addPoint(float x, float y) {
-        std::cout << "addPoint x=" << x << " y=" << y << std::endl;
+        if (!workBox.contains(x, y)) {
+            std::cout << "Point x=" << x << " y=" << y << " is out of work box" << std::endl;
+            return;
+        }
 
         //check existing point
         auto newPos = glm::vec2(x, y);
         for (auto point : points) {
             bool alreadyExists = math::same(point->position, newPos);
             if (alreadyExists) {
+                std::cout << "Point x=" << x << " y=" << y << " already exists" << std::endl;
                 return;
             }
         }
 
+        std::cout << "addPoint(" << x << ", " << y << ")" << std::endl;
         auto id = static_cast<uint32_t>(points.size());
         auto point = points.emplace_back(new DPoint{ id, x, y });
         changedPoints.insert(point);
-        
-        auto pointsSize = points.size();
-        if (pointsSize < 3) {
-            return;
-        }
-
-        if (pointsSize == 3 && triangles.empty()) {
-            auto superTriangle = new DTriangle{ 0,
-                points[0],
-                points[1],
-                points[2]
-            };
-            triangles.emplace_back(superTriangle);
-            changedTriangles.insert(superTriangle);
-            return;
-        }
 
         addPoint(point);
     }
@@ -400,10 +410,17 @@ namespace delaunay {
         }
     } 
     void Triangulation::movePoint(size_t index, const glm::vec2& position) {
+        if (index < superOffset) {
+            return;
+        }
+
         auto point = points[index];
         point->position = position;
         changedPoints.insert(point);
         
+        while (!trianglesForCheck.empty()) {
+            trianglesForCheck.pop();
+        }
         markedEdges.clear();
         for (auto tr : triangles) {
             if (tr->hasPoint(point)) {
@@ -676,8 +693,38 @@ namespace delaunay {
         changedPoints.clear();
         changedTriangles.clear();
     }
+    void Triangulation::rebuild() {
+       
+        errors = 0;
+        while (!trianglesForCheck.empty()) {
+            trianglesForCheck.pop();
+        }
+        markedEdges.clear();
+        changedPoints.clear();
+        changedTriangles.clear();
+
+        for (auto t : triangles) {
+            delete t;
+        }
+        triangles.clear();
+        triangles.emplace_back(new DTriangle(0, points[0], points[1], points[2]));
+        triangles.emplace_back(new DTriangle(1, points[2], points[3], points[0]));
+        triangles[0]->link(triangles[1]);
+        triangles[1]->link(triangles[0]);
+
+        changedPoints.insert(points[0]);
+        changedPoints.insert(points[1]);
+        changedPoints.insert(points[2]);
+        changedPoints.insert(points[3]);
+        changedTriangles.insert(triangles[0]);
+        changedTriangles.insert(triangles[1]);
+
+        for (size_t i = superOffset; i < points.size(); i++) {
+            addPoint(points[i]);
+        }
+    }
     bool Triangulation::isSuper(const DPoint* point) const {
-        return point->id < 3;
+        return point->id < superOffset;
     }
     bool Triangulation::isSuper(const DTriangle* tr) const {
         return
@@ -705,30 +752,12 @@ namespace delaunay {
         }
         return true;
     }
-    void Triangulation::rebuild() {
-        changedPoints.clear();
-        changedTriangles.clear();
-
-        for (auto t : triangles) {
-            delete t;
-        }
-        triangles.clear();
-
-        if (points.size() > 3) {
-            auto superTriangle = new DTriangle{ 0,
-               points[0],
-               points[1],
-               points[2]
-            };
-            triangles.emplace_back(superTriangle);
-            changedTriangles.insert(superTriangle);
-        }
-
-        for (size_t i = 3; i < points.size(); i++) {
-            addPoint(points[i]);
-        }
+    bool Triangulation::hasErrors() const {
+        return errors > 0;
     }
-
+    void Triangulation::increaseError() {
+        errors++;
+    }
 
     void SceneView::getUpdates(const Triangulation& model) {
         
@@ -767,21 +796,15 @@ namespace delaunay {
         auto bottom = p;
         auto left = p;
 
-        model.triangles.reserve(9);
-        model.points.reserve(7);
-        
-        //3 points for super triangle
-        model.addPoint(-w, -h);
-        model.addPoint(2 * w, -h);
-        model.addPoint(0.5f * w, 2.f * h);
+        model.triangles.reserve(10);
+        model.points.reserve(8);
+        model.setWorkBox(-10, -10, w + 10, h + 10);
 
-        //4 rect points
         model.addPoint(left, bottom);
         model.addPoint(right, bottom);
         model.addPoint(right, top);
         model.addPoint(left, top);
         model.updateView(view);
-
 
         background.init(viewSize.x, viewSize.y);
         selectedPoint.mesh = CircleMesh::createPointSelected({ glm::vec2(0,0) });
@@ -836,8 +859,13 @@ namespace delaunay {
         selectedPoint.index = index;
         dragOffset = cursor - position;
     }
-    void Scene::clearSelection() {
+    void Scene::recover() {
         selectedPoint.index = -1;
+
+        if (model.hasErrors()) {
+            model.rebuild();
+            model.updateView(view);
+        }
     }
     void Scene::rebuild() {
         model.rebuild();

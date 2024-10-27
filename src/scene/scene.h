@@ -80,11 +80,13 @@ namespace delaunay {
             virtual void getUpdates(const Triangulation& model) = 0;
         };
 
+        DBox workBox;
         std::vector<DPoint*> points;  
         std::vector<DTriangle*> triangles;
         std::unordered_set<const DPoint*> changedPoints;
         std::unordered_set<const DTriangle*> changedTriangles;
     private:
+        size_t superOffset = 0;
         uint32_t errors = 0;
         std::stack<uint32_t> trianglesForCheck;
         std::unordered_set<uint64_t> markedEdges;
@@ -92,14 +94,15 @@ namespace delaunay {
     public: 
         Triangulation() = default;
         ~Triangulation();
-        bool hasErrors() const;
+        void setWorkBox(float startX, float startY, float endX, float endY);
         void addPoint(float x, float y);
         void movePoint(size_t id, const glm::vec2& position);
         void updateView(Observer& observer);
+        void rebuild();
         bool isSuper(const DPoint* point) const;
         bool isSuper(const DTriangle* tr) const;
         bool isDelaynayConstrained(size_t tIndex) const;
-        void rebuild();
+        bool hasErrors() const;
     private:
         void increaseError();
         void addPoint(DPoint* point);
@@ -136,7 +139,7 @@ namespace delaunay {
         void addPoint(const glm::vec2& cursor);
         void movePoint(const glm::vec2& cursor);
         void selectPoint(const glm::vec2& cursor);
-        void clearSelection();
+        void recover();
         void rebuild();
     };
 };

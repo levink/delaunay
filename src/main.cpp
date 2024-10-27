@@ -34,9 +34,9 @@ void mouseCallback(ui::mouse::MouseEvent event) {
     auto& scene = render.scene;
 
     if (event.is(Action::PRESS, Button::LEFT)) scene.selectPoint(cursor);
-    else if (event.is(Action::MOVE, Button::LEFT))  scene.movePoint(cursor);
-    else if (event.is(Action::RELEASE, Button::LEFT)) scene.clearSelection();
     else if (event.is(Action::PRESS, Button::RIGHT)) scene.addPoint(cursor);
+    else if (event.is(Action::MOVE, Button::LEFT))  scene.movePoint(cursor);
+    else if (event.is(Action::RELEASE, Button::LEFT)) scene.recover();
 }
 void mouseClick(GLFWwindow*, int button, int action, int mods) {
     auto event = ui::mouse::click(button, action, mods);
