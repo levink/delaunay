@@ -5,7 +5,6 @@
 
 namespace math {
     constexpr float SAME_EPS = 0.001f;
-
     static bool same(const glm::vec2& a, const glm::vec2& b) {
         auto dx = std::abs(a.x - b.x);
         auto dy = std::abs(a.y - b.y);
@@ -17,7 +16,6 @@ namespace math {
 namespace delaunay {
 
     namespace util {
-        
         static void printTriangle(const DTriangle* triangle) {
             if (triangle) {
                 std::cout << "triangle id="
