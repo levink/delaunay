@@ -24,8 +24,9 @@ namespace delaunay {
     };
 
     struct DEdge {
-        uint32_t p0, p1; //Guaranteed that p0 <= p1 
-        DEdge(uint32_t p0, uint32_t p1);
+        uint32_t p0 = 0;
+        uint32_t p1 = 0; 
+        DEdge(uint32_t p0, uint32_t p1); //Guaranteed that this->p0 <= this->p1 
         bool hasPoint(uint32_t pointId) const;
         uint64_t key() const;
     };

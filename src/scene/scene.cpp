@@ -352,8 +352,7 @@ namespace delaunay {
         //check existing point
         auto newPos = glm::vec2(x, y);
         for (auto point : points) {
-            bool alreadyExists = math::same(point->position, newPos);
-            if (alreadyExists) {
+            if (math::same(point->position, newPos)) {
                 std::cout << "Point x=" << x << " y=" << y << " already exists" << std::endl;
                 return;
             }
@@ -445,7 +444,7 @@ namespace delaunay {
             }
         }
     }
-    
+
     DTriangle* Triangulation::findTriangle(float x, float y, uint8_t& hitCode) {
         for (auto triangle : triangles) {
             if (triangle->contains(x, y, hitCode)) {
@@ -458,9 +457,9 @@ namespace delaunay {
 
         int hitCount = 0;
         int edgeNum = 0;
-        if (hitCode & 0x0001) { hitCount++; edgeNum = 0; }
-        if (hitCode & 0x0010) { hitCount++; edgeNum = 1; }
-        if (hitCode & 0x0100) { hitCount++; edgeNum = 2; }
+        if (hitCode & 0b0001) { hitCount++; edgeNum = 0; }
+        if (hitCode & 0b0010) { hitCount++; edgeNum = 1; }
+        if (hitCode & 0b0100) { hitCount++; edgeNum = 2; }
         if (hitCount > 1) {
             // we hit the triangle's corner
             // there is an error here because we checked existing points before
@@ -664,13 +663,11 @@ namespace delaunay {
         bool ok2 = t2->setAdjacent(a22, a12, t1);
 
         {
-            bool bad1 = util::hasErrors(t1);
-            bool bad2 = util::hasErrors(t2);
             bool someMad = 
                 !ok1 ||
                 !ok2 ||
-                bad1 || 
-                bad2;
+                util::hasErrors(t1) ||
+                util::hasErrors(t2);
             if (someMad) {
                 Log::warn("SceneModel::swapEdge() - Bad triangles after swap");
                 return false;
