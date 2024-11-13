@@ -13,7 +13,7 @@ Hi! Here we are creating non-constrained Delaynay triangulation and drawing scen
 
 ### Details
 * The approach described by S. W. Sloan in his [article](./data/articles/A-fast-algortithm-for-generating-constrained-Delaunay-triangulations.pdf) is implemented.
-* The [book](.data/articles/SkvortsovAV-DT.pdf) by Skvortsov A.V. contains a lot of important datails.
+* The [book](./data/articles/SkvortsovAV-DT.pdf) by Skvortsov A.V. contains a lot of important datails.
 * Draw smooth points and lines. Go deep into the code of shaders. Here is an example of pretty simple architecture and clean code.
 * Use `glad` and `glfw` libraries for graphics and `glm` for math operations. All libraries already included.
 
