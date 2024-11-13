@@ -1,12 +1,12 @@
 #include <iostream>
-#include "loader.h"
-#include "log.h"
+#include "shader/shaderLoader.h"
+#include "shader/shaderLog.h"
 
 std::string ShaderLoader::getShaderText(const char* fileName) {
     std::string result;
     std::ifstream input(fileName, std::ifstream::binary);
     if (!input) {
-        Log::warn("Could not open file", fileName);
+        ShaderLog::warn("Could not open file", fileName);
         return result;
     }
 
@@ -36,14 +36,14 @@ ShaderSource ShaderLoader::load(const char* path) const {
     static const auto vertexTag = "//#vertex";
     auto vertexPosition = text.find(vertexTag);
     if (vertexPosition == std::string::npos) {
-        Log::warn("Vertex tag not found in shader", path);
+        ShaderLog::warn("Vertex tag not found in shader", path);
         return ShaderSource();
     }
 
     static const auto fragmentTag = "//#fragment";
     auto fragmentPosition = text.find(fragmentTag);
     if (fragmentPosition == std::string::npos) {
-        Log::warn("Fragment tag not found in shader", path);
+        ShaderLog::warn("Fragment tag not found in shader", path);
         return ShaderSource();
     }
 

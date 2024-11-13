@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <array>
 #include <vector>
 #include <map>
 #include <stack>
@@ -9,6 +10,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <functional>
+#include <unordered_set>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

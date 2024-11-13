@@ -1,5 +1,5 @@
 #include "line.h"
-#include "model/color.h"
+#include "view/color.h"
 
 LineVertex::LineVertex() = default;
 LineVertex::LineVertex(glm::vec2 position, glm::vec2 e1, glm::vec2 e2, glm::vec2 offset) :

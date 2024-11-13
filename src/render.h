@@ -1,9 +1,14 @@
 #pragma once
-#include "camera/camera.h"
-#include "platform/loader.h"
-#include "shader/shaderSource.h"
-#include "shader/shader.h"
+
+#include "pch.h"
+#include "model/delaunay.h"
+#include "model/drawBatch.h"
+#include "scene/camera.h"
 #include "scene/scene.h"
+#include "shader/shader.h"
+#include "shader/shaderSource.h"
+#include "shader/shaderLoader.h"
+
 using namespace delaunay;
 
 class Render;

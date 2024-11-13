@@ -1,7 +1,8 @@
 #include <glad/glad.h>
 #include <random>
 #include "drawBatch.h"
-#include "scene/scene.h"
+#include "view/face.h"
+#include "view/circle.h"
 
 void DrawBatch::init(float w, float h) {
     std::random_device rd;

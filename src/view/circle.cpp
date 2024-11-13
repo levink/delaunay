@@ -1,5 +1,5 @@
 #include "circle.h"
-#include "model/color.h"
+#include "view/color.h"
 
 CircleVertex::CircleVertex() 
     : center(0,0), offset(0,0), radius(0.f), fill(0.f) { }

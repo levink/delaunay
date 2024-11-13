@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
-#include "camera/camera.h"
-#include "model/circle.h"
-#include "model/line.h"
-#include "scene/drawBatch.h"
-#include "shaderBase.h"
+#include "model/drawBatch.h"
+#include "scene/camera.h"
+#include "shader/shaderBase.h"
+#include "view/circle.h"
+#include "view/line.h"
 
 class CircleShader : public Shader {
     struct {

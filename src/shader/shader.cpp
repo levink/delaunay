@@ -1,5 +1,5 @@
 #include "shader.h"
-#include "model/color.h"
+#include "view/color.h"
 
 CircleShader::CircleShader() : Shader(2, 4) {
     u[0] = Uniform("Ortho");

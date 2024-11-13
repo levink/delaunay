@@ -1,5 +1,6 @@
-#include "platform/log.h"
 #include "shaderBase.h"
+#include "shader/shaderLog.h"
+
 
 Attribute::Attribute(): id(-1), size(-1), type(GL_NONE) { }
 Attribute::Attribute(GLSLType type, std::string name):
@@ -62,7 +63,7 @@ GLuint Shader::compile(GLenum shaderType, const char *shaderText) {
             case GL_FRAGMENT_SHADER: error = "Fragment shader text is null"; break;
             default: error = "Shader text is null"; break;
         }
-        Log::warn(error);
+        ShaderLog::warn(error);
         return 0;
     }
 
@@ -81,16 +82,16 @@ GLuint Shader::compile(GLenum shaderType, const char *shaderText) {
         std::vector<GLchar> description(length);
         glGetShaderInfoLog(shader, length, &length, description.data());
 
-        std::string error;
+        std::string_view error;
         switch (shaderType) {
-            case GL_VERTEX_SHADER: error = "Could not compile vertex shader"; break;
-            case GL_FRAGMENT_SHADER: error = "Could not compile fragment shader"; break;
-            default: error = "Could not compile shader"; break;
+            case GL_VERTEX_SHADER: { error = "Could not compile vertex shader"; break; }
+            case GL_FRAGMENT_SHADER: { error = "Could not compile fragment shader"; break; }
+            default: { error = "Could not compile shader"; break; }
         }
-        Log::warn(error, description.data());
+        ShaderLog::warn(error, description.data());
     }
     else {
-        Log::warn("Could not compile shader, but info log is empty");
+        ShaderLog::warn("Could not compile shader, but info log is empty");
     }
 
     glDeleteShader(shader);
@@ -98,7 +99,7 @@ GLuint Shader::compile(GLenum shaderType, const char *shaderText) {
 }
 GLuint Shader::link(GLuint vertexShader, GLuint fragmentShader) {
     if (!vertexShader || !fragmentShader) {
-        Log::warn("Can't link shader because of empty parts");
+        ShaderLog::warn("Can't link shader because of empty parts");
         return 0;
     }
 
@@ -119,10 +120,10 @@ GLuint Shader::link(GLuint vertexShader, GLuint fragmentShader) {
     if (length) {
         std::vector<GLchar> info(length);
         glGetProgramInfoLog(program, length, &length, info.data());
-        Log::warn("Could not link program", info.data());
+        ShaderLog::warn("Could not link program", info.data());
     }
     else {
-        Log::warn("Could not link shader, but info log is empty");
+        ShaderLog::warn("Could not link shader, but info log is empty");
     }
 
     glDetachShader(program, vertexShader);
@@ -163,7 +164,7 @@ void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, 
     }
 }
 void Shader::attr(const Attribute &attribute, GLsizei stride, GLuint offset) {
-    if (attribute.id != -1) { //todo: move 'if' outside
+    if (attribute.id != -1) {
         glVertexAttribPointer(
             attribute.id, 
             attribute.size, 

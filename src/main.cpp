@@ -1,7 +1,7 @@
 #include <iostream>
 #include "ui/ui.h"
 #include "render.h"
-#include "model/color.h"
+#include "view/color.h"
 
 Render render;
 
