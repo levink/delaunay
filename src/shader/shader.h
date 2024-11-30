@@ -12,7 +12,7 @@ class CircleShader : public Shader {
     } context;
     void drawMesh(const CircleMesh& mesh);
 public:
-    explicit CircleShader();
+    CircleShader();
     void link(const Camera* camera);
     void enable() const override;
     void disable() const override;
@@ -27,7 +27,7 @@ class LineShader : public Shader {
         const Camera* camera = nullptr;
     } context;
 public:
-    explicit LineShader();
+    LineShader();
     void link(const Camera* camera);
     void enable() const override;
     void disable() const override;

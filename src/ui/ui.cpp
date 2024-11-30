@@ -1,9 +1,7 @@
 #include <iostream>
 #include "ui.h"
 
-
 using namespace ui;
-
 
 bool UIState::is(KeyMod mod) {
     if (mod == KeyMod::NO) {

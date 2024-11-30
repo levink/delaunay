@@ -45,7 +45,7 @@ protected:
     std::vector<Uniform> u;
 public:
 
-    explicit Shader(uint8_t uniforms, uint8_t attributes);
+    Shader(uint8_t uniforms, uint8_t attributes);
     virtual ~Shader();
 
     void create(const ShaderSource& source);

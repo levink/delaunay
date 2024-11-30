@@ -11,11 +11,10 @@ std::string ShaderLoader::getShaderText(const char* fileName) {
     }
 
     input.seekg(0, std::ios::end);
-    std::streamoff file_length = input.tellg();
+    size_t file_length = input.tellg();
     input.seekg(0, std::ios::beg);
 
-    auto buf_size = static_cast<size_t>(file_length + 1);
-    char* buf = new char[buf_size];
+    char* buf = new char[file_length + 1];
     std::streamsize readCount = 0;
     while (readCount < file_length) {
         input.read(buf + readCount, file_length - readCount);

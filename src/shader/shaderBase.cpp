@@ -152,7 +152,6 @@ void Shader::disable() const {
 
 void Shader::attr(const Attribute& attribute, const void *data, GLsizei stride, GLuint offset) {
     if (attribute.id != -1) {
-
         glVertexAttribPointer( 
             attribute.id, 
             attribute.size, 
