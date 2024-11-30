@@ -1,14 +1,13 @@
 # Delaunay triangulation
 Hi! Here we are creating non-constrained Delaynay triangulation and drawing scene with OpenGL shaders. It is  platform independent solution written on C++.
 
+![Screen](./data/images/screen.png)
+
 ### Control
 * Add point - right mouse click     
 * Move point - left mouse drag&drop
 * R - hot reload shaders
 * B - rebuild triangulation
-
-### Example
-![Screen](./data/images/screen.png)
 
 ### Build & run
 ``` shell
