@@ -10,6 +10,23 @@ Hi! Here we are creating non-constrained Delaynay triangulation and drawing scen
 ### Example
 ![Screen](./data/images/screen.png)
 
+### Build & run
+```
+# Clone
+git clone https://github.com/levink/delaunay.git
+cd delaunay
+
+# Build
+mkdir build
+cd build
+cmake ../
+cmake --build ./ --config Debug -j10
+
+# Run
+cd Debug 
+./app.exe
+
+```
 
 ### Details
 * The approach described by S. W. Sloan in his [article](./data/articles/A-fast-algortithm-for-generating-constrained-Delaunay-triangulations.pdf) is implemented.

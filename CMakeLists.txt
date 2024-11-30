@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-project(delone)
+
+project(delaunay)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -11,7 +12,7 @@ add_subdirectory(lib/glfw-3.3.4)
 
 add_subdirectory(lib/glad)
 
-add_executable(delone
+add_executable(app
         src/model/delaunay.cpp
         src/model/drawBatch.cpp
         src/scene/camera.cpp
@@ -31,7 +32,7 @@ add_executable(delone
         src/render.cpp
         src/main.cpp)
 
-target_precompile_headers(delone PRIVATE src/pch.h)
+target_precompile_headers(app PRIVATE src/pch.h)
 
-target_link_libraries(delone glad glfw)
+target_link_libraries(app glad glfw)
 
