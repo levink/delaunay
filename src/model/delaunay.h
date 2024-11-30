@@ -119,6 +119,7 @@ namespace delaunay {
         bool isSuper(const DTriangle* tr) const;
         bool isDelaynayConstrained(size_t tIndex) const;
         bool hasErrors() const;
+        void swapEdgeManually(const DEdge& edge);
     private:
         void increaseError();
         void addPoint(DPoint* point);

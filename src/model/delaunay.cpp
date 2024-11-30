@@ -483,42 +483,58 @@ namespace delaunay {
 
         checkAndSwapEdges();
     }
+
+    struct EdgeTriangles {
+        uint8_t count = 0;
+        DTriangle* t1 = nullptr;
+        DTriangle* t2 = nullptr;
+    };
+    static EdgeTriangles searchAdjacentTrianglesForEdge(const DEdge& edge, const std::vector<DTriangle*>& trianglesForSearch) {
+        // Search adjacent triangles for edge
+        uint8_t count = 0;
+        DTriangle* t1 = nullptr;
+        DTriangle* t2 = nullptr;
+
+        for (auto triangle : trianglesForSearch) {
+            bool hasEdge =
+                triangle->hasPointId(edge.p0) &&
+                triangle->hasPointId(edge.p1);
+            if (hasEdge) {
+                count++;
+                if (t1 == nullptr) {
+                    t1 = triangle;
+                    continue;
+                }
+                if (t2 == nullptr) {
+                    t2 = triangle;
+                    continue;
+                }
+            }
+        }
+        return EdgeTriangles{ count, t1, t2 };
+    }
     void Triangulation::checkAndSwapEdges() {
         while (!edgeStack.empty()) {
 
-            // Get edge and unmark it
+            // "Get edge and unmark it" (c) S.W.Sloan
             DEdge edge = edgeStack.pop();
 
-            // Search adjacent triangles for edge
-            DTriangle* t1 = nullptr;
-            DTriangle* t2 = nullptr;
-            uint8_t trianglesForEdge = 0;
-            for (auto triangle : triangles) {
-                bool hasEdge =
-                    triangle->hasPointId(edge.p0) &&
-                    triangle->hasPointId(edge.p1);
-                if (hasEdge) {
-                    trianglesForEdge++;
-                    if (t1 == nullptr) { t1 = triangle; }
-                    else if (t2 == nullptr) { t2 = triangle; }
-                }
-            }
-
-            if (trianglesForEdge == 0 || trianglesForEdge > 2) {
-                /*
-                    0: unknown edge
-                    2: non manifold triangulation
-                */
+            EdgeTriangles search = searchAdjacentTrianglesForEdge(edge, triangles);
+            bool unknownEdge = (search.count == 0);
+            bool nonManifoldTriangulation = (search.count > 2);
+            if (unknownEdge || nonManifoldTriangulation) {
                 increaseError();
                 break;
             }
-            if (trianglesForEdge == 1 || !t1 || !t2) {
-                /*
-                    1: it means border edge
-                */
+
+            bool borderEdge = (search.count == 1);
+            if (borderEdge || !search.t1 || !search.t2) {
+                //it is ok, but no need to swap
                 continue;
             }
 
+            DTriangle* t1 = search.t1;
+            DTriangle* t2 = search.t2;
             bool isLegalEdge = legalEdge(edge, t1, t2);
             if (isLegalEdge) {
                 continue;
@@ -545,9 +561,17 @@ namespace delaunay {
         }
     }
     bool Triangulation::legalEdge(const DEdge& edge, DTriangle* t1, DTriangle* t2) const {
-        const auto& point = t2->getOppositePoint(edge)->position;
-        bool contains = t1->circle.contains(point);
-        return !contains;
+        /*
+            Unfortunately we need to check both circles
+            because of float point errors
+        */
+        const auto& p1 = t1->getOppositePoint(edge)->position;
+        const auto& p2 = t2->getOppositePoint(edge)->position;
+
+        bool contains1 = t1->circle.contains(p2);
+        bool contains2 = t2->circle.contains(p1);
+
+        return !contains1 && !contains2;
     }
     bool Triangulation::swapEdge(DTriangle* t1, DTriangle* t2) {
 
@@ -608,7 +632,7 @@ namespace delaunay {
         changedPoints.insert(point);
         for (auto tr : triangles) {
             if (tr->hasPoint(point)) {
-                tr->update(); 
+                tr->update();
                 changedTriangles.insert(tr);
                 auto id1 = tr->points[0]->id;
                 auto id2 = tr->points[1]->id;
@@ -620,6 +644,24 @@ namespace delaunay {
         }
 
         checkAndSwapEdges();
+    }
+    void Triangulation::swapEdgeManually(const DEdge& edge) {
+        // Search adjacent triangles for edge
+        EdgeTriangles search = searchAdjacentTrianglesForEdge(edge, triangles);
+        if (search.count != 2) {
+            return;
+        }
+
+        DTriangle* t1 = search.t1;
+        DTriangle* t2 = search.t2;
+        bool ok = swapEdge(t1, t2);
+        if (ok) {
+            changedTriangles.insert(t1);
+            changedTriangles.insert(t2);
+        }
+        else {
+            increaseError();
+        }
     }
 
     DTriangle* Triangulation::findTriangle(float x, float y, uint8_t& hitCode) {
@@ -827,4 +869,3 @@ namespace delaunay {
         errors++;
     }
 }
-
