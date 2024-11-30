@@ -11,7 +11,7 @@ Hi! Here we are creating non-constrained Delaynay triangulation and drawing scen
 ![Screen](./data/images/screen.png)
 
 ### Build & run
-```
+``` shell
 # Clone
 git clone https://github.com/levink/delaunay.git
 cd delaunay
